@@ -1,6 +1,10 @@
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 
+import { useAuth } from '@/hooks/useAuth'
 import { AuthShell, PasswordInput } from '@/sections/auth'
+import { resetPasswordSchema } from '@/validation/authSchemas'
+import { getZodErrorMessage } from '@/validation/zodError'
 
 const resetPasswordFeatures = [
   {
@@ -27,6 +31,40 @@ const resetPasswordFeatures = [
 ]
 
 export default function ResetPassword() {
+  const { updatePassword } = useAuth()
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+    setMessage('')
+
+    const formData = new FormData(event.currentTarget)
+    const result = resetPasswordSchema.safeParse({
+      password: formData.get('password'),
+      confirm: formData.get('confirm'),
+    })
+
+    if (!result.success) {
+      setError(getZodErrorMessage(result.error, 'Invalid password.'))
+      return
+    }
+
+    setLoading(true)
+    const { error: updateError } = await updatePassword(result.data.password)
+
+    if (updateError) {
+      setError(updateError.message)
+    } else {
+      setMessage('Your password has been updated successfully!')
+      event.currentTarget.reset()
+    }
+
+    setLoading(false)
+  }
+
   return (
     <AuthShell
       title="Set New Password"
@@ -37,7 +75,18 @@ export default function ResetPassword() {
       backTo="/login"
       backLabel="Back to Login"
     >
-      <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
+      {error ? (
+        <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      ) : null}
+      {message ? (
+        <div className="mb-6 rounded-lg border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {message}
+        </div>
+      ) : null}
+
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <PasswordInput
           id="reset-password"
           label="New Password"
@@ -55,9 +104,10 @@ export default function ResetPassword() {
 
         <button
           type="submit"
+          disabled={loading}
           className="w-full rounded-xl bg-gradient-to-r from-pink-600 to-pink-700 py-3.5 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:from-pink-700 hover:to-pink-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
         >
-          Update Password
+          {loading ? 'Updating...' : 'Update Password'}
         </button>
       </form>
 

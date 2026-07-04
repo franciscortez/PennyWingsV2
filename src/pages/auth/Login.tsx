@@ -1,5 +1,7 @@
-import { Link } from 'react-router'
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router'
 
+import { useAuth } from '@/hooks/useAuth'
 import {
   AuthDivider,
   AuthShell,
@@ -7,6 +9,8 @@ import {
   PasswordInput,
   TextInput,
 } from '@/sections/auth'
+import { loginSchema } from '@/validation/authSchemas'
+import { getZodErrorMessage } from '@/validation/zodError'
 
 const loginFeatures = [
   {
@@ -33,6 +37,54 @@ const loginFeatures = [
 ]
 
 export default function Login() {
+  const { loading: authLoading, signIn, signInWithGoogle } = useAuth()
+  const navigate = useNavigate()
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+
+    const formData = new FormData(event.currentTarget)
+    const result = loginSchema.safeParse({
+      email: formData.get('email'),
+      password: formData.get('password'),
+    })
+
+    if (!result.success) {
+      setError(getZodErrorMessage(result.error, 'Invalid sign in details.'))
+      return
+    }
+
+    setLoading(true)
+    const { error: signInError } = await signIn(
+      result.data.email,
+      result.data.password,
+    )
+
+    if (signInError) {
+      setError(signInError.message)
+    } else {
+      navigate('/dashboard')
+    }
+
+    setLoading(false)
+  }
+
+  const handleGoogleLogin = async () => {
+    setError('')
+    setGoogleLoading(true)
+
+    const { error: googleError } = await signInWithGoogle()
+
+    if (googleError) {
+      setError(googleError.message)
+      setGoogleLoading(false)
+    }
+  }
+
   return (
     <AuthShell
       title="Sign In"
@@ -41,7 +93,13 @@ export default function Login() {
       heroDescription="Continue tracking your expenses, managing your budgets, and achieving your financial goals with ease."
       features={loginFeatures}
     >
-      <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
+      {error ? (
+        <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      ) : null}
+
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <TextInput
           id="login-email"
           label="Email Address"
@@ -62,14 +120,18 @@ export default function Login() {
 
         <button
           type="submit"
+          disabled={loading || googleLoading || authLoading}
           className="w-full rounded-xl bg-gradient-to-r from-pink-600 to-pink-700 py-3.5 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:from-pink-700 hover:to-pink-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
         >
-          Sign In
+          {loading ? 'Signing in...' : 'Sign In'}
         </button>
       </form>
 
       <AuthDivider />
-      <GoogleAuthButton />
+      <GoogleAuthButton
+        disabled={loading || googleLoading || authLoading}
+        onClick={handleGoogleLogin}
+      />
 
       <div className="mt-8 text-center">
         <p className="text-sm text-pink-600">

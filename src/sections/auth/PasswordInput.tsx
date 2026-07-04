@@ -9,6 +9,7 @@ type PasswordInputProps = {
   placeholder: string
   autoComplete: string
   forgotPassword?: boolean
+  required?: boolean
 }
 
 export function PasswordInput({
@@ -18,6 +19,7 @@ export function PasswordInput({
   placeholder,
   autoComplete,
   forgotPassword = false,
+  required = true,
 }: PasswordInputProps) {
   const [showPassword, setShowPassword] = useState(false)
 
@@ -43,6 +45,7 @@ export function PasswordInput({
           name={name}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          required={required}
           className="w-full rounded-xl border-2 border-pink-200 bg-white px-4 py-3 pr-12 text-sm text-pink-900 transition placeholder:text-pink-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500"
         />
         <button

@@ -1,12 +1,17 @@
 type GoogleAuthButtonProps = {
   disabled?: boolean
+  onClick?: () => void
 }
 
-export function GoogleAuthButton({ disabled = false }: GoogleAuthButtonProps) {
+export function GoogleAuthButton({
+  disabled = false,
+  onClick,
+}: GoogleAuthButtonProps) {
   return (
     <button
       type="button"
       disabled={disabled}
+      onClick={onClick}
       className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-pink-100 bg-white py-3.5 font-bold text-pink-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-pink-200 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
     >
       <svg

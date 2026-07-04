@@ -11,12 +11,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 
 import { PennyWingsMark } from '@/sections/shared'
-
-type AuthFeature = {
-  title: string
-  description: string
-  icon: 'zap' | 'check' | 'chart' | 'lock' | 'card' | 'shield'
-}
+import type { AuthFeature } from '@/types'
 
 type AuthShellProps = {
   title: string

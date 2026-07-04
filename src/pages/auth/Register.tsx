@@ -1,5 +1,7 @@
+import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 
+import { useAuth } from '@/hooks/useAuth'
 import {
   AuthDivider,
   AuthShell,
@@ -7,6 +9,8 @@ import {
   PasswordInput,
   TextInput,
 } from '@/sections/auth'
+import { registerSchema } from '@/validation/authSchemas'
+import { getZodErrorMessage } from '@/validation/zodError'
 
 const signupFeatures = [
   {
@@ -32,6 +36,59 @@ const signupFeatures = [
 ]
 
 export default function Register() {
+  const { loading: authLoading, signInWithGoogle, signUp } = useAuth()
+  const [error, setError] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    setError('')
+    setMessage('')
+
+    const formData = new FormData(event.currentTarget)
+    const result = registerSchema.safeParse({
+      email: formData.get('email'),
+      password: formData.get('password'),
+      confirm: formData.get('confirm'),
+      acceptedTerms: formData.get('acceptedTerms') === 'on',
+    })
+
+    if (!result.success) {
+      setError(getZodErrorMessage(result.error, 'Invalid account details.'))
+      return
+    }
+
+    setLoading(true)
+    const { error: signUpError } = await signUp(
+      result.data.email,
+      result.data.password,
+    )
+
+    if (signUpError) {
+      setError(signUpError.message)
+    } else {
+      setMessage('Account created! Please check your email to confirm your account.')
+      event.currentTarget.reset()
+    }
+
+    setLoading(false)
+  }
+
+  const handleGoogleLogin = async () => {
+    setError('')
+    setMessage('')
+    setGoogleLoading(true)
+
+    const { error: googleError } = await signInWithGoogle()
+
+    if (googleError) {
+      setError(googleError.message)
+      setGoogleLoading(false)
+    }
+  }
+
   return (
     <AuthShell
       title="Create Account"
@@ -40,7 +97,18 @@ export default function Register() {
       heroDescription="Join thousands of users who are taking control of their finances. Track expenses, set budgets, and achieve your goals."
       features={signupFeatures}
     >
-      <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
+      {error ? (
+        <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
+          {error}
+        </div>
+      ) : null}
+      {message ? (
+        <div className="mb-6 rounded-lg border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
+          {message}
+        </div>
+      ) : null}
+
+      <form className="space-y-5" onSubmit={handleSubmit}>
         <TextInput
           id="register-email"
           label="Email Address"
@@ -69,6 +137,7 @@ export default function Register() {
           <input
             type="checkbox"
             id="terms"
+            name="acceptedTerms"
             className="mt-1.5 h-4 w-4 cursor-pointer rounded border-2 border-pink-200 text-pink-600 accent-pink-600 transition focus:ring-pink-500"
           />
           <label
@@ -88,14 +157,18 @@ export default function Register() {
 
         <button
           type="submit"
+          disabled={loading || googleLoading || authLoading}
           className="w-full rounded-xl bg-gradient-to-r from-pink-600 to-pink-700 py-3.5 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:from-pink-700 hover:to-pink-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
         >
-          Create Account
+          {loading ? 'Creating account...' : 'Create Account'}
         </button>
       </form>
 
       <AuthDivider />
-      <GoogleAuthButton />
+      <GoogleAuthButton
+        disabled={loading || googleLoading || authLoading}
+        onClick={handleGoogleLogin}
+      />
 
       <div className="mt-8 text-center">
         <p className="text-sm text-pink-600">

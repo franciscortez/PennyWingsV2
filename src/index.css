@@ -1,1 +1,47 @@
 @import "tailwindcss";
+
+@theme {
+  --color-pink-50: #fff0f5;
+  --color-pink-100: #ffe4e9;
+  --color-pink-200: #ffb6c1;
+  --color-pink-300: #ffc0cb;
+  --color-pink-400: #ff9ead;
+  --color-pink-500: #ff7a93;
+  --color-pink-600: #e85d7a;
+  --color-pink-700: #c94466;
+  --color-pink-800: #a32e50;
+  --color-pink-900: #7d1a3a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 700ms ease-out both;
+}
+
+.animate-fade-in-delay {
+  animation: fade-in 700ms ease-out 200ms both;
+}

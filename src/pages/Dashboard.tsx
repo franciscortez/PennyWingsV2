@@ -1,34 +1,65 @@
-import { LogOut } from 'lucide-react'
-import { useState } from 'react'
-import { Navigate } from 'react-router'
-
+import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
+import { useDashboardData } from '@/hooks/useDashboardData'
+import {
+  CardsSection,
+  DashboardHeader,
+  MiniStatsSection,
+  ProgressOverviewSection,
+  RecentActivitySection,
+} from '@/sections/dashboard'
 
 export default function Dashboard() {
-  const { loading: authLoading, signOut, user } = useAuth()
-  const [loading, setLoading] = useState(false)
+  const { profile, user } = useAuth()
+  const {
+    accounts,
+    error,
+    loading,
+    monthlyStats,
+    progress,
+    totalBalance,
+    transactions,
+  } = useDashboardData(user?.id)
 
-  const handleLogout = async () => {
-    setLoading(true)
-    await signOut()
-    setLoading(false)
-  }
-
-  if (!authLoading && !user) {
-    return <Navigate to="/login" replace />
-  }
+  const savingsRate =
+    monthlyStats.income > 0
+      ? Math.round(
+          ((monthlyStats.income - monthlyStats.expenses) /
+            monthlyStats.income) *
+            100,
+        )
+      : 0
+  const profileLabel = profile?.full_name ?? user?.email ?? 'PennyWings User'
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-pink-50 px-4">
-      <button
-        type="button"
-        onClick={handleLogout}
-        disabled={loading || authLoading}
-        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-pink-600 to-pink-700 px-6 py-3 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:from-pink-700 hover:to-pink-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
-      >
-        <LogOut className="h-5 w-5" aria-hidden="true" />
-        {loading ? 'Logging out...' : 'Logout'}
-      </button>
-    </main>
+    <Layout>
+      <div className="space-y-10">
+        <DashboardHeader />
+
+        {error ? (
+          <div className="rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-bold text-red-600">
+            {error}
+          </div>
+        ) : null}
+
+        <CardsSection
+          loading={loading}
+          monthlyStats={monthlyStats}
+          savingsRate={savingsRate}
+          totalBalance={totalBalance}
+        />
+        <ProgressOverviewSection progress={progress} />
+        <RecentActivitySection
+          loading={loading}
+          transactions={transactions}
+        />
+        <MiniStatsSection
+          accountCount={accounts.length}
+          loading={loading}
+          profileLabel={profileLabel}
+          transactionCount={transactions.length}
+        />
+      </div>
+    </Layout>
   )
 }

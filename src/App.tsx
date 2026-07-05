@@ -1,6 +1,8 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 
+import ProtectedRoute from '@/components/ProtectedRoute'
 import { AuthProvider } from '@/context/AuthContext'
+import ComingSoon from '@/pages/ComingSoon'
 import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
@@ -14,7 +16,62 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts"
+            element={
+              <ProtectedRoute>
+                <ComingSoon title="Accounts" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/transactions"
+            element={
+              <ProtectedRoute>
+                <ComingSoon title="Transactions" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ComingSoon title="Profile" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <ComingSoon title="Reports" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/monitoring"
+            element={
+              <ProtectedRoute>
+                <ComingSoon title="Monitoring" />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/calculator"
+            element={
+              <ProtectedRoute>
+                <ComingSoon title="Calculator" />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Register />} />
           <Route path="/register" element={<Register />} />

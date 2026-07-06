@@ -3,6 +3,7 @@ export type {
   AccountColor,
   AccountCreateValues,
   AccountKind,
+  AccountUpdateValues,
   AccountsData,
 } from '@/types/accounts'
 export type {

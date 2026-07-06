@@ -10,8 +10,8 @@ type LayoutProps = {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const { signOut, user } = useAuth()
-  const sidebarInfo = useSidebarInfo(user?.id, user?.email)
+  const { loading, profile, signOut, user } = useAuth()
+  const sidebarInfo = useSidebarInfo(loading, user?.email, profile)
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('sidebarOpen')
     return saved === 'true'

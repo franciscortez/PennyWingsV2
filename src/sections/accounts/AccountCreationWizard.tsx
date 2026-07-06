@@ -1,12 +1,12 @@
 import {
-  ArrowLeft,
-  Building2,
-  Landmark,
-  Smartphone,
-  Wallet2,
-  X,
-  type LucideIcon,
-} from 'lucide-react'
+  FaArrowLeft,
+  FaBuilding,
+  FaMobileScreenButton,
+  FaMoneyBillWave,
+  FaWallet,
+  FaXmark,
+} from 'react-icons/fa6'
+import type { IconType } from 'react-icons'
 import { memo, useCallback, useState } from 'react'
 
 import { alerts } from '@/lib/alert'
@@ -47,14 +47,14 @@ const initialForm: WizardForm = {
 }
 
 const accountTypes: Array<{
-  icon: LucideIcon
+  icon: IconType
   id: SetupType
   label: string
 }> = [
-  { id: 'traditional', label: 'Traditional Bank', icon: Building2 },
-  { id: 'digital', label: 'Digital Bank', icon: Smartphone },
-  { id: 'ewallet', label: 'E-Wallet', icon: Wallet2 },
-  { id: 'cash', label: 'Cash on Hand', icon: Landmark },
+  { id: 'traditional', label: 'Traditional Bank', icon: FaBuilding },
+  { id: 'digital', label: 'Digital Bank', icon: FaMobileScreenButton },
+  { id: 'ewallet', label: 'E-Wallet', icon: FaWallet },
+  { id: 'cash', label: 'Cash on Hand', icon: FaMoneyBillWave },
 ]
 
 const providerOptions: Record<Exclude<SetupType, 'cash'>, string[]> = {
@@ -169,7 +169,7 @@ export function AccountCreationWizard({
       return
     }
 
-    const created = await onCreate(result.data)
+    const created = await onCreate(result.data as AccountCreateValues)
 
     if (created) {
       onClose()
@@ -194,7 +194,7 @@ export function AccountCreationWizard({
                 className="rounded-full p-2 text-gray-400 transition-colors hover:bg-pink-50 active:scale-90"
                 aria-label="Back"
               >
-                <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+                <FaArrowLeft className="h-5 w-5" aria-hidden="true" />
               </button>
             ) : null}
             <h2 className="text-2xl font-black tracking-tight text-gray-800">
@@ -207,7 +207,7 @@ export function AccountCreationWizard({
             className="rounded-full p-2 text-gray-400 transition-all duration-200 hover:rotate-90 hover:bg-pink-50 active:scale-90"
             aria-label="Close account setup"
           >
-            <X className="h-6 w-6" aria-hidden="true" />
+            <FaXmark className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
 

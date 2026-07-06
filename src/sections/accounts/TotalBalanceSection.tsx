@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { FaPlus } from 'react-icons/fa6'
 
 type TotalBalanceSectionProps = {
   loading: boolean
@@ -41,7 +41,7 @@ export function TotalBalanceSection({
           className="group/add flex items-center justify-center gap-3 whitespace-nowrap rounded-[2rem] bg-white px-8 py-5 text-lg font-black text-pink-600 transition-all hover:-translate-y-1 hover:bg-pink-50 active:scale-95 sm:hover:scale-105"
         >
           <span className="rounded-xl bg-pink-100 p-1.5 transition-colors group-hover/add:bg-pink-200">
-            <Plus className="h-5 w-5" aria-hidden="true" />
+            <FaPlus className="h-5 w-5" aria-hidden="true" />
           </span>
           Add New Account
         </button>

@@ -8,6 +8,7 @@ export type AccountColor = {
 }
 
 export type Account = {
+  accountIdentifier?: string
   accountType: string
   balance: number
   color: string
@@ -15,15 +16,29 @@ export type Account = {
   id: string
   isActive: boolean
   kind: AccountKind
+  lastFour?: string
   name: string
   textColor: string
 }
 
 export type AccountCreateValues = {
+  accountIdentifier?: string
   accountType: string
   balance: number
   color: string
   kind: AccountKind
+  lastFour?: string
+  name: string
+  textColor: string
+}
+
+export type AccountUpdateValues = {
+  accountIdentifier?: string
+  accountType: string
+  balance: number
+  color: string
+  kind: AccountKind
+  lastFour?: string
   name: string
   textColor: string
 }
@@ -35,3 +50,4 @@ export type AccountsData = {
   totalBalance: number
   walletCount: number
 }
+

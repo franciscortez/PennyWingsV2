@@ -1,10 +1,9 @@
 import {
-  CreditCard,
-  Landmark,
-  PiggyBank,
-  Wallet,
-  type LucideIcon,
-} from 'lucide-react'
+  FaBuildingColumns,
+  FaMoneyBillWave,
+  FaWallet,
+} from 'react-icons/fa6'
+import type { IconType } from 'react-icons'
 
 type AccountsSummarySectionProps = {
   cardCount: number
@@ -30,22 +29,22 @@ export function AccountsSummarySection({
   return (
     <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
       <SummaryCard
-        icon={Landmark}
+        icon={FaBuildingColumns}
         label="Total Balance"
         value={loading ? 'Loading...' : currency.format(totalBalance)}
       />
       <SummaryCard
-        icon={CreditCard}
+        icon={FaBuildingColumns}
         label="Cards"
         value={loading ? '...' : String(cardCount)}
       />
       <SummaryCard
-        icon={Wallet}
+        icon={FaWallet}
         label="E-Wallets"
         value={loading ? '...' : String(walletCount)}
       />
       <SummaryCard
-        icon={PiggyBank}
+        icon={FaMoneyBillWave}
         label="Cash"
         value={loading ? '...' : String(cashCount)}
       />
@@ -58,7 +57,7 @@ function SummaryCard({
   label,
   value,
 }: {
-  icon: LucideIcon
+  icon: IconType
   label: string
   value: string
 }) {

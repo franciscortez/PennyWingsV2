@@ -45,3 +45,12 @@ body {
 .animate-fade-in-delay {
   animation: fade-in 700ms ease-out 200ms both;
 }
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

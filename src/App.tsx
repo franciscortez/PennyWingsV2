@@ -1,10 +1,13 @@
 import { BrowserRouter, Route, Routes } from 'react-router'
 
 import ProtectedRoute from '@/components/ProtectedRoute'
+import PublicRoute from '@/components/PublicRoute'
 import { AuthProvider } from '@/context/AuthContext'
+import Accounts from '@/pages/Accounts'
 import ComingSoon from '@/pages/ComingSoon'
 import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
+import NotFound from '@/pages/NotFound'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
 import Login from '@/pages/auth/Login'
 import Register from '@/pages/auth/Register'
@@ -15,7 +18,14 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <Home />
+              </PublicRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={
@@ -28,7 +38,7 @@ export default function App() {
             path="/accounts"
             element={
               <ProtectedRoute>
-                <ComingSoon title="Accounts" />
+                <Accounts />
               </ProtectedRoute>
             }
           />
@@ -72,12 +82,40 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Register />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/login"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/forgot-password"
+            element={
+              <PublicRoute>
+                <ForgotPassword />
+              </PublicRoute>
+            }
+          />
           <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

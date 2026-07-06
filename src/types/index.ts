@@ -1,4 +1,11 @@
 export type {
+  Account,
+  AccountColor,
+  AccountCreateValues,
+  AccountKind,
+  AccountsData,
+} from '@/types/accounts'
+export type {
   AuthContextValue,
   AuthResult,
   Profile,
@@ -12,6 +19,7 @@ export type {
   DashboardTransaction,
 } from '@/types/dashboard'
 export type {
+  AccountFormValues,
   ForgotPasswordValues,
   LoginValues,
   RegisterValues,

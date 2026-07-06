@@ -49,3 +49,15 @@ style(home): adjust hero section spacing and gradient colors
 4. Never push secrets, `.env` files, or credentials (already in `.gitignore`)
 5. Never force push to shared branches
 6. Branch naming follows the same type prefix: `feat/auth-forms`, `fix/login-redirect`
+
+---
+
+## Workflow (run this every time changes are ready to commit)
+
+1. Analyze the current uncommitted changes with `git status` and `git diff HEAD`
+2. Derive the branch name from the changes using the type prefix convention
+3. `git checkout -b <branch-name>`
+4. `git add .`
+5. `git commit -m "<type>(<scope>): <short description>"`
+
+Branch name mirrors the commit message slug: `feat/accounts-page-and-initial-loader`

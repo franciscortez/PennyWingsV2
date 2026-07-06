@@ -4,19 +4,19 @@ import { Navigate } from 'react-router'
 import { PageLoader } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 
-type ProtectedRouteProps = {
+type PublicRouteProps = {
   children: ReactNode
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function PublicRoute({ children }: PublicRouteProps) {
   const { loading, user } = useAuth()
 
   if (loading) {
     return <PageLoader />
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />
+  if (user) {
+    return <Navigate to="/dashboard" replace />
   }
 
   return children

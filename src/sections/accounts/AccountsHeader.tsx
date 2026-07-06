@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { FaPlus } from 'react-icons/fa6'
 
 import { AppButton } from '@/components/ui'
 
@@ -21,7 +21,7 @@ export function AccountsHeader({ onCreate }: AccountsHeaderProps) {
         </p>
       </div>
       <AppButton type="button" onClick={onCreate} className="self-start md:self-auto">
-        <Plus className="h-5 w-5" aria-hidden="true" />
+        <FaPlus className="h-5 w-5" aria-hidden="true" />
         Add Account
       </AppButton>
     </header>

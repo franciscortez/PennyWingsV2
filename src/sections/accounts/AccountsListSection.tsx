@@ -1,13 +1,21 @@
-import { CreditCard, Landmark, Wallet } from 'lucide-react'
+import {
+  FaBuildingColumns,
+  FaMoneyBillWave,
+  FaPencil,
+  FaTrashCan,
+  FaWallet,
+} from 'react-icons/fa6'
 
-import { AccountCardChip } from '@/sections/accounts'
 import type { Account, AccountKind } from '@/types'
 
 type AccountsListSectionProps = {
   accounts: Account[]
+  archivingId?: string | null
   emptyDescription: string
   emptyTitle: string
   loading: boolean
+  onArchive?: (account: Account) => void
+  onEdit?: (account: Account) => void
   variant: AccountKind | 'all'
 }
 
@@ -24,30 +32,115 @@ const formatAccountType = (value: string) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 
+const getAccountSubtitle = (account: Account) => {
+  if (account.kind === 'cash') {
+    return 'Cash on hand'
+  }
+
+  if (account.lastFour) {
+    return `•••• •••• •••• ${account.lastFour}`
+  }
+
+  if (account.accountIdentifier) {
+    return account.accountIdentifier
+  }
+
+  return formatAccountType(account.accountType)
+}
+
+function KindIconDisplay({ kind, className }: { kind: AccountKind; className?: string }) {
+  if (kind === 'card') return <FaBuildingColumns className={className} aria-hidden="true" />
+  if (kind === 'cash') return <FaMoneyBillWave className={className} aria-hidden="true" />
+  return <FaWallet className={className} aria-hidden="true" />
+}
+
+/**
+ * Generates a subtle SVG pattern unique to each account kind.
+ * Cards get a circuit-board feel, wallets get a wave pattern, cash gets concentric rings.
+ */
+function KindPattern({ kind }: { kind: AccountKind }) {
+  if (kind === 'card') {
+    return (
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.07]"
+        viewBox="0 0 200 120"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <line x1="0" y1="30" x2="200" y2="30" stroke="white" strokeWidth="0.5" />
+        <line x1="0" y1="60" x2="200" y2="60" stroke="white" strokeWidth="0.5" />
+        <line x1="0" y1="90" x2="200" y2="90" stroke="white" strokeWidth="0.5" />
+        <line x1="50" y1="0" x2="50" y2="120" stroke="white" strokeWidth="0.5" />
+        <line x1="100" y1="0" x2="100" y2="120" stroke="white" strokeWidth="0.5" />
+        <line x1="150" y1="0" x2="150" y2="120" stroke="white" strokeWidth="0.5" />
+        <rect x="45" y="25" width="12" height="12" rx="2" stroke="white" strokeWidth="0.7" />
+        <rect x="95" y="55" width="12" height="12" rx="2" stroke="white" strokeWidth="0.7" />
+        <rect x="145" y="85" width="12" height="12" rx="2" stroke="white" strokeWidth="0.7" />
+      </svg>
+    )
+  }
+
+  if (kind === 'wallet') {
+    return (
+      <svg
+        className="absolute inset-0 h-full w-full opacity-[0.07]"
+        viewBox="0 0 200 120"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <path d="M0 60 Q 25 30, 50 60 T 100 60 T 150 60 T 200 60" stroke="white" strokeWidth="1" fill="none" />
+        <path d="M0 80 Q 25 50, 50 80 T 100 80 T 150 80 T 200 80" stroke="white" strokeWidth="0.7" fill="none" />
+        <path d="M0 40 Q 25 10, 50 40 T 100 40 T 150 40 T 200 40" stroke="white" strokeWidth="0.5" fill="none" />
+        <path d="M0 100 Q 25 70, 50 100 T 100 100 T 150 100 T 200 100" stroke="white" strokeWidth="0.3" fill="none" />
+      </svg>
+    )
+  }
+
+  // Cash pattern — concentric rings
+  return (
+    <svg
+      className="absolute inset-0 h-full w-full opacity-[0.06]"
+      viewBox="0 0 200 120"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <circle cx="160" cy="60" r="20" stroke="white" strokeWidth="0.7" />
+      <circle cx="160" cy="60" r="35" stroke="white" strokeWidth="0.5" />
+      <circle cx="160" cy="60" r="50" stroke="white" strokeWidth="0.4" />
+      <circle cx="160" cy="60" r="65" stroke="white" strokeWidth="0.3" />
+      <circle cx="160" cy="60" r="80" stroke="white" strokeWidth="0.2" />
+    </svg>
+  )
+}
+
 export function AccountsListSection({
   accounts,
+  archivingId,
   emptyDescription,
   emptyTitle,
   loading,
+  onArchive,
+  onEdit,
   variant,
 }: AccountsListSectionProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-        {[1, 2, 3].map((item) => (
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {[1, 2, 3, 4, 5, 6].map((item) => (
           <div
             key={item}
-            className="space-y-4 rounded-[2rem] border border-pink-50 bg-white p-6"
+            className="overflow-hidden rounded-[2rem] border border-pink-100/60 bg-white/70 backdrop-blur-sm"
+            style={{ animationDelay: `${item * 80}ms` }}
           >
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 animate-pulse rounded-xl bg-pink-100" />
-              <div className="flex-1 space-y-2">
-                <div className="h-4 w-2/3 animate-pulse rounded-full bg-pink-100" />
-                <div className="h-3 w-1/3 animate-pulse rounded-full bg-pink-100" />
-              </div>
+            <div className="h-32 animate-pulse bg-gradient-to-br from-pink-100 to-pink-50" />
+            <div className="space-y-3 p-5">
+              <div className="h-4 w-2/3 animate-pulse rounded-full bg-pink-100" />
+              <div className="h-3 w-1/2 animate-pulse rounded-full bg-pink-50" />
+              <div className="mt-4 h-14 w-full animate-pulse rounded-2xl bg-pink-50/80" />
             </div>
-            <div className="h-8 w-1/2 animate-pulse rounded-full bg-pink-100" />
-            <div className="h-3 w-full animate-pulse rounded-full bg-pink-100" />
           </div>
         ))}
       </div>
@@ -56,164 +149,212 @@ export function AccountsListSection({
 
   if (!accounts.length) {
     const EmptyIcon =
-      variant === 'card' ? CreditCard : variant === 'cash' ? Landmark : Wallet
+      variant === 'card' ? FaBuildingColumns : variant === 'cash' ? FaMoneyBillWave : FaWallet
 
     return (
-      <div className="animate-fade-in rounded-[3rem] border-2 border-dashed border-pink-100 bg-pink-50/30 py-20 text-center">
-        <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-pink-100">
-          <EmptyIcon className="h-10 w-10 text-pink-600" aria-hidden="true" />
+      <div className="animate-fade-in rounded-[2.5rem] border-2 border-dashed border-pink-200/60 bg-gradient-to-br from-pink-50/80 to-white py-20 text-center">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-pink-100 to-pink-200/60 shadow-lg shadow-pink-200/40">
+          <EmptyIcon className="h-10 w-10 text-pink-500" aria-hidden="true" />
         </div>
-        <p className="mb-2 text-lg font-black uppercase tracking-widest text-gray-400">
+        <p className="mb-2 text-sm font-black uppercase tracking-widest text-gray-400">
           {emptyTitle}
         </p>
-        <p className="text-sm text-gray-400">{emptyDescription}</p>
+        <p className="mx-auto max-w-xs text-xs font-medium leading-relaxed text-gray-400">
+          {emptyDescription}
+        </p>
       </div>
     )
   }
 
   return (
-    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-      {accounts.map((account) => (
-        <AccountTile key={`${account.kind}-${account.id}`} account={account} />
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {accounts.map((account, index) => (
+        <AccountCard
+          key={`${account.kind}-${account.id}`}
+          account={account}
+          archivingId={archivingId}
+          index={index}
+          onArchive={onArchive}
+          onEdit={onEdit}
+        />
       ))}
     </div>
   )
 }
 
-function AccountTile({ account }: { account: Account }) {
-  if (account.kind === 'card') {
-    return <BankCardTile account={account} />
-  }
-
-  return <WalletTile account={account} />
-}
-
-function BankCardTile({ account }: { account: Account }) {
-  const bgColor = account.color || '#F472B6'
+function AccountCard({
+  account,
+  archivingId,
+  index,
+  onArchive,
+  onEdit,
+}: {
+  account: Account
+  archivingId?: string | null
+  index: number
+  onArchive?: (account: Account) => void
+  onEdit?: (account: Account) => void
+}) {
+  const isDeleting = archivingId === account.id
+  const primaryColor = account.color || '#F472B6'
+  const secondaryColor = adjustColorBrightness(primaryColor, -25)
 
   return (
-    <article className="animate-fade-in relative flex flex-col overflow-hidden rounded-[2.5rem] border border-pink-50 bg-white p-6 transition-all duration-300 sm:hover:-translate-y-2">
+    <article
+      className="group relative flex flex-col overflow-hidden rounded-[2rem] border border-white/40 bg-white shadow-sm transition-all duration-500 hover:-translate-y-1.5 hover:shadow-2xl"
+      style={{
+        animationDelay: `${index * 60}ms`,
+        boxShadow: `0 4px 24px ${primaryColor}12, 0 1px 3px ${primaryColor}08`,
+      }}
+    >
+      {/* ─── Gradient Header ─── */}
       <div
-        className="relative mb-4 h-48 cursor-pointer overflow-hidden rounded-[2rem] p-6 transition-transform duration-300 sm:hover:scale-[1.02]"
+        className="relative h-32 overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, ${bgColor}, ${bgColor}dd)`,
-          color: account.textColor || '#ffffff',
+          background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 60%, ${adjustColorBrightness(primaryColor, -45)} 100%)`,
         }}
       >
+        {/* SVG pattern overlay */}
+        <KindPattern kind={account.kind} />
+
+        {/* Floating accent orbs */}
         <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-            backgroundSize: '16px 16px',
-          }}
+          className="absolute -right-6 -top-6 h-28 w-28 rounded-full opacity-20 transition-transform duration-700 group-hover:scale-125"
+          style={{ background: `radial-gradient(circle, white 0%, transparent 70%)` }}
         />
-        <div className="absolute right-0 top-0 h-32 w-32 translate-x-10 -translate-y-5 rounded-full bg-white/20 blur-3xl" />
-        <div className="absolute right-6 top-4 opacity-30">
-          <Landmark className="h-10 w-10" aria-hidden="true" />
-        </div>
+        <div
+          className="absolute -bottom-4 -left-4 h-20 w-20 rounded-full opacity-10 transition-transform duration-700 group-hover:scale-110"
+          style={{ background: `radial-gradient(circle, white 0%, transparent 70%)` }}
+        />
 
-        <div className="relative z-10 flex h-full flex-col justify-between">
-          <div className="flex items-start justify-between">
-            <div className="min-w-0">
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-70">
-                {account.accountType === 'credit' ? 'Premium Credit' : 'Bank Debit'}
-              </p>
-              <h3 className="max-w-[150px] truncate text-xl font-bold tracking-tight">
-                {account.name}
-              </h3>
+        {/* Header Content */}
+        <div className="relative z-10 flex h-full flex-col justify-between p-5">
+          {/* Top Row: Kind icon left — Account type badge right */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
+              <KindIconDisplay kind={account.kind} className="h-5 w-5 text-white" />
             </div>
-            <AccountCardChip className="mt-1 h-8 w-10" />
-          </div>
 
-          <div className="mt-auto">
-            <p className="mb-2 text-sm font-mono uppercase tracking-[0.3em] opacity-80">
+            {/* Account Type Badge — top right */}
+            <span
+              className="rounded-full bg-white/15 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm"
+              style={{ color: 'rgba(255,255,255,0.9)' }}
+            >
               {formatAccountType(account.accountType)}
+            </span>
+          </div>
+
+          {/* Account Name + Subtitle */}
+          <div className="min-w-0">
+            <h3 className="truncate text-xl font-black tracking-tight text-white drop-shadow-sm">
+              {account.name}
+            </h3>
+            <p className="mt-0.5 truncate text-xs font-semibold text-white/60">
+              {getAccountSubtitle(account)}
             </p>
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="mb-1 text-[10px] font-bold uppercase tracking-widest opacity-70">
-                  Balance
-                </p>
-                <p className="text-2xl font-black tracking-tight">
-                  {currency.format(account.balance)}
-                </p>
-              </div>
-              <div className="flex flex-col items-end">
-                <CreditCard className="mb-1 h-8 w-8 opacity-20" aria-hidden="true" />
-                <span className="text-[8px] font-black uppercase tracking-widest opacity-60">
-                  VISA / MC
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center justify-end px-2">
-        <div
-          className="h-2.5 w-2.5 animate-pulse rounded-full"
-          style={{ backgroundColor: account.isActive ? '#10B981' : '#EF4444' }}
-        />
+      {/* ─── Card Body ─── */}
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        {/* Balance Display */}
+        <div className="relative overflow-hidden rounded-2xl border border-gray-100/80 bg-gradient-to-br from-gray-50/80 to-white p-4">
+          {/* Subtle decorative sparkline */}
+          <svg
+            className="absolute bottom-0 right-0 h-12 w-24 opacity-[0.06]"
+            viewBox="0 0 100 50"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M0 40 Q 15 10, 30 25 T 60 15 T 90 20 L100 50 L0 50Z"
+              fill={primaryColor}
+            />
+          </svg>
+
+          <div className="relative z-10">
+            <div className="mb-1 flex items-center gap-2">
+              <FaMoneyBillWave
+                className="h-3.5 w-3.5"
+                style={{ color: primaryColor }}
+                aria-hidden="true"
+              />
+              <span className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">
+                Current Balance
+              </span>
+            </div>
+            <p className="text-2xl font-black tracking-tight text-gray-900">
+              {currency.format(account.balance)}
+            </p>
+          </div>
+        </div>
+
+        {/* Footer Row: Status left — Edit/Delete buttons right */}
+        <div className="mt-auto flex items-center justify-between gap-3">
+          {/* Status indicator */}
+          <div className="flex items-center gap-2">
+            <span
+              className="flex h-2 w-2 rounded-full"
+              style={{
+                backgroundColor: isDeleting
+                  ? '#f59e0b'
+                  : account.isActive
+                    ? '#22c55e'
+                    : '#9ca3af',
+                boxShadow: isDeleting
+                  ? '0 0 6px #f59e0b60'
+                  : account.isActive
+                    ? '0 0 6px #22c55e50'
+                    : 'none',
+              }}
+            />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+              {isDeleting ? 'Deleting' : account.isActive ? 'Active' : 'Inactive'}
+            </span>
+          </div>
+
+          {/* Action Buttons — lower right */}
+          <div className="flex items-center gap-1.5">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={() => onEdit(account)}
+                disabled={isDeleting}
+                title="Edit account"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-400 transition-all duration-200 hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600 active:scale-90 disabled:opacity-40"
+                aria-label={`Edit ${account.name}`}
+              >
+                <FaPencil className="h-4 w-4" />
+              </button>
+            )}
+            {onArchive && (
+              <button
+                type="button"
+                onClick={() => onArchive(account)}
+                disabled={isDeleting}
+                title="Delete account"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-400 transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-500 active:scale-90 disabled:opacity-40"
+                aria-label={`Delete ${account.name}`}
+              >
+                <FaTrashCan className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </article>
   )
 }
 
-function WalletTile({ account }: { account: Account }) {
-  const bgColor = account.color || '#FFB6C1'
-  const Icon = account.kind === 'cash' ? Landmark : Wallet
-
-  return (
-    <article className="animate-fade-in relative overflow-hidden rounded-[2.5rem] border border-pink-50 bg-white p-6 transition-all duration-300 sm:hover:-translate-y-2">
-      <div
-        className="relative mb-4 h-48 cursor-pointer overflow-hidden rounded-[2rem] p-6 transition-transform duration-300 sm:hover:scale-[1.02]"
-        style={{
-          background: `linear-gradient(135deg, ${bgColor}, ${bgColor}DD)`,
-          color: account.textColor || '#ffffff',
-        }}
-      >
-        <div className="absolute right-[-10%] top-[-20%] h-40 w-40 animate-pulse rounded-full bg-white/10 blur-3xl" />
-
-        <div className="relative z-10 flex h-full flex-col">
-          <div className="flex items-start justify-between">
-            <div className="min-w-0">
-              <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
-                {account.kind === 'cash' ? 'cash' : account.accountType}
-              </p>
-              <h3 className="truncate text-xl font-bold tracking-tight">
-                {account.name}
-              </h3>
-            </div>
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/30 bg-white/20 p-2 backdrop-blur-md transition-transform duration-300 sm:hover:-rotate-12">
-              <Icon className="h-6 w-6" aria-hidden="true" />
-            </div>
-          </div>
-
-          <div className="mt-auto">
-            <p className="mb-2 max-w-[150px] truncate text-xs font-medium opacity-80">
-              {account.kind === 'cash' ? 'On hand' : formatAccountType(account.accountType)}
-            </p>
-            <div className="flex items-end justify-between">
-              <div>
-                <p className="text-[10px] font-medium uppercase opacity-70">
-                  Balance
-                </p>
-                <p className="text-2xl font-black tracking-tight">
-                  {currency.format(account.balance)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-end px-2">
-        <div
-          className="h-2 w-2 animate-pulse rounded-full"
-          style={{ backgroundColor: account.isActive ? '#10B981' : '#EF4444' }}
-        />
-      </div>
-    </article>
-  )
+/**
+ * Adjusts hex color brightness by the given amount (negative = darker).
+ */
+function adjustColorBrightness(hex: string, amount: number): string {
+  const clean = hex.replace('#', '')
+  const num = parseInt(clean, 16)
+  const r = Math.min(255, Math.max(0, ((num >> 16) & 0xff) + amount))
+  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount))
+  const b = Math.min(255, Math.max(0, (num & 0xff) + amount))
+  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }

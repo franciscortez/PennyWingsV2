@@ -11,12 +11,22 @@ const moneyValue = z.preprocess(
     .min(0, 'Balance cannot be negative.'),
 )
 
+const lastFourSchema = z
+  .string()
+  .trim()
+  .refine((value) => value === '' || /^\d{4}$/.test(value), {
+    message: 'Card suffix must be exactly 4 digits.',
+  })
+  .optional()
+
 export const accountSchema = z
   .object({
+    accountIdentifier: z.string().trim().optional(),
     accountType: z.string().trim().min(1, 'Account type is required.'),
     balance: moneyValue,
     color: z.string().trim().min(1, 'Choose an account color.'),
     kind: z.enum(accountKinds),
+    lastFour: lastFourSchema,
     name: z.string().trim().min(1, 'Account name is required.'),
     textColor: z.string().trim().min(1, 'Choose a text color.'),
   })
@@ -43,3 +53,6 @@ export const accountSchema = z
     message: 'Cash accounts must use the cash type.',
     path: ['accountType'],
   })
+
+export const accountUpdateSchema = accountSchema
+

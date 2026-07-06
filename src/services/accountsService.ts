@@ -1,5 +1,11 @@
 import { supabase } from '@/lib/supabase'
-import type { Account, AccountCreateValues, AccountsData } from '@/types'
+import type {
+  Account,
+  AccountCreateValues,
+  AccountKind,
+  AccountsData,
+  AccountUpdateValues,
+} from '@/types'
 
 type CardRow = {
   balance: number | string | null
@@ -9,10 +15,12 @@ type CardRow = {
   created_at: string
   id: string
   is_active: boolean | null
+  last_four: string | null
   text_color: string | null
 }
 
 type WalletRow = {
+  account_identifier: string | null
   balance: number | string | null
   color: string | null
   created_at: string
@@ -41,11 +49,13 @@ const mapCardAccount = (card: CardRow): Account => ({
   id: card.id,
   isActive: card.is_active !== false,
   kind: 'card',
+  lastFour: card.last_four ?? undefined,
   name: card.card_name,
   textColor: card.text_color ?? '#ffffff',
 })
 
 const mapWalletAccount = (wallet: WalletRow): Account => ({
+  accountIdentifier: wallet.account_identifier ?? undefined,
   accountType: wallet.wallet_type,
   balance: toNumber(wallet.balance),
   color: wallet.color ?? '#ec4899',
@@ -62,7 +72,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     supabase
       .from('bank_cards')
       .select(
-        'id, card_name, card_type, balance, color, text_color, is_active, created_at',
+        'id, card_name, card_type, balance, color, text_color, last_four, is_active, created_at',
       )
       .eq('user_id', userId)
       .eq('is_active', true)
@@ -70,7 +80,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     supabase
       .from('e_wallets')
       .select(
-        'id, wallet_name, wallet_type, balance, color, text_color, is_active, created_at',
+        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, created_at',
       )
       .eq('user_id', userId)
       .eq('is_active', true)
@@ -113,6 +123,7 @@ export const createCardAccount = async (
     card_type: values.accountType,
     color: values.color,
     is_active: true,
+    last_four: values.lastFour || null,
     text_color: values.textColor,
     user_id: userId,
   })
@@ -122,6 +133,7 @@ export const createWalletAccount = async (
   values: AccountCreateValues,
 ) =>
   supabase.from('e_wallets').insert({
+    account_identifier: values.accountIdentifier || null,
     balance: values.balance,
     color: values.color,
     is_active: true,
@@ -138,3 +150,64 @@ export const createAccount = async (
   values.kind === 'card'
     ? createCardAccount(userId, values)
     : createWalletAccount(userId, values)
+
+export const updateAccount = async (
+  userId: string,
+  accountId: string,
+  values: AccountUpdateValues,
+) => {
+  const updatedAt = new Date().toISOString()
+
+  if (values.kind === 'card') {
+    return supabase
+      .from('bank_cards')
+      .update({
+        balance: values.balance,
+        card_name: values.name,
+        card_type: values.accountType,
+        color: values.color,
+        last_four: values.lastFour || null,
+        text_color: values.textColor,
+        updated_at: updatedAt,
+      })
+      .eq('id', accountId)
+      .eq('user_id', userId)
+  }
+
+  return supabase
+    .from('e_wallets')
+    .update({
+      account_identifier: values.accountIdentifier || null,
+      balance: values.balance,
+      color: values.color,
+      text_color: values.textColor,
+      updated_at: updatedAt,
+      wallet_name: values.name,
+      wallet_type: values.accountType,
+    })
+    .eq('id', accountId)
+    .eq('user_id', userId)
+}
+
+export const archiveAccount = async (
+  userId: string,
+  accountId: string,
+  kind: AccountKind,
+) => {
+  const updatedAt = new Date().toISOString()
+
+  if (kind === 'card') {
+    return supabase
+      .from('bank_cards')
+      .update({ is_active: false, updated_at: updatedAt })
+      .eq('id', accountId)
+      .eq('user_id', userId)
+  }
+
+  return supabase
+    .from('e_wallets')
+    .update({ is_active: false, updated_at: updatedAt })
+    .eq('id', accountId)
+    .eq('user_id', userId)
+}
+

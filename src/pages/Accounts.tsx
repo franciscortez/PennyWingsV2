@@ -1,4 +1,4 @@
-import { CreditCard, Grid2X2, Landmark, Wallet } from 'lucide-react'
+import { FaBorderAll, FaBuildingColumns, FaMoneyBillWave, FaWallet } from 'react-icons/fa6'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
@@ -9,21 +9,23 @@ import { alerts } from '@/lib/alert'
 import {
   AccountCreationWizard,
   AccountsListSection,
+  CategoryBalanceCards,
+  EditAccountModal,
   TotalBalanceSection,
 } from '@/sections/accounts'
-import type { Account, AccountCreateValues } from '@/types'
+import type { Account, AccountCreateValues, AccountUpdateValues } from '@/types'
 
 type AccountTab = 'all' | 'cards' | 'wallets' | 'cash'
 
 const tabs: Array<{
-  icon: typeof Grid2X2
+  icon: typeof FaBorderAll
   id: AccountTab
   label: string
 }> = [
-  { id: 'all', label: 'All', icon: Grid2X2 },
-  { id: 'cards', label: 'Cards', icon: CreditCard },
-  { id: 'wallets', label: 'E-Wallet', icon: Wallet },
-  { id: 'cash', label: 'Cash', icon: Landmark },
+  { id: 'all', label: 'All', icon: FaBorderAll },
+  { id: 'cards', label: 'Cards', icon: FaBuildingColumns },
+  { id: 'wallets', label: 'E-Wallet', icon: FaWallet },
+  { id: 'cash', label: 'Cash', icon: FaMoneyBillWave },
 ]
 
 const getTabFromUrl = (value: string | null): AccountTab =>
@@ -48,7 +50,10 @@ export default function Accounts() {
   const {
     accounts,
     addAccount,
+    archiveAccount,
+    archivingId,
     cashCount,
+    editAccount,
     error,
     loading,
     saving,
@@ -57,6 +62,7 @@ export default function Accounts() {
   } = useAccountsData(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
   const [wizardOpen, setWizardOpen] = useState(false)
+  const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const activeTab = getTabFromUrl(searchParams.get('tab'))
 
@@ -82,16 +88,29 @@ export default function Accounts() {
       ),
     [accounts, searchQuery],
   )
-  const filteredWalletsAndCash = useMemo(
-    () => [...walletAccounts, ...cashAccounts],
-    [cashAccounts, walletAccounts],
+  const allFilteredAccounts = useMemo(
+    () => accounts.filter((account) => matchesSearch(account, searchQuery)),
+    [accounts, searchQuery],
   )
   const tabCounts: Record<AccountTab, number> = {
-    all: accounts.filter((account) => matchesSearch(account, searchQuery)).length,
+    all: allFilteredAccounts.length,
     cards: cardAccounts.length,
     cash: cashCount,
     wallets: walletCount,
   }
+
+  const bankBalance = useMemo(
+    () => accounts.filter((a) => a.kind === 'card').reduce((sum, a) => sum + a.balance, 0),
+    [accounts],
+  )
+  const walletBalance = useMemo(
+    () => accounts.filter((a) => a.kind === 'wallet').reduce((sum, a) => sum + a.balance, 0),
+    [accounts],
+  )
+  const cashBalance = useMemo(
+    () => accounts.filter((a) => a.kind === 'cash').reduce((sum, a) => sum + a.balance, 0),
+    [accounts],
+  )
 
   const openWizard = () => {
     setWizardOpen(true)
@@ -100,6 +119,16 @@ export default function Accounts() {
   const closeWizard = () => {
     if (!saving) {
       setWizardOpen(false)
+    }
+  }
+
+  const openEditModal = (account: Account) => {
+    setEditingAccount(account)
+  }
+
+  const closeEditModal = () => {
+    if (!saving) {
+      setEditingAccount(null)
     }
   }
 
@@ -120,6 +149,42 @@ export default function Accounts() {
     return true
   }
 
+  const handleUpdateAccount = async (values: AccountUpdateValues) => {
+    if (!editingAccount) {
+      return false
+    }
+
+    const { error: updateError } = await editAccount(editingAccount.id, values)
+
+    if (updateError) {
+      alerts.error(updateError.message)
+      return false
+    }
+
+    alerts.success('Account updated.')
+    setEditingAccount(null)
+    return true
+  }
+
+  const handleArchiveAccount = async (account: Account) => {
+    const confirmed = await alerts.confirmDelete(
+      'Account',
+      `Delete "${account.name}"? This account will be removed from your active list.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    const { error: archiveError } = await archiveAccount(account.id, account.kind)
+
+    if (archiveError) {
+      alerts.error(archiveError.message)
+    } else {
+      alerts.success('Account deleted.')
+    }
+  }
+
   return (
     <Layout>
       <div className="mb-8">
@@ -135,6 +200,13 @@ export default function Accounts() {
         loading={loading}
         total={totalBalance}
         onAddClick={openWizard}
+      />
+
+      <CategoryBalanceCards
+        bankBalance={bankBalance}
+        cashBalance={cashBalance}
+        loading={loading}
+        walletBalance={walletBalance}
       />
 
       {error ? (
@@ -190,47 +262,47 @@ export default function Accounts() {
       <div className="pb-20">
         <div key={activeTab} className="animate-fade-in">
           {activeTab === 'all' ? (
-            <div className="space-y-12">
-              <AccountSectionHeader icon={CreditCard} title="Bank Cards" />
-              <AccountsListSection
-                accounts={cardAccounts}
-                emptyDescription="Add your first card to start tracking your finances."
-                emptyTitle="No Bank Cards Yet"
-                loading={loading}
-                variant="card"
-              />
-
-              <AccountSectionHeader icon={Wallet} title="Digital Wallets & Cash" />
-              <AccountsListSection
-                accounts={filteredWalletsAndCash}
-                emptyDescription="Add your first wallet or cash balance to manage funds."
-                emptyTitle="No E-Wallets Yet"
-                loading={loading}
-                variant="wallet"
-              />
-            </div>
+            <AccountsListSection
+              accounts={allFilteredAccounts}
+              archivingId={archivingId}
+              emptyDescription="Add your first card, digital wallet, or cash balance to start tracking."
+              emptyTitle="No Accounts Found"
+              loading={loading}
+              onArchive={handleArchiveAccount}
+              onEdit={openEditModal}
+              variant="all"
+            />
           ) : activeTab === 'cards' ? (
             <AccountsListSection
               accounts={cardAccounts}
+              archivingId={archivingId}
               emptyDescription="Add your first card to start tracking your finances."
               emptyTitle="No Bank Cards Yet"
               loading={loading}
+              onArchive={handleArchiveAccount}
+              onEdit={openEditModal}
               variant="card"
             />
           ) : activeTab === 'wallets' ? (
             <AccountsListSection
               accounts={walletAccounts}
+              archivingId={archivingId}
               emptyDescription="Add your first wallet to manage digital funds."
               emptyTitle="No E-Wallets Yet"
               loading={loading}
+              onArchive={handleArchiveAccount}
+              onEdit={openEditModal}
               variant="wallet"
             />
           ) : (
             <AccountsListSection
               accounts={cashAccounts}
+              archivingId={archivingId}
               emptyDescription="Add a cash balance to track money on hand."
               emptyTitle="No Cash Yet"
               loading={loading}
+              onArchive={handleArchiveAccount}
+              onEdit={openEditModal}
               variant="cash"
             />
           )}
@@ -245,25 +317,18 @@ export default function Accounts() {
           onCreate={handleCreateAccount}
         />
       ) : null}
+
+      {editingAccount ? (
+        <EditAccountModal
+          key={editingAccount.id}
+          account={editingAccount}
+          saving={saving}
+          onClose={closeEditModal}
+          onUpdate={handleUpdateAccount}
+        />
+      ) : null}
     </Layout>
   )
 }
 
-function AccountSectionHeader({
-  icon: Icon,
-  title,
-}: {
-  icon: typeof CreditCard
-  title: string
-}) {
-  return (
-    <section>
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-100 text-pink-600">
-          <Icon className="h-4 w-4" aria-hidden="true" />
-        </div>
-        <h3 className="text-xl font-bold text-gray-800">{title}</h3>
-      </div>
-    </section>
-  )
-}
+

@@ -1,0 +1,302 @@
+import { FaCheck, FaXmark } from 'react-icons/fa6'
+import { useState } from 'react'
+import type { FormEvent } from 'react'
+
+import { accountColors, cardTypeOptions, walletTypeOptions } from '@/sections/accounts/accountOptions'
+import type { Account, AccountUpdateValues } from '@/types'
+import { accountUpdateSchema } from '@/validation/accountSchemas'
+
+type EditAccountModalProps = {
+  account: Account
+  saving: boolean
+  onClose: () => void
+  onUpdate: (values: AccountUpdateValues) => Promise<boolean>
+}
+
+const textColorOptions = [
+  { label: 'White', value: '#ffffff' },
+  { label: 'Dark Slate', value: '#0f172a' },
+  { label: 'Soft Pink', value: '#fce7f3' },
+]
+
+export function EditAccountModal({
+  account,
+  onClose,
+  onUpdate,
+  saving,
+}: EditAccountModalProps) {
+  const [name, setName] = useState(account.name)
+  const [accountType, setAccountType] = useState(account.accountType)
+  const [balance, setBalance] = useState(String(account.balance))
+  const [lastFour, setLastFour] = useState(account.lastFour ?? '')
+  const [accountIdentifier, setAccountIdentifier] = useState(
+    account.accountIdentifier ?? '',
+  )
+  const [color, setColor] = useState(account.color || '#F472B6')
+  const [textColor, setTextColor] = useState(account.textColor || '#ffffff')
+  const [errors, setErrors] = useState<Record<string, string>>({})
+
+
+  const isCard = account.kind === 'card'
+  const isCash = account.kind === 'cash'
+
+  const handleSubmit = async (event: FormEvent) => {
+    event.preventDefault()
+
+    const rawValues: AccountUpdateValues = {
+      accountIdentifier: isCard ? undefined : accountIdentifier,
+      accountType: isCash ? 'cash' : accountType,
+      balance: Number(balance),
+      color,
+      kind: account.kind,
+      lastFour: isCard ? lastFour : undefined,
+      name,
+      textColor,
+    }
+
+    const validationResult = accountUpdateSchema.safeParse(rawValues)
+
+    if (!validationResult.success) {
+      const formattedErrors: Record<string, string> = {}
+
+      for (const issue of validationResult.error.issues) {
+        const fieldName = issue.path[0]
+        if (typeof fieldName === 'string' && !formattedErrors[fieldName]) {
+          formattedErrors[fieldName] = issue.message
+        }
+      }
+
+      setErrors(formattedErrors)
+      return
+    }
+
+    setErrors({})
+    await onUpdate(validationResult.data as AccountUpdateValues)
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] bg-white p-6 shadow-2xl sm:p-8">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black tracking-tight text-gray-900">
+              Edit Account
+            </h2>
+            <p className="text-xs font-bold text-gray-400">
+              Update account preferences and details
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={saving}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+          >
+            <FaXmark className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Account Name */}
+          <div>
+            <label
+              htmlFor="account-name-input"
+              className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+            >
+              Account Name
+            </label>
+            <input
+              id="account-name-input"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              placeholder="e.g. BDO Savings, GCash"
+            />
+            {errors.name ? (
+              <p className="mt-1 text-xs font-bold text-red-500">{errors.name}</p>
+            ) : null}
+          </div>
+
+          {/* Account Type */}
+          {!isCash ? (
+            <div>
+              <label
+                htmlFor="account-type-select"
+                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+              >
+                Account Type
+              </label>
+              <select
+                id="account-type-select"
+                value={accountType}
+                onChange={(e) => setAccountType(e.target.value)}
+                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              >
+                {(isCard ? cardTypeOptions : walletTypeOptions).map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              {errors.accountType ? (
+                <p className="mt-1 text-xs font-bold text-red-500">
+                  {errors.accountType}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Balance */}
+          <div>
+            <label
+              htmlFor="account-balance-input"
+              className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+            >
+              Current Balance (₱)
+            </label>
+            <input
+              id="account-balance-input"
+              type="number"
+              step="0.01"
+              value={balance}
+              onChange={(e) => setBalance(e.target.value)}
+              className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+            />
+            {errors.balance ? (
+              <p className="mt-1 text-xs font-bold text-red-500">
+                {errors.balance}
+              </p>
+            ) : null}
+          </div>
+
+          {/* Card Suffix / Wallet Identifier */}
+          {isCard ? (
+            <div>
+              <label
+                htmlFor="last-four-input"
+                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+              >
+                Card Last 4 Digits (Optional)
+              </label>
+              <input
+                id="last-four-input"
+                type="text"
+                maxLength={4}
+                value={lastFour}
+                onChange={(e) => setLastFour(e.target.value.replace(/\D/g, ''))}
+                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+                placeholder="1234"
+              />
+              {errors.lastFour ? (
+                <p className="mt-1 text-xs font-bold text-red-500">
+                  {errors.lastFour}
+                </p>
+              ) : null}
+            </div>
+          ) : !isCash ? (
+            <div>
+              <label
+                htmlFor="account-identifier-input"
+                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+              >
+                Account Identifier (Optional)
+              </label>
+              <input
+                id="account-identifier-input"
+                type="text"
+                value={accountIdentifier}
+                onChange={(e) => setAccountIdentifier(e.target.value)}
+                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+                placeholder="Mobile number or account ID"
+              />
+              {errors.accountIdentifier ? (
+                <p className="mt-1 text-xs font-bold text-red-500">
+                  {errors.accountIdentifier}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+
+          {/* Card Color Palette */}
+          <div>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
+              Account Card Theme
+            </label>
+            <div className="grid grid-cols-8 gap-2">
+              {accountColors.map((colorOption) => (
+                <button
+                  key={colorOption.value}
+                  type="button"
+                  onClick={() => {
+                    setColor(colorOption.value)
+                    if (colorOption.text) {
+                      setTextColor(colorOption.text)
+                    }
+                  }}
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl transition-transform ${colorOption.background} ${
+                    color === colorOption.value ? 'scale-110 ring-4 ring-pink-500/30' : 'hover:scale-105'
+                  }`}
+                >
+                  {color === colorOption.value ? (
+                    <FaCheck
+                      className="h-4 w-4"
+                      style={{ color: colorOption.text || '#ffffff' }}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Text Color Selection */}
+          <div>
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
+              Card Text Color
+            </label>
+            <div className="flex gap-3">
+              {textColorOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setTextColor(option.value)}
+                  className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-bold transition-all ${
+                    textColor === option.value
+                      ? 'border-pink-500 bg-pink-50 text-pink-600'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-pink-200'
+                  }`}
+                >
+                  <span
+                    className="h-3 w-3 rounded-full border border-gray-300"
+                    style={{ backgroundColor: option.value }}
+                  />
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="mt-8 flex items-center justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="rounded-2xl border border-gray-200 px-6 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex items-center justify-center gap-2 rounded-2xl bg-pink-500 px-8 py-3 text-sm font-bold text-white transition hover:bg-pink-600 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}

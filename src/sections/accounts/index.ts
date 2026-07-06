@@ -3,4 +3,7 @@ export { AccountCreationWizard } from '@/sections/accounts/AccountCreationWizard
 export { AccountsHeader } from '@/sections/accounts/AccountsHeader'
 export { AccountsListSection } from '@/sections/accounts/AccountsListSection'
 export { AccountsSummarySection } from '@/sections/accounts/AccountsSummarySection'
+export { CategoryBalanceCards } from '@/sections/accounts/CategoryBalanceCards'
+export { EditAccountModal } from '@/sections/accounts/EditAccountModal'
 export { TotalBalanceSection } from '@/sections/accounts/TotalBalanceSection'
+

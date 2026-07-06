@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 
 import { useAuth } from '@/hooks/useAuth'
+import { alerts } from '@/lib/alert'
 import { AuthShell, TextInput } from '@/sections/auth'
 import { forgotPasswordSchema } from '@/validation/authSchemas'
 import { getZodErrorMessage } from '@/validation/zodError'
@@ -31,14 +32,10 @@ const forgotPasswordFeatures = [
 
 export default function ForgotPassword() {
   const { resetPassword } = useAuth()
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError('')
-    setMessage('')
 
     const formData = new FormData(event.currentTarget)
     const result = forgotPasswordSchema.safeParse({
@@ -46,7 +43,7 @@ export default function ForgotPassword() {
     })
 
     if (!result.success) {
-      setError(getZodErrorMessage(result.error, 'Invalid email address.'))
+      alerts.warning(getZodErrorMessage(result.error, 'Invalid email address.'))
       return
     }
 
@@ -54,9 +51,9 @@ export default function ForgotPassword() {
     const { error: resetError } = await resetPassword(result.data.email)
 
     if (resetError) {
-      setError(resetError.message)
+      alerts.error(resetError.message)
     } else {
-      setMessage('Check your email for password reset instructions.')
+      alerts.success('Check your email for password reset instructions.')
       event.currentTarget.reset()
     }
 
@@ -71,17 +68,6 @@ export default function ForgotPassword() {
       heroDescription="We'll send you a secure link to reset your password and get you back on track with your financial goals."
       features={forgotPasswordFeatures}
     >
-      {error ? (
-        <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      ) : null}
-      {message ? (
-        <div className="mb-6 rounded-lg border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {message}
-        </div>
-      ) : null}
-
       <form className="space-y-5" onSubmit={handleSubmit}>
         <TextInput
           id="forgot-email"

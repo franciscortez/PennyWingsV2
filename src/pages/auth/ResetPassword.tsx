@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 
 import { useAuth } from '@/hooks/useAuth'
+import { alerts } from '@/lib/alert'
 import { AuthShell, PasswordInput } from '@/sections/auth'
 import { resetPasswordSchema } from '@/validation/authSchemas'
 import { getZodErrorMessage } from '@/validation/zodError'
@@ -32,14 +33,10 @@ const resetPasswordFeatures = [
 
 export default function ResetPassword() {
   const { updatePassword } = useAuth()
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError('')
-    setMessage('')
 
     const formData = new FormData(event.currentTarget)
     const result = resetPasswordSchema.safeParse({
@@ -48,7 +45,7 @@ export default function ResetPassword() {
     })
 
     if (!result.success) {
-      setError(getZodErrorMessage(result.error, 'Invalid password.'))
+      alerts.warning(getZodErrorMessage(result.error, 'Invalid password.'))
       return
     }
 
@@ -56,9 +53,9 @@ export default function ResetPassword() {
     const { error: updateError } = await updatePassword(result.data.password)
 
     if (updateError) {
-      setError(updateError.message)
+      alerts.error(updateError.message)
     } else {
-      setMessage('Your password has been updated successfully!')
+      alerts.success('Your password has been updated successfully!')
       event.currentTarget.reset()
     }
 
@@ -75,17 +72,6 @@ export default function ResetPassword() {
       backTo="/login"
       backLabel="Back to Login"
     >
-      {error ? (
-        <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      ) : null}
-      {message ? (
-        <div className="mb-6 rounded-lg border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {message}
-        </div>
-      ) : null}
-
       <form className="space-y-5" onSubmit={handleSubmit}>
         <PasswordInput
           id="reset-password"

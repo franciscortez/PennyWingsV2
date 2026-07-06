@@ -1,0 +1,309 @@
+import { useCallback, useState } from 'react'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+
+import { queryKeys } from '@/lib/queryClient'
+import { fetchAccounts } from '@/services/accountsService'
+import { fetchCategories } from '@/services/categoriesService'
+import {
+  deleteTransaction as deleteTransactionService,
+  emptyTransactionsListData,
+  fetchAccountBalance,
+  fetchTransactions,
+  processTransaction,
+  updateTransaction as updateTransactionService,
+} from '@/services/transactionsService'
+import type {
+  Transaction,
+  TransactionFilterType,
+  TransactionFormValues,
+  TransactionMutationValues,
+} from '@/types'
+
+type UseTransactionsDataOptions = {
+  page: number
+  pageSize: number
+  search: string
+  type: TransactionFilterType
+  userId: string | undefined
+}
+
+const isDeduction = (type: TransactionFormValues['type']) =>
+  type === 'expense' || type === 'withdrawal' || type === 'transfer'
+
+const normalizeDescription = (value: string | undefined) => {
+  const description = value?.trim()
+  return description ? description : null
+}
+
+export function useTransactionsData({
+  page,
+  pageSize,
+  search,
+  type,
+  userId,
+}: UseTransactionsDataOptions) {
+  const [saving, setSaving] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const queryClient = useQueryClient()
+
+  const transactionsQuery = useQuery({
+    enabled: Boolean(userId),
+    placeholderData: keepPreviousData,
+    queryFn: () =>
+      userId
+        ? fetchTransactions({
+            page,
+            pageSize,
+            search,
+            type,
+            userId,
+          })
+        : emptyTransactionsListData,
+    queryKey: queryKeys.transactionsList(userId ?? 'anonymous', {
+      page,
+      pageSize,
+      search,
+      type,
+    }),
+  })
+
+  const categoriesQuery = useQuery({
+    enabled: Boolean(userId),
+    queryFn: () => (userId ? fetchCategories(userId) : []),
+    queryKey: queryKeys.categories(userId ?? 'anonymous'),
+  })
+
+  const accountsQuery = useQuery({
+    enabled: Boolean(userId),
+    queryFn: () => (userId ? fetchAccounts(userId) : null),
+    queryKey: queryKeys.accounts(userId ?? 'anonymous'),
+  })
+
+  const reload = useCallback(async () => {
+    if (!userId) {
+      return
+    }
+
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.transactions(userId),
+    })
+  }, [queryClient, userId])
+
+  const refreshTransactionCaches = useCallback(async () => {
+    if (!userId) {
+      return
+    }
+
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.transactions(userId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.accounts(userId),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.dashboard(userId),
+      }),
+    ])
+  }, [queryClient, userId])
+
+  const listData = transactionsQuery.data ?? emptyTransactionsListData
+  const categories = categoriesQuery.data ?? []
+  const accounts = accountsQuery.data?.accounts ?? []
+  const error =
+    transactionsQuery.error instanceof Error
+      ? transactionsQuery.error.message
+      : categoriesQuery.error instanceof Error
+        ? categoriesQuery.error.message
+        : accountsQuery.error instanceof Error
+          ? accountsQuery.error.message
+          : transactionsQuery.error || categoriesQuery.error || accountsQuery.error
+            ? 'Unable to load transactions.'
+            : null
+
+  const cardAccounts = accounts.filter((account) => account.kind === 'card')
+  const walletAccounts = accounts.filter((account) => account.kind === 'wallet')
+  const cashAccount = accounts.find((account) => account.kind === 'cash') ?? null
+
+  const buildMutationValues = useCallback(
+    (values: TransactionFormValues): TransactionMutationValues => {
+      const cashWalletId = cashAccount?.id ?? null
+
+      if (values.payment_method === 'cash' && !cashWalletId) {
+        throw new Error('Add a cash account before recording cash transactions.')
+      }
+
+      const cardId = values.payment_method === 'card' ? values.card_id ?? null : null
+      const walletId =
+        values.payment_method === 'ewallet'
+          ? values.wallet_id ?? null
+          : values.payment_method === 'cash'
+            ? cashWalletId
+            : null
+      const toCardId =
+        values.type === 'transfer' && values.to_payment_method === 'card'
+          ? values.to_card_id ?? null
+          : null
+      const toWalletId =
+        values.type === 'transfer' && values.to_payment_method === 'ewallet'
+          ? values.to_wallet_id ?? null
+          : null
+
+      return {
+        amount: values.amount,
+        card_id: cardId,
+        category_id: values.category_id,
+        description: normalizeDescription(values.description),
+        payment_method: values.payment_method,
+        to_card_id: toCardId,
+        to_wallet_id: toWalletId,
+        transaction_date: values.transaction_date,
+        type: values.type,
+        wallet_id: walletId,
+      }
+    },
+    [cashAccount?.id],
+  )
+
+  const checkBalance = useCallback(
+    async (values: TransactionMutationValues) => {
+      if (!isDeduction(values.type)) {
+        return
+      }
+
+      const balance = await fetchAccountBalance({
+        card_id: values.card_id,
+        wallet_id: values.wallet_id,
+      })
+
+      if (values.amount > balance) {
+        throw new Error('Insufficient balance.')
+      }
+    },
+    [],
+  )
+
+  const createTransaction = useCallback(
+    async (values: TransactionFormValues) => {
+      if (!userId) {
+        return { error: new Error('No user logged in.') }
+      }
+
+      setSaving(true)
+
+      try {
+        const mutationValues = buildMutationValues(values)
+        await checkBalance(mutationValues)
+
+        const { error: processError } = await processTransaction(mutationValues)
+
+        if (processError) {
+          throw processError
+        }
+
+        await refreshTransactionCaches()
+
+        return { error: null }
+      } catch (transactionError) {
+        return {
+          error:
+            transactionError instanceof Error
+              ? transactionError
+              : new Error('Unable to save transaction.'),
+        }
+      } finally {
+        setSaving(false)
+      }
+    },
+    [buildMutationValues, checkBalance, refreshTransactionCaches, userId],
+  )
+
+  const updateTransaction = useCallback(
+    async (transaction: Transaction, values: TransactionFormValues) => {
+      if (!userId) {
+        return { error: new Error('No user logged in.') }
+      }
+
+      setSaving(true)
+
+      try {
+        const mutationValues = buildMutationValues(values)
+        const { error: updateError } = await updateTransactionService(
+          transaction.id,
+          mutationValues,
+        )
+
+        if (updateError) {
+          throw updateError
+        }
+
+        await refreshTransactionCaches()
+
+        return { error: null }
+      } catch (transactionError) {
+        return {
+          error:
+            transactionError instanceof Error
+              ? transactionError
+              : new Error('Unable to update transaction.'),
+        }
+      } finally {
+        setSaving(false)
+      }
+    },
+    [buildMutationValues, refreshTransactionCaches, userId],
+  )
+
+  const removeTransaction = useCallback(
+    async (transaction: Transaction) => {
+      if (!userId) {
+        return { error: new Error('No user logged in.') }
+      }
+
+      setDeletingId(transaction.id)
+
+      try {
+        const { error: deleteError } = await deleteTransactionService(
+          transaction.id,
+        )
+
+        if (deleteError) {
+          throw deleteError
+        }
+
+        await refreshTransactionCaches()
+
+        return { error: null }
+      } catch (transactionError) {
+        return {
+          error:
+            transactionError instanceof Error
+              ? transactionError
+              : new Error('Unable to delete transaction.'),
+        }
+      } finally {
+        setDeletingId(null)
+      }
+    },
+    [refreshTransactionCaches, userId],
+  )
+
+  return {
+    ...listData,
+    cardAccounts,
+    cashAccount,
+    categories,
+    createTransaction,
+    deletingId,
+    error: userId ? error : null,
+    loading: userId ? transactionsQuery.isLoading : false,
+    optionsLoading: userId
+      ? categoriesQuery.isLoading || accountsQuery.isLoading
+      : false,
+    reload,
+    removeTransaction,
+    saving,
+    updateTransaction,
+    walletAccounts,
+  }
+}

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 
 import { useAuth } from '@/hooks/useAuth'
+import { alerts } from '@/lib/alert'
 import {
   AuthDivider,
   AuthShell,
@@ -39,13 +40,11 @@ const loginFeatures = [
 export default function Login() {
   const { loading: authLoading, signIn, signInWithGoogle } = useAuth()
   const navigate = useNavigate()
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError('')
 
     const formData = new FormData(event.currentTarget)
     const result = loginSchema.safeParse({
@@ -54,7 +53,7 @@ export default function Login() {
     })
 
     if (!result.success) {
-      setError(getZodErrorMessage(result.error, 'Invalid sign in details.'))
+      alerts.warning(getZodErrorMessage(result.error, 'Invalid sign in details.'))
       return
     }
 
@@ -65,7 +64,7 @@ export default function Login() {
     )
 
     if (signInError) {
-      setError(signInError.message)
+      alerts.error(signInError.message)
     } else {
       navigate('/dashboard')
     }
@@ -74,13 +73,12 @@ export default function Login() {
   }
 
   const handleGoogleLogin = async () => {
-    setError('')
     setGoogleLoading(true)
 
     const { error: googleError } = await signInWithGoogle()
 
     if (googleError) {
-      setError(googleError.message)
+      alerts.error(googleError.message)
       setGoogleLoading(false)
     }
   }
@@ -93,12 +91,6 @@ export default function Login() {
       heroDescription="Continue tracking your expenses, managing your budgets, and achieving your financial goals with ease."
       features={loginFeatures}
     >
-      {error ? (
-        <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      ) : null}
-
       <form className="space-y-5" onSubmit={handleSubmit}>
         <TextInput
           id="login-email"

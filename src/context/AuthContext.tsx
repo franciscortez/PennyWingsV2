@@ -10,6 +10,7 @@ import {
 import {
   deleteAccount as deleteAccountService,
   fetchProfile,
+  getCurrentUser,
   getSession,
   onAuthStateChange,
   resetPassword as resetPasswordService,
@@ -26,6 +27,13 @@ import type { AuthContextValue, Profile, ProfileUpdate } from '@/types'
 type AuthProviderProps = {
   children: ReactNode
 }
+
+const MIN_INITIAL_LOADING_MS = 900
+
+const wait = (duration: number) =>
+  new Promise((resolve) => {
+    window.setTimeout(resolve, duration)
+  })
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
@@ -48,39 +56,59 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     let mounted = true
+    let bootstrapping = true
 
-    if (window.location.hash.includes('access_token')) {
-      getSession().then(({ data: { session } }) => {
-        if (!mounted || !session) {
-          return
+    const bootstrapAuth = async () => {
+      const minimumLoader = wait(MIN_INITIAL_LOADING_MS)
+
+      try {
+        if (window.location.hash.includes('access_token')) {
+          const {
+            data: { session },
+          } = await getSession()
+
+          if (session) {
+            window.history.replaceState(null, '', window.location.pathname)
+          }
         }
 
-        setUser(session.user)
-        void loadProfile(session.user.id)
-        window.history.replaceState(null, '', window.location.pathname)
-      })
-    }
+        const {
+          data: { session },
+        } = await getSession()
 
-    getSession()
-      .then(({ data: { session } }) => {
+        let currentUser: User | null = null
+
+        if (session) {
+          const {
+            data: { user: verifiedUser },
+            error,
+          } = await getCurrentUser()
+
+          currentUser = error ? null : verifiedUser
+        }
+
         if (!mounted) {
           return
         }
 
-        const currentUser = session?.user ?? null
         setUser(currentUser)
 
         if (currentUser) {
-          void loadProfile(currentUser.id)
+          await loadProfile(currentUser.id)
         } else {
           setProfile(null)
         }
-      })
-      .finally(() => {
+      } finally {
+        await minimumLoader
+        bootstrapping = false
+
         if (mounted) {
           setLoading(false)
         }
-      })
+      }
+    }
+
+    void bootstrapAuth()
 
     const {
       data: { subscription },
@@ -94,7 +122,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setProfile(null)
       }
 
-      setLoading(false)
+      if (!bootstrapping) {
+        setLoading(false)
+      }
     })
 
     return () => {

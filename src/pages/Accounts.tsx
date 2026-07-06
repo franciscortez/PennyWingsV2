@@ -144,7 +144,7 @@ export default function Accounts() {
       ) : null}
 
       <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row">
-        <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-[2rem] border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm md:w-fit">
+        <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-4xl border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm md:w-fit">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const active = activeTab === tab.id

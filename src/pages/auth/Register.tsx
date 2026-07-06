@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 
 import { useAuth } from '@/hooks/useAuth'
+import { alerts } from '@/lib/alert'
 import {
   AuthDivider,
   AuthShell,
@@ -37,15 +38,11 @@ const signupFeatures = [
 
 export default function Register() {
   const { loading: authLoading, signInWithGoogle, signUp } = useAuth()
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setError('')
-    setMessage('')
 
     const formData = new FormData(event.currentTarget)
     const result = registerSchema.safeParse({
@@ -56,7 +53,7 @@ export default function Register() {
     })
 
     if (!result.success) {
-      setError(getZodErrorMessage(result.error, 'Invalid account details.'))
+      alerts.warning(getZodErrorMessage(result.error, 'Invalid account details.'))
       return
     }
 
@@ -67,9 +64,9 @@ export default function Register() {
     )
 
     if (signUpError) {
-      setError(signUpError.message)
+      alerts.error(signUpError.message)
     } else {
-      setMessage('Account created! Please check your email to confirm your account.')
+      alerts.success('Account created! Please check your email to confirm your account.')
       event.currentTarget.reset()
     }
 
@@ -77,14 +74,12 @@ export default function Register() {
   }
 
   const handleGoogleLogin = async () => {
-    setError('')
-    setMessage('')
     setGoogleLoading(true)
 
     const { error: googleError } = await signInWithGoogle()
 
     if (googleError) {
-      setError(googleError.message)
+      alerts.error(googleError.message)
       setGoogleLoading(false)
     }
   }
@@ -97,17 +92,6 @@ export default function Register() {
       heroDescription="Join thousands of users who are taking control of their finances. Track expenses, set budgets, and achieve your goals."
       features={signupFeatures}
     >
-      {error ? (
-        <div className="mb-6 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
-          {error}
-        </div>
-      ) : null}
-      {message ? (
-        <div className="mb-6 rounded-lg border border-green-100 bg-green-50 px-4 py-3 text-sm text-green-700">
-          {message}
-        </div>
-      ) : null}
-
       <form className="space-y-5" onSubmit={handleSubmit}>
         <TextInput
           id="register-email"

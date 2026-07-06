@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { memo, useCallback, useState } from 'react'
 
+import { alerts } from '@/lib/alert'
 import type { AccountColor, AccountCreateValues } from '@/types'
 import {
   accountColors,
@@ -20,7 +21,6 @@ import { accountSchema } from '@/validation/accountSchemas'
 import { getZodErrorMessage } from '@/validation/zodError'
 
 type AccountCreationWizardProps = {
-  error: string
   hasCashAccount: boolean
   saving: boolean
   onClose: () => void
@@ -67,7 +67,6 @@ const formatProviderValue = (value: string) =>
   value.toLowerCase().replace(/\s+/g, '')
 
 export function AccountCreationWizard({
-  error,
   hasCashAccount,
   onClose,
   onCreate,
@@ -101,6 +100,7 @@ export function AccountCreationWizard({
   const handleStep1Next = () => {
     if (!form.setupType) {
       setFormError('Choose an account type.')
+      alerts.warning('Choose an account type.')
       return
     }
 
@@ -110,6 +110,7 @@ export function AccountCreationWizard({
   const handleStep2Next = () => {
     if (!form.provider) {
       setFormError('Choose a bank or wallet provider.')
+      alerts.warning('Choose a bank or wallet provider.')
       return
     }
 
@@ -162,7 +163,9 @@ export function AccountCreationWizard({
     const result = buildCreateValues()
 
     if (!result.success) {
-      setFormError(getZodErrorMessage(result.error, 'Invalid account details.'))
+      const message = getZodErrorMessage(result.error, 'Invalid account details.')
+      setFormError(message)
+      alerts.warning(message)
       return
     }
 
@@ -174,7 +177,7 @@ export function AccountCreationWizard({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
       <button
         type="button"
         onClick={onClose}
@@ -225,9 +228,9 @@ export function AccountCreationWizard({
             ))}
           </div>
 
-          {formError || error ? (
+          {formError ? (
             <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
-              {formError || error}
+              {formError}
             </div>
           ) : null}
 
@@ -293,7 +296,7 @@ const StepOne = memo(function StepOne({
                 key={type.id}
                 type="button"
                 onClick={() => onSelectType(type.id)}
-                className={`flex flex-col items-center justify-center gap-2 rounded-[2rem] border-2 p-4 text-center transition-all duration-200 active:scale-95 sm:gap-3 sm:p-6 ${
+                className={`flex flex-col items-center justify-center gap-2 rounded-4xl border-2 p-4 text-center transition-all duration-200 active:scale-95 sm:gap-3 sm:p-6 ${
                   active
                     ? 'scale-[1.02] border-pink-500 bg-pink-50'
                     : 'border-transparent bg-pink-50/50 hover:border-pink-200 hover:bg-white'
@@ -321,7 +324,7 @@ const StepOne = memo(function StepOne({
         type="button"
         onClick={onNext}
         disabled={!form.setupType}
-        className="mt-2 w-full rounded-2xl bg-gradient-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-30"
+        className="mt-2 w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-30"
       >
         Continue
       </button>
@@ -381,7 +384,7 @@ const StepTwo = memo(function StepTwo({
         type="button"
         onClick={onNext}
         disabled={!form.provider}
-        className="w-full rounded-2xl bg-gradient-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-30"
+        className="w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-30"
       >
         Continue
       </button>
@@ -454,7 +457,7 @@ const StepThree = memo(function StepThree({
       </div>
 
       <div
-        className="flex h-16 items-center justify-center rounded-[1.5rem] border border-pink-100 text-lg font-bold"
+        className="flex h-16 items-center justify-center rounded-3xl border border-pink-100 text-lg font-bold"
         style={{
           background: `linear-gradient(135deg, ${form.color.value}, ${form.color.value}DD)`,
           color: form.color.text,
@@ -467,7 +470,7 @@ const StepThree = memo(function StepThree({
         type="button"
         onClick={onSubmit}
         disabled={saving}
-        className="w-full rounded-3xl bg-gradient-to-r from-pink-500 to-pink-600 py-5 text-xl font-black text-white transition-all hover:-translate-y-1 disabled:opacity-50"
+        className="w-full rounded-3xl bg-linear-to-r from-pink-500 to-pink-600 py-5 text-xl font-black text-white transition-all hover:-translate-y-1 disabled:opacity-50"
       >
         {saving ? 'Creating...' : 'Finalize Account'}
       </button>

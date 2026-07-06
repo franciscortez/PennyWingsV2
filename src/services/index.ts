@@ -1,4 +1,6 @@
 export * from '@/services/accountsService'
 export * from '@/services/authService'
+export * from '@/services/categoriesService'
 export * from '@/services/dashboardService'
 export * from '@/services/sidebarService'
+export * from '@/services/transactionsService'

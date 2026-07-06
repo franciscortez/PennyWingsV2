@@ -3,7 +3,7 @@ import { PennyWingsMark } from '@/sections/shared'
 export function PageLoader() {
   return (
     <main
-      className="flex min-h-screen min-h-svh flex-col items-center justify-center bg-pink-50 p-4 transition-colors duration-300"
+      className="flex min-h-svh flex-col items-center justify-center bg-pink-50 p-4 transition-colors duration-300"
       aria-label="Loading PennyWings"
     >
       <PennyWingsMark className="mb-6 h-24 w-24 animate-bounce text-pink-500" />

@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router'
 import Layout from '@/components/Layout'
 import { useAccountsData } from '@/hooks/useAccountsData'
 import { useAuth } from '@/hooks/useAuth'
+import { alerts } from '@/lib/alert'
 import {
   AccountCreationWizard,
   AccountsListSection,
@@ -56,7 +57,6 @@ export default function Accounts() {
   } = useAccountsData(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
   const [wizardOpen, setWizardOpen] = useState(false)
-  const [createError, setCreateError] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const activeTab = getTabFromUrl(searchParams.get('tab'))
 
@@ -94,13 +94,11 @@ export default function Accounts() {
   }
 
   const openWizard = () => {
-    setCreateError('')
     setWizardOpen(true)
   }
 
   const closeWizard = () => {
     if (!saving) {
-      setCreateError('')
       setWizardOpen(false)
     }
   }
@@ -110,15 +108,14 @@ export default function Accounts() {
   }
 
   const handleCreateAccount = async (values: AccountCreateValues) => {
-    setCreateError('')
-
     const { error: accountError } = await addAccount(values)
 
     if (accountError) {
-      setCreateError(accountError.message)
+      alerts.error(accountError.message)
       return false
     }
 
+    alerts.success('Account created.')
     setWizardOpen(false)
     return true
   }
@@ -147,7 +144,7 @@ export default function Accounts() {
       ) : null}
 
       <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row">
-        <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-[2rem] border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm md:w-fit">
+        <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-4xl border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm md:w-fit">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const active = activeTab === tab.id
@@ -242,7 +239,6 @@ export default function Accounts() {
 
       {wizardOpen ? (
         <AccountCreationWizard
-          error={createError}
           hasCashAccount={cashCount > 0}
           saving={saving}
           onClose={closeWizard}

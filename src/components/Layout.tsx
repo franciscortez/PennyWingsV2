@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 
 import { useAuth } from '@/hooks/useAuth'
 import { useSidebarInfo } from '@/hooks/useSidebarInfo'
+import { alerts } from '@/lib/alert'
 import { Sidebar } from '@/components/ui'
 
 type LayoutProps = {
@@ -25,8 +26,12 @@ export default function Layout({ children }: LayoutProps) {
     })
   }
 
-  const handleSignOut = () => {
-    void signOut()
+  const handleSignOut = async () => {
+    const confirmed = await alerts.confirmLogout()
+
+    if (confirmed) {
+      void signOut()
+    }
   }
 
   return (

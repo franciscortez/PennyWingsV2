@@ -24,6 +24,20 @@ export type {
   LoginValues,
   RegisterValues,
   ResetPasswordValues,
+  TransactionValidatedValues,
 } from '@/types/forms'
 export type { SidebarInfo, SidebarProfile } from '@/types/sidebar'
+export type {
+  DestinationPaymentMethod,
+  PaymentMethod,
+  Transaction,
+  TransactionAccountRelation,
+  TransactionCategory,
+  TransactionFilterType,
+  TransactionFormValues,
+  TransactionMutationValues,
+  TransactionsListData,
+  TransactionsListParams,
+  TransactionType,
+} from '@/types/transactions'
 export type { AuthFeature, AuthFeatureIcon } from '@/types/ui'

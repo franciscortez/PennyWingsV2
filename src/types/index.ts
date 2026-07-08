@@ -20,6 +20,17 @@ export type {
   DashboardTransaction,
 } from '@/types/dashboard'
 export type {
+  Budget,
+  BudgetFormValues,
+  BudgetPeriod,
+  Goal,
+  GoalFormValues,
+  GoalLinkedAccount,
+  MonitoringCategory,
+  MonitoringData,
+  MonitoringTab,
+} from '@/types/monitoring'
+export type {
   AccountFormValues,
   ForgotPasswordValues,
   LoginValues,

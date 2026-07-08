@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query'
 
-import type { TransactionFilterType } from '@/types'
+import type { MonitoringTab, TransactionFilterType } from '@/types'
 
 const cacheMinutes = 5
 
@@ -21,6 +21,9 @@ export const queryKeys = {
   dashboard: (userId: string) => ['dashboard', userId] as const,
   dashboardData: (userId: string, txLimit: number) =>
     [...queryKeys.dashboard(userId), txLimit] as const,
+  monitoring: (userId: string) => ['monitoring', userId] as const,
+  monitoringData: (userId: string, tab: MonitoringTab) =>
+    [...queryKeys.monitoring(userId), tab] as const,
   transactions: (userId: string) => ['transactions', userId] as const,
   transactionsList: (
     userId: string,

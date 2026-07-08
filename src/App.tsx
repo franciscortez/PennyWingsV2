@@ -7,6 +7,7 @@ import Accounts from '@/pages/Accounts'
 import ComingSoon from '@/pages/ComingSoon'
 import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
+import Monitoring from '@/pages/Monitoring'
 import NotFound from '@/pages/NotFound'
 import Transactions from '@/pages/Transactions'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
@@ -71,7 +72,7 @@ export default function App() {
             path="/monitoring"
             element={
               <ProtectedRoute>
-                <ComingSoon title="Monitoring" />
+                <Monitoring />
               </ProtectedRoute>
             }
           />

@@ -1,8 +1,9 @@
-import { FaPlus } from 'react-icons/fa6'
+import { FaPlus, FaUsers } from 'react-icons/fa6'
 
 type TotalBalanceSectionProps = {
   loading: boolean
   onAddClick: () => void
+  onJoinClick?: () => void
   total: number
 }
 
@@ -15,6 +16,7 @@ const currency = new Intl.NumberFormat('en-PH', {
 export function TotalBalanceSection({
   loading,
   onAddClick,
+  onJoinClick,
   total,
 }: TotalBalanceSectionProps) {
   return (
@@ -35,17 +37,33 @@ export function TotalBalanceSection({
           </h2>
         </div>
 
-        <button
-          type="button"
-          onClick={onAddClick}
-          className="group/add flex items-center justify-center gap-3 whitespace-nowrap rounded-[2rem] bg-white px-8 py-5 text-lg font-black text-pink-600 transition-all hover:-translate-y-1 hover:bg-pink-50 active:scale-95 sm:hover:scale-105"
-        >
-          <span className="rounded-xl bg-pink-100 p-1.5 transition-colors group-hover/add:bg-pink-200">
-            <FaPlus className="h-5 w-5" aria-hidden="true" />
-          </span>
-          Add New Account
-        </button>
+        <div className="flex flex-col gap-3 w-full sm:flex-row sm:w-auto">
+          {onJoinClick ? (
+            <button
+              type="button"
+              onClick={onJoinClick}
+              className="group/join flex w-full sm:w-auto items-center justify-center gap-3 whitespace-nowrap rounded-[2rem] border-2 border-white/30 bg-white/10 px-6 py-5 text-lg font-black text-white backdrop-blur-sm transition-all hover:-translate-y-1 hover:border-white/50 hover:bg-white/20 active:scale-95"
+            >
+              <span className="rounded-xl bg-white/20 p-1.5 transition-colors group-hover/join:bg-white/30">
+                <FaUsers className="h-5 w-5" aria-hidden="true" />
+              </span>
+              Join Account
+            </button>
+          ) : null}
+
+          <button
+            type="button"
+            onClick={onAddClick}
+            className="group/add flex w-full sm:w-auto items-center justify-center gap-3 whitespace-nowrap rounded-[2rem] bg-white px-8 py-5 text-lg font-black text-pink-600 transition-all hover:-translate-y-1 hover:bg-pink-50 active:scale-95 sm:hover:scale-105"
+          >
+            <span className="rounded-xl bg-pink-100 p-1.5 transition-colors group-hover/add:bg-pink-200">
+              <FaPlus className="h-5 w-5" aria-hidden="true" />
+            </span>
+            Add New Account
+          </button>
+        </div>
       </div>
     </section>
   )
 }
+

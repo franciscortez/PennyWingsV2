@@ -13,6 +13,8 @@ import {
   AccountsSkeleton,
   CategoryBalanceCards,
   EditAccountModal,
+  JoinAccountModal,
+  ShareAccountModal,
   TotalBalanceSection,
 } from '@/sections/accounts'
 import type { Account, AccountCreateValues, AccountUpdateValues } from '@/types'
@@ -61,11 +63,14 @@ export default function Accounts() {
     saving,
     totalBalance,
     walletCount,
+    reload,
   } = useAccountsData(user?.id)
   useErrorAlert(error)
   const [searchParams, setSearchParams] = useSearchParams()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
+  const [sharingAccount, setSharingAccount] = useState<Account | null>(null)
+  const [joinModalOpen, setJoinModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const activeTab = getTabFromUrl(searchParams.get('tab'))
 
@@ -211,6 +216,7 @@ export default function Accounts() {
         loading={loading}
         total={totalBalance}
         onAddClick={openWizard}
+        onJoinClick={() => setJoinModalOpen(true)}
       />
 
       <CategoryBalanceCards
@@ -270,39 +276,46 @@ export default function Accounts() {
             <AccountsListSection
               accounts={allFilteredAccounts}
               archivingId={archivingId}
+              currentUserId={user?.id}
               emptyDescription="Add your first card, digital wallet, or cash balance to start tracking."
               emptyTitle="No Accounts Found"
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onShare={(account) => setSharingAccount(account)}
               variant="all"
             />
           ) : activeTab === 'cards' ? (
             <AccountsListSection
               accounts={cardAccounts}
               archivingId={archivingId}
+              currentUserId={user?.id}
               emptyDescription="Add your first card to start tracking your finances."
               emptyTitle="No Bank Cards Yet"
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onShare={(account) => setSharingAccount(account)}
               variant="card"
             />
           ) : activeTab === 'wallets' ? (
             <AccountsListSection
               accounts={walletAccounts}
               archivingId={archivingId}
+              currentUserId={user?.id}
               emptyDescription="Add your first wallet to manage digital funds."
               emptyTitle="No E-Wallets Yet"
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onShare={(account) => setSharingAccount(account)}
               variant="wallet"
             />
           ) : (
             <AccountsListSection
               accounts={cashAccounts}
               archivingId={archivingId}
+              currentUserId={user?.id}
               emptyDescription="Add a cash balance to track money on hand."
               emptyTitle="No Cash Yet"
               loading={loading}
@@ -332,8 +345,24 @@ export default function Accounts() {
           onUpdate={handleUpdateAccount}
         />
       ) : null}
+
+      {sharingAccount ? (
+        <ShareAccountModal
+          key={sharingAccount.id}
+          account={sharingAccount}
+          onClose={() => setSharingAccount(null)}
+        />
+      ) : null}
+
+      {joinModalOpen ? (
+        <JoinAccountModal
+          onClose={() => setJoinModalOpen(false)}
+          onJoined={() => {
+            setJoinModalOpen(false)
+            reload()
+          }}
+        />
+      ) : null}
     </Layout>
   )
 }
-
-

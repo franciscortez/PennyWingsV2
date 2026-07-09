@@ -6,5 +6,7 @@ export { AccountsSkeleton } from '@/sections/accounts/AccountsSkeleton'
 export { AccountsSummarySection } from '@/sections/accounts/AccountsSummarySection'
 export { CategoryBalanceCards } from '@/sections/accounts/CategoryBalanceCards'
 export { EditAccountModal } from '@/sections/accounts/EditAccountModal'
+export { JoinAccountModal } from '@/sections/accounts/JoinAccountModal'
+export { ShareAccountModal } from '@/sections/accounts/ShareAccountModal'
 export { TotalBalanceSection } from '@/sections/accounts/TotalBalanceSection'
 

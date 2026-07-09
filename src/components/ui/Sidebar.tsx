@@ -358,7 +358,7 @@ function MobileMenu({
           <ProfileLinkIndicator />
         </Link>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))' }}>
           {items.map((item) => {
             const Icon = item.icon
 

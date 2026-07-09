@@ -204,13 +204,11 @@ export const fetchDashboardData = async (
     supabase
       .from('bank_cards')
       .select('id, card_name, card_type, balance, color, text_color')
-      .eq('user_id', userId)
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
     supabase
       .from('e_wallets')
       .select('id, wallet_name, wallet_type, balance, color, text_color')
-      .eq('user_id', userId)
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
     supabase
@@ -224,7 +222,6 @@ export const fetchDashboardData = async (
         to_card:bank_cards!transactions_to_card_id_fkey(card_name, color),
         to_wallet:e_wallets!transactions_to_wallet_id_fkey(wallet_name, color)
       `)
-      .eq('user_id', userId)
       .order('transaction_date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(txLimit)
@@ -232,7 +229,6 @@ export const fetchDashboardData = async (
     supabase
       .from('transactions')
       .select('type, amount, category_id')
-      .eq('user_id', userId)
       .gte('transaction_date', start)
       .lte('transaction_date', end),
     supabase

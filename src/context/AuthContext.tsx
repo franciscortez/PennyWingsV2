@@ -8,6 +8,7 @@ import {
 } from 'react'
 
 import {
+  createProfile,
   deleteAccount as deleteAccountService,
   fetchProfile,
   getCurrentUser,
@@ -40,9 +41,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const loadProfile = useCallback(async (userId: string) => {
-    const { data } = await fetchProfile(userId)
-    setProfile(data)
+  const loadProfile = useCallback(async (authUser: User) => {
+    const { data, error } = await fetchProfile(authUser.id)
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    if (data) {
+      setProfile(data)
+    } else {
+      const { data: newProfile, error: createError } = await createProfile(authUser)
+
+      if (!createError && newProfile) {
+        setProfile(newProfile)
+      } else {
+        console.error('Failed to auto-create profile:', createError)
+      }
+    }
   }, [])
 
   const refreshProfile = useCallback(async () => {
@@ -51,7 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return
     }
 
-    await loadProfile(user.id)
+    await loadProfile(user)
   }, [loadProfile, user])
 
   useEffect(() => {
@@ -94,7 +110,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(currentUser)
 
         if (currentUser) {
-          await loadProfile(currentUser.id)
+          await loadProfile(currentUser)
         } else {
           setProfile(null)
         }
@@ -117,7 +133,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(currentUser)
 
       if (currentUser) {
-        void loadProfile(currentUser.id)
+        void loadProfile(currentUser)
       } else {
         setProfile(null)
       }

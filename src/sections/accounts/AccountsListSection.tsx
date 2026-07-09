@@ -2,7 +2,9 @@ import {
   FaBuildingColumns,
   FaMoneyBillWave,
   FaPencil,
+  FaShareNodes,
   FaTrashCan,
+  FaUsers,
   FaWallet,
 } from 'react-icons/fa6'
 
@@ -11,11 +13,13 @@ import type { Account, AccountKind } from '@/types'
 type AccountsListSectionProps = {
   accounts: Account[]
   archivingId?: string | null
+  currentUserId?: string
   emptyDescription: string
   emptyTitle: string
   loading: boolean
   onArchive?: (account: Account) => void
   onEdit?: (account: Account) => void
+  onShare?: (account: Account) => void
   variant: AccountKind | 'all'
 }
 
@@ -119,11 +123,13 @@ function KindPattern({ kind }: { kind: AccountKind }) {
 export function AccountsListSection({
   accounts,
   archivingId,
+  currentUserId,
   emptyDescription,
   emptyTitle,
   loading,
   onArchive,
   onEdit,
+  onShare,
   variant,
 }: AccountsListSectionProps) {
   if (loading) {
@@ -173,9 +179,11 @@ export function AccountsListSection({
           key={`${account.kind}-${account.id}`}
           account={account}
           archivingId={archivingId}
+          currentUserId={currentUserId}
           index={index}
           onArchive={onArchive}
           onEdit={onEdit}
+          onShare={onShare}
         />
       ))}
     </div>
@@ -185,17 +193,23 @@ export function AccountsListSection({
 function AccountCard({
   account,
   archivingId,
+  currentUserId,
   index,
   onArchive,
   onEdit,
+  onShare,
 }: {
   account: Account
   archivingId?: string | null
+  currentUserId?: string
   index: number
   onArchive?: (account: Account) => void
   onEdit?: (account: Account) => void
+  onShare?: (account: Account) => void
 }) {
   const isDeleting = archivingId === account.id
+  const isOwner = !currentUserId || account.userId === currentUserId
+  const isShared = !isOwner
   const primaryColor = account.color || '#F472B6'
   const secondaryColor = adjustColorBrightness(primaryColor, -25)
 
@@ -235,13 +249,23 @@ function AccountCard({
               <KindIconDisplay kind={account.kind} className="h-5 w-5 text-white" />
             </div>
 
-            {/* Account Type Badge — top right */}
-            <span
-              className="rounded-full bg-white/15 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm"
-              style={{ color: 'rgba(255,255,255,0.9)' }}
-            >
-              {formatAccountType(account.accountType)}
-            </span>
+            <div className="flex items-center gap-2">
+              {/* Shared badge */}
+              {isShared ? (
+                <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm text-white/90">
+                  <FaUsers className="h-3 w-3" aria-hidden="true" />
+                  Shared
+                </span>
+              ) : null}
+
+              {/* Account Type Badge */}
+              <span
+                className="rounded-full bg-white/15 px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-widest backdrop-blur-sm"
+                style={{ color: 'rgba(255,255,255,0.9)' }}
+              >
+                {formatAccountType(account.accountType)}
+              </span>
+            </div>
           </div>
 
           {/* Account Name + Subtitle */}
@@ -290,7 +314,7 @@ function AccountCard({
           </div>
         </div>
 
-        {/* Footer Row: Status left — Edit/Delete buttons right */}
+        {/* Footer Row: Status left — Action buttons right */}
         <div className="mt-auto flex items-center justify-between gap-3">
           {/* Status indicator */}
           <div className="flex items-center gap-2">
@@ -316,7 +340,19 @@ function AccountCard({
 
           {/* Action Buttons — lower right */}
           <div className="flex items-center gap-1.5">
-            {onEdit && (
+            {isOwner && onShare && account.kind !== 'cash' && (
+              <button
+                type="button"
+                onClick={() => onShare(account)}
+                disabled={isDeleting}
+                title="Share account"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-400 transition-all duration-200 hover:border-blue-200 hover:bg-blue-50 hover:text-blue-500 active:scale-90 disabled:opacity-40"
+                aria-label={`Share ${account.name}`}
+              >
+                <FaShareNodes className="h-4 w-4" />
+              </button>
+            )}
+            {isOwner && onEdit && (
               <button
                 type="button"
                 onClick={() => onEdit(account)}
@@ -328,7 +364,7 @@ function AccountCard({
                 <FaPencil className="h-4 w-4" />
               </button>
             )}
-            {onArchive && (
+            {isOwner && onArchive && (
               <button
                 type="button"
                 onClick={() => onArchive(account)}

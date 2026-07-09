@@ -1,5 +1,6 @@
 import type { User } from '@supabase/supabase-js'
 
+import type { Tables } from '@/lib/database.types'
 import type {
   resetPassword,
   signIn,
@@ -9,13 +10,7 @@ import type {
   updatePassword,
 } from '@/services/authService'
 
-export type Profile = {
-  id: string
-  full_name: string | null
-  avatar_url: string | null
-  created_at: string
-  updated_at: string
-}
+export type Profile = Tables<'profiles'>
 
 export type ProfileUpdate = Partial<Pick<Profile, 'full_name' | 'avatar_url'>>
 

@@ -1,12 +1,20 @@
 import { supabase } from '@/lib/supabase'
+import type { Tables } from '@/lib/database.types'
 import type { TransactionCategory } from '@/types'
 
-type CategoryRow = {
-  color: string | null
-  icon: string | null
-  id: string
-  name: string
-  type: 'income' | 'expense'
+type CategoryRow = Pick<
+  Tables<'categories'>,
+  'color' | 'icon' | 'id' | 'name' | 'type'
+>
+
+const parseCategoryType = (
+  value: string,
+): TransactionCategory['type'] => {
+  if (value === 'income' || value === 'expense') {
+    return value
+  }
+
+  throw new Error(`Unsupported category type: ${value}`)
 }
 
 export const fetchCategories = async (
@@ -22,12 +30,14 @@ export const fetchCategories = async (
     throw error
   }
 
-  return ((data ?? []) as CategoryRow[]).map((category) => ({
+  const categories: CategoryRow[] = data ?? []
+
+  return categories.map((category) => ({
     color: category.color,
     icon: category.icon,
     id: category.id,
     name: category.name,
-    type: category.type,
+    type: parseCategoryType(category.type),
   }))
 }
 

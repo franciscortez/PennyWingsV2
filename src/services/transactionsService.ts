@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import type { Tables } from '@/lib/database.types'
 import type {
   PaymentMethod,
   Transaction,
@@ -27,7 +28,7 @@ type AccountRelationRow = {
 }
 
 type RawTransactionRow = {
-  amount: number | string
+  amount: Tables<'transactions'>['amount']
   card?: AccountRelationRow | AccountRelationRow[] | null
   card_id: string | null
   category?: TransactionCategory | TransactionCategory[] | null
@@ -46,9 +47,7 @@ type RawTransactionRow = {
   wallet_id: string | null
 }
 
-type BalanceRow = {
-  balance: number | string | null
-}
+type BalanceRow = Pick<Tables<'bank_cards'>, 'balance'>
 
 const firstRelation = <T>(value: T | T[] | null | undefined) =>
   Array.isArray(value) ? (value[0] ?? null) : (value ?? null)
@@ -132,7 +131,10 @@ export const fetchTransactions = async ({
     dataQuery = dataQuery.ilike('description', `%${cleanedSearch}%`)
   }
 
-  const [countResult, dataResult] = await Promise.all([countQuery, dataQuery])
+  const [countResult, dataResult] = await Promise.all([
+    countQuery,
+    dataQuery.overrideTypes<RawTransactionRow[]>(),
+  ])
   const firstError = countResult.error ?? dataResult.error
 
   if (firstError) {
@@ -144,9 +146,7 @@ export const fetchTransactions = async ({
   return {
     totalCount,
     totalPages: Math.ceil(totalCount / pageSize),
-    transactions: ((dataResult.data ?? []) as unknown as RawTransactionRow[]).map(
-      mapTransaction,
-    ),
+    transactions: (dataResult.data ?? []).map(mapTransaction),
   }
 }
 

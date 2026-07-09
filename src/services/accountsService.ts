@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import type { Tables } from '@/lib/database.types'
 import type {
   Account,
   AccountCreateValues,
@@ -7,29 +8,31 @@ import type {
   AccountUpdateValues,
 } from '@/types'
 
-type CardRow = {
-  balance: number | string | null
-  card_name: string
-  card_type: string
-  color: string | null
-  created_at: string
-  id: string
-  is_active: boolean | null
-  last_four: string | null
-  text_color: string | null
-}
+type CardRow = Pick<
+  Tables<'bank_cards'>,
+  | 'balance'
+  | 'card_name'
+  | 'card_type'
+  | 'color'
+  | 'created_at'
+  | 'id'
+  | 'is_active'
+  | 'last_four'
+  | 'text_color'
+>
 
-type WalletRow = {
-  account_identifier: string | null
-  balance: number | string | null
-  color: string | null
-  created_at: string
-  id: string
-  is_active: boolean | null
-  text_color: string | null
-  wallet_name: string
-  wallet_type: string
-}
+type WalletRow = Pick<
+  Tables<'e_wallets'>,
+  | 'account_identifier'
+  | 'balance'
+  | 'color'
+  | 'created_at'
+  | 'id'
+  | 'is_active'
+  | 'text_color'
+  | 'wallet_name'
+  | 'wallet_type'
+>
 
 export const emptyAccountsData: AccountsData = {
   accounts: [],
@@ -93,8 +96,8 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     throw firstError
   }
 
-  const cards = (cardsResult.data ?? []) as CardRow[]
-  const wallets = (walletsResult.data ?? []) as WalletRow[]
+  const cards: CardRow[] = cardsResult.data ?? []
+  const wallets: WalletRow[] = walletsResult.data ?? []
   const walletAccounts = wallets.map(mapWalletAccount)
   const accounts = [
     ...cards.map(mapCardAccount),
@@ -162,7 +165,6 @@ export const updateAccount = async (
     return supabase
       .from('bank_cards')
       .update({
-        balance: values.balance,
         card_name: values.name,
         card_type: values.accountType,
         color: values.color,
@@ -178,7 +180,6 @@ export const updateAccount = async (
     .from('e_wallets')
     .update({
       account_identifier: values.accountIdentifier || null,
-      balance: values.balance,
       color: values.color,
       text_color: values.textColor,
       updated_at: updatedAt,

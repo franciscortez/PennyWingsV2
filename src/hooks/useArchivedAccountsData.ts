@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AppError } from '@/lib/errors'
 import { queryKeys } from '@/lib/queryClient'
 import {
+  deleteArchivedAccount as deleteArchivedAccountService,
   emptyAccountsData,
   fetchArchivedAccounts,
   restoreAccount as restoreAccountService,
@@ -57,6 +58,23 @@ export function useArchivedAccountsData(userId: string | undefined) {
     onSuccess: refreshAccountCaches,
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: async ({
+      accountId,
+      kind,
+    }: {
+      accountId: string
+      kind: AccountKind
+    }) => {
+      if (!userId) {
+        throw new Error('No user logged in.')
+      }
+
+      await deleteArchivedAccountService(userId, accountId, kind)
+    },
+    onSuccess: refreshAccountCaches,
+  })
+
   const restoreAccount = useCallback(
     async (accountId: string, kind: AccountKind) => {
       try {
@@ -69,6 +87,20 @@ export function useArchivedAccountsData(userId: string | undefined) {
     [restoreMutation],
   )
 
+  const deleteArchivedAccount = useCallback(
+    async (accountId: string, kind: AccountKind) => {
+      try {
+        await deleteMutation.mutateAsync({ accountId, kind })
+        return { error: null }
+      } catch (error) {
+        return {
+          error: AppError.from(error, 'Unable to permanently delete account.'),
+        }
+      }
+    },
+    [deleteMutation],
+  )
+
   const error =
     archivedAccountsQuery.error instanceof Error
       ? archivedAccountsQuery.error.message
@@ -79,6 +111,10 @@ export function useArchivedAccountsData(userId: string | undefined) {
 
   return {
     ...(userId ? data : emptyAccountsData),
+    deleteArchivedAccount,
+    deletingId: deleteMutation.isPending
+      ? (deleteMutation.variables?.accountId ?? null)
+      : null,
     error: userId ? error : null,
     loading: userId ? archivedAccountsQuery.isLoading : false,
     restoreAccount,

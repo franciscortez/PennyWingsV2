@@ -1,4 +1,4 @@
-import { ArrowLeft, CreditCard, RotateCcw, Wallet } from 'lucide-react'
+import { ArrowLeft, CreditCard, RotateCcw, Trash2, Wallet } from 'lucide-react'
 import { Link } from 'react-router'
 
 import Layout from '@/components/Layout'
@@ -38,6 +38,8 @@ export default function ArchivedAccounts() {
   const { user } = useAuth()
   const {
     accounts,
+    deleteArchivedAccount,
+    deletingId,
     error,
     loading,
     restoreAccount,
@@ -69,6 +71,28 @@ export default function ArchivedAccounts() {
       alerts.error(restoreError.message)
     } else {
       alerts.success('Account restored.')
+    }
+  }
+
+  const handleDelete = async (account: Account) => {
+    const confirmed = await alerts.confirmDelete(
+      'Archived Account',
+      `Permanently delete "${account.name}"? This removes the account record and cannot be undone.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    const { error: deleteError } = await deleteArchivedAccount(
+      account.id,
+      account.kind,
+    )
+
+    if (deleteError) {
+      alerts.error(deleteError.message)
+    } else {
+      alerts.success('Account permanently deleted.')
     }
   }
 
@@ -114,7 +138,9 @@ export default function ArchivedAccounts() {
               <ArchivedAccountCard
                 key={`${account.kind}-${account.id}`}
                 account={account}
+                deleting={deletingId === account.id}
                 restoring={restoringId === account.id}
+                onDelete={handleDelete}
                 onRestore={handleRestore}
               />
             ))}
@@ -129,10 +155,14 @@ export default function ArchivedAccounts() {
 
 function ArchivedAccountCard({
   account,
+  deleting,
+  onDelete,
   onRestore,
   restoring,
 }: {
   account: Account
+  deleting: boolean
+  onDelete: (account: Account) => void
   onRestore: (account: Account) => void
   restoring: boolean
 }) {
@@ -167,15 +197,26 @@ function ArchivedAccountCard({
         </p>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onRestore(account)}
-        disabled={restoring}
-        className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-2xl bg-pink-500 px-5 py-3 text-sm font-black text-white transition hover:bg-pink-600 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
-      >
-        <RotateCcw className="h-4 w-4" aria-hidden="true" />
-        {restoring ? 'Restoring...' : 'Restore'}
-      </button>
+      <div className="flex shrink-0 flex-col gap-2 sm:w-36">
+        <button
+          type="button"
+          onClick={() => onRestore(account)}
+          disabled={restoring || deleting}
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-pink-500 px-5 py-3 text-sm font-black text-white transition hover:bg-pink-600 active:scale-95 disabled:pointer-events-none disabled:opacity-60"
+        >
+          <RotateCcw className="h-4 w-4" aria-hidden="true" />
+          {restoring ? 'Restoring...' : 'Restore'}
+        </button>
+        <button
+          type="button"
+          onClick={() => onDelete(account)}
+          disabled={restoring || deleting}
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-rose-100 bg-rose-50 px-5 py-3 text-sm font-black text-rose-600 transition hover:border-rose-200 hover:bg-rose-100 active:scale-95 disabled:pointer-events-none disabled:opacity-60 dark:border-rose-950/40 dark:bg-rose-950/20 dark:text-rose-400 dark:hover:bg-rose-950/30"
+        >
+          <Trash2 className="h-4 w-4" aria-hidden="true" />
+          {deleting ? 'Deleting...' : 'Delete'}
+        </button>
+      </div>
     </article>
   )
 }

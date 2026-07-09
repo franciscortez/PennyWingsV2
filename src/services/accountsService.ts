@@ -309,3 +309,52 @@ export const restoreAccount = async (
   if (error) throw AppError.from(error)
 }
 
+export const deleteArchivedAccount = async (
+  userId: string,
+  accountId: string,
+  kind: AccountKind,
+) => {
+  const resourceType = kind === 'card' ? 'bank_card' : 'e_wallet'
+
+  const [membershipsResult, invitesResult] = await Promise.all([
+    supabase
+      .from('account_memberships')
+      .delete()
+      .eq('resource_type', resourceType)
+      .eq('resource_id', accountId),
+    supabase
+      .from('joint_account_invites')
+      .delete()
+      .eq('resource_type', resourceType)
+      .eq('resource_id', accountId)
+      .eq('owner_id', userId),
+  ])
+
+  const cleanupError = membershipsResult.error ?? invitesResult.error
+
+  if (cleanupError) {
+    throw AppError.from(cleanupError)
+  }
+
+  if (kind === 'card') {
+    const { error } = await supabase
+      .from('bank_cards')
+      .delete()
+      .eq('id', accountId)
+      .eq('user_id', userId)
+      .eq('is_active', false)
+
+    if (error) throw AppError.from(error)
+    return
+  }
+
+  const { error } = await supabase
+    .from('e_wallets')
+    .delete()
+    .eq('id', accountId)
+    .eq('user_id', userId)
+    .eq('is_active', false)
+
+  if (error) throw AppError.from(error)
+}
+

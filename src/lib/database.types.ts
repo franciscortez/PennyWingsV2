@@ -398,31 +398,31 @@ export type Database = {
       process_transaction: {
         Args: {
           p_amount: number
-          p_card_id?: string | null
+          p_card_id?: string
           p_category_id: string
-          p_description: string | null
+          p_description: string
           p_payment_method: string
-          p_to_card_id?: string | null
-          p_to_wallet_id?: string | null
+          p_to_card_id?: string
+          p_to_wallet_id?: string
           p_transaction_date: string
           p_type: string
           p_user_id?: string
-          p_wallet_id?: string | null
+          p_wallet_id?: string
         }
         Returns: Json
       }
       process_transaction_checked: {
         Args: {
           p_amount: number
-          p_card_id: string | null
+          p_card_id: string
           p_category_id: string
-          p_description: string | null
+          p_description: string
           p_payment_method: string
-          p_to_card_id: string | null
-          p_to_wallet_id: string | null
+          p_to_card_id: string
+          p_to_wallet_id: string
           p_transaction_date: string
           p_type: string
-          p_wallet_id: string | null
+          p_wallet_id: string
         }
         Returns: undefined
       }
@@ -459,16 +459,48 @@ export type Database = {
       update_transaction: {
         Args: {
           p_amount: number
-          p_card_id?: string | null
+          p_card_id?: string
           p_category_id: string
-          p_description: string | null
+          p_description: string
           p_id: string
           p_payment_method: string
-          p_to_card_id?: string | null
-          p_to_wallet_id?: string | null
+          p_to_card_id?: string
+          p_to_wallet_id?: string
           p_transaction_date: string
           p_type: string
-          p_wallet_id?: string | null
+          p_wallet_id?: string
+        }
+        Returns: undefined
+      }
+      update_transaction_checked: {
+        Args: {
+          p_amount: number
+          p_card_id: string
+          p_category_id: string
+          p_description: string
+          p_id: string
+          p_payment_method: string
+          p_to_card_id: string
+          p_to_wallet_id: string
+          p_transaction_date: string
+          p_type: string
+          p_wallet_id: string
+        }
+        Returns: undefined
+      }
+      update_transaction_legacy: {
+        Args: {
+          p_amount: number
+          p_card_id?: string
+          p_category_id: string
+          p_description: string
+          p_id: string
+          p_payment_method: string
+          p_to_card_id?: string
+          p_to_wallet_id?: string
+          p_transaction_date: string
+          p_type: string
+          p_wallet_id?: string
         }
         Returns: undefined
       }

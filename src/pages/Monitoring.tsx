@@ -12,6 +12,7 @@ import {
   GoalModal,
   GoalsPanel,
   MonitoringHeader,
+  MonitoringSkeleton,
   MonitoringSummarySection,
   MonitoringTabs,
   type ModalMode,
@@ -63,6 +64,14 @@ export default function Monitoring() {
     () => goals.filter((goal) => goal.linkedAccount).length,
     [goals],
   )
+
+  if (loading) {
+    return (
+      <Layout>
+        <MonitoringSkeleton />
+      </Layout>
+    )
+  }
 
   const openCreateBudgetModal = () => {
     setBudgetModal({ mode: 'create', budget: null })

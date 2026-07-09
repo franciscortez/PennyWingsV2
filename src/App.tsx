@@ -78,14 +78,6 @@ export default function App() {
             }
           />
           <Route
-            path="/calculator"
-            element={
-              <ProtectedRoute>
-                <ComingSoon title="Calculator" />
-              </ProtectedRoute>
-            }
-          />
-          <Route
             path="/login"
             element={
               <PublicRoute>

@@ -1,5 +1,6 @@
 export { CardsSection } from '@/sections/dashboard/CardsSection'
 export { DashboardHeader } from '@/sections/dashboard/DashboardHeader'
+export { DashboardSkeleton } from '@/sections/dashboard/DashboardSkeleton'
 export { DashboardShell } from '@/sections/dashboard/DashboardShell'
 export { MiniStatsSection } from '@/sections/dashboard/MiniStatsSection'
 export { ProgressOverviewSection } from '@/sections/dashboard/ProgressOverviewSection'

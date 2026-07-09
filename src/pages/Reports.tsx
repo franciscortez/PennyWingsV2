@@ -10,6 +10,7 @@ import {
   CashFlowOverviewSection,
   CategoryAllocationSection,
   ReportsHeader,
+  ReportsSkeleton,
   ReportSummarySection,
   SavedReportsSection,
 } from '@/sections/reports'
@@ -32,6 +33,14 @@ export default function Reports() {
     [reports, selectedMonth],
   )
 
+  if (loading) {
+    return (
+      <Layout>
+        <ReportsSkeleton />
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="space-y-9 pb-20">
@@ -40,9 +49,7 @@ export default function Reports() {
           selectedMonth={selectedMonth}
         />
 
-        {loading ? (
-          <ReportsSkeleton />
-        ) : selectedReport ? (
+        {selectedReport ? (
           <>
             <ReportSummarySection report={selectedReport} />
             <section className="grid grid-cols-1 gap-7 xl:grid-cols-5">
@@ -92,24 +99,5 @@ function EmptyReport({
         </p>
       </div>
     </section>
-  )
-}
-
-function ReportsSkeleton() {
-  return (
-    <div className="animate-pulse space-y-7" aria-label="Loading reports">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }, (_, index) => (
-          <div
-            key={index}
-            className="h-36 rounded-[2rem] border border-pink-50 bg-white"
-          />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-7 xl:grid-cols-5">
-        <div className="h-[34rem] rounded-[2.5rem] bg-white xl:col-span-3" />
-        <div className="h-[34rem] rounded-[2.5rem] bg-white xl:col-span-2" />
-      </div>
-    </div>
   )
 }

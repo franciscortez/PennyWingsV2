@@ -1,6 +1,6 @@
 import { BarChart3, RefreshCw } from 'lucide-react'
 
-import { currentMonthInput } from '@/sections/reports/reportFormat'
+import { ReportMonthPicker } from '@/sections/reports/ReportMonthPicker'
 
 type ReportsHeaderProps = {
   onMonthChange: (month: string) => void
@@ -32,17 +32,7 @@ export function ReportsHeader({
           <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
           Updates automatically
         </span>
-        <label className="sr-only" htmlFor="report-month">
-          Report month
-        </label>
-        <input
-          id="report-month"
-          type="month"
-          max={currentMonthInput()}
-          value={selectedMonth}
-          onChange={(event) => onMonthChange(event.target.value)}
-          className="rounded-[1.5rem] border border-pink-100 bg-white px-5 py-3.5 text-sm font-black text-gray-700 outline-none transition focus:border-pink-400 focus:ring-4 focus:ring-pink-500/10"
-        />
+        <ReportMonthPicker value={selectedMonth} onChange={onMonthChange} />
       </div>
     </header>
   )

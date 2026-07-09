@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { Tables } from '@/lib/database.types'
+import type { Database, Tables } from '@/lib/database.types'
 import { AppError } from '@/lib/errors'
 import type {
   PaymentMethod,
@@ -49,6 +49,12 @@ type RawTransactionRow = {
 }
 
 type BalanceRow = Pick<Tables<'bank_cards'>, 'balance'>
+
+type ProcessTransactionArgs =
+  Database['public']['Functions']['process_transaction_checked']['Args']
+
+type UpdateTransactionArgs =
+  Database['public']['Functions']['update_transaction_checked']['Args']
 
 const firstRelation = <T>(value: T | T[] | null | undefined) =>
   Array.isArray(value) ? (value[0] ?? null) : (value ?? null)
@@ -186,7 +192,12 @@ export const fetchAccountBalance = async (
 }
 
 export const processTransaction = async (values: TransactionMutationValues) => {
-  const { error } = await supabase.rpc('process_transaction_checked', {
+  /*
+   * PostgreSQL does not expose function-argument nullability to the type
+   * generator. These account IDs and the description intentionally use SQL
+   * NULL when they do not apply to a transaction.
+   */
+  const args = {
     p_amount: values.amount,
     p_card_id: values.card_id,
     p_category_id: values.category_id,
@@ -197,7 +208,8 @@ export const processTransaction = async (values: TransactionMutationValues) => {
     p_transaction_date: values.transaction_date,
     p_type: values.type,
     p_wallet_id: values.wallet_id,
-  })
+  } as unknown as ProcessTransactionArgs
+  const { error } = await supabase.rpc('process_transaction_checked', args)
 
   if (error) throw AppError.from(error)
 }
@@ -206,7 +218,7 @@ export const updateTransaction = async (
   id: string,
   values: TransactionMutationValues,
 ) => {
-  const { error } = await supabase.rpc('update_transaction', {
+  const args = {
     p_amount: values.amount,
     p_card_id: values.card_id,
     p_category_id: values.category_id,
@@ -218,7 +230,8 @@ export const updateTransaction = async (
     p_transaction_date: values.transaction_date,
     p_type: values.type,
     p_wallet_id: values.wallet_id,
-  })
+  } as unknown as UpdateTransactionArgs
+  const { error } = await supabase.rpc('update_transaction_checked', args)
 
   if (error) throw AppError.from(error)
 }

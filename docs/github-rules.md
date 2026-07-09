@@ -61,3 +61,11 @@ style(home): adjust hero section spacing and gradient colors
 5. `git commit -m "<type>(<scope>): <short description>"`
 
 Branch name mirrors the commit message slug: `feat/accounts-page-and-initial-loader`
+
+---
+
+## After Merge Cleanup (run this after a PR is merged on GitHub)
+
+1. `git checkout main`
+2. `git pull`
+3. `git branch -d <branch-name>`

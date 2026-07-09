@@ -1,6 +1,12 @@
-import { useCallback, useState } from 'react'
-import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useCallback } from 'react'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 
+import { AppError } from '@/lib/errors'
 import { queryKeys } from '@/lib/queryClient'
 import { fetchAccounts } from '@/services/accountsService'
 import { fetchCategories } from '@/services/categoriesService'
@@ -42,8 +48,6 @@ export function useTransactionsData({
   type,
   userId,
 }: UseTransactionsDataOptions) {
-  const [saving, setSaving] = useState(false)
-  const [deletingId, setDeletingId] = useState<string | null>(null)
   const queryClient = useQueryClient()
 
   const transactionsQuery = useQuery({
@@ -183,109 +187,88 @@ export function useTransactionsData({
     [],
   )
 
+  const createMutation = useMutation({
+    mutationFn: async (values: TransactionFormValues) => {
+      if (!userId) {
+        throw new Error('No user logged in.')
+      }
+
+      const mutationValues = buildMutationValues(values)
+      await checkBalance(mutationValues)
+      await processTransaction(mutationValues)
+    },
+    onSuccess: refreshTransactionCaches,
+  })
+
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      transaction,
+      values,
+    }: {
+      transaction: Transaction
+      values: TransactionFormValues
+    }) => {
+      if (!userId) {
+        throw new Error('No user logged in.')
+      }
+
+      const mutationValues = buildMutationValues(values)
+      await updateTransactionService(transaction.id, mutationValues)
+    },
+    onSuccess: refreshTransactionCaches,
+  })
+
+  const deleteMutation = useMutation({
+    mutationFn: async (transaction: Transaction) => {
+      if (!userId) {
+        throw new Error('No user logged in.')
+      }
+
+      await deleteTransactionService(transaction.id)
+    },
+    onSuccess: refreshTransactionCaches,
+  })
+
   const createTransaction = useCallback(
     async (values: TransactionFormValues) => {
-      if (!userId) {
-        return { error: new Error('No user logged in.') }
-      }
-
-      setSaving(true)
-
       try {
-        const mutationValues = buildMutationValues(values)
-        await checkBalance(mutationValues)
-
-        const { error: processError } = await processTransaction(mutationValues)
-
-        if (processError) {
-          throw processError
-        }
-
-        await refreshTransactionCaches()
-
+        await createMutation.mutateAsync(values)
         return { error: null }
-      } catch (transactionError) {
+      } catch (error) {
         return {
-          error:
-            transactionError instanceof Error
-              ? transactionError
-              : new Error('Unable to save transaction.'),
+          error: AppError.from(error, 'Unable to save transaction.'),
         }
-      } finally {
-        setSaving(false)
       }
     },
-    [buildMutationValues, checkBalance, refreshTransactionCaches, userId],
+    [createMutation],
   )
 
   const updateTransaction = useCallback(
     async (transaction: Transaction, values: TransactionFormValues) => {
-      if (!userId) {
-        return { error: new Error('No user logged in.') }
-      }
-
-      setSaving(true)
-
       try {
-        const mutationValues = buildMutationValues(values)
-        const { error: updateError } = await updateTransactionService(
-          transaction.id,
-          mutationValues,
-        )
-
-        if (updateError) {
-          throw updateError
-        }
-
-        await refreshTransactionCaches()
-
+        await updateMutation.mutateAsync({ transaction, values })
         return { error: null }
-      } catch (transactionError) {
+      } catch (error) {
         return {
-          error:
-            transactionError instanceof Error
-              ? transactionError
-              : new Error('Unable to update transaction.'),
+          error: AppError.from(error, 'Unable to update transaction.'),
         }
-      } finally {
-        setSaving(false)
       }
     },
-    [buildMutationValues, refreshTransactionCaches, userId],
+    [updateMutation],
   )
 
   const removeTransaction = useCallback(
     async (transaction: Transaction) => {
-      if (!userId) {
-        return { error: new Error('No user logged in.') }
-      }
-
-      setDeletingId(transaction.id)
-
       try {
-        const { error: deleteError } = await deleteTransactionService(
-          transaction.id,
-        )
-
-        if (deleteError) {
-          throw deleteError
-        }
-
-        await refreshTransactionCaches()
-
+        await deleteMutation.mutateAsync(transaction)
         return { error: null }
-      } catch (transactionError) {
+      } catch (error) {
         return {
-          error:
-            transactionError instanceof Error
-              ? transactionError
-              : new Error('Unable to delete transaction.'),
+          error: AppError.from(error, 'Unable to delete transaction.'),
         }
-      } finally {
-        setDeletingId(null)
       }
     },
-    [refreshTransactionCaches, userId],
+    [deleteMutation],
   )
 
   return {
@@ -294,7 +277,9 @@ export function useTransactionsData({
     cashAccount,
     categories,
     createTransaction,
-    deletingId,
+    deletingId: deleteMutation.isPending
+      ? (deleteMutation.variables?.id ?? null)
+      : null,
     error: userId ? error : null,
     loading: userId ? transactionsQuery.isLoading : false,
     optionsLoading: userId
@@ -302,7 +287,7 @@ export function useTransactionsData({
       : false,
     reload,
     removeTransaction,
-    saving,
+    saving: createMutation.isPending || updateMutation.isPending,
     updateTransaction,
     walletAccounts,
   }

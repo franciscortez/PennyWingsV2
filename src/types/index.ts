@@ -41,8 +41,11 @@ export type {
 } from '@/types/reports'
 export type {
   AccountFormValues,
+  ChangePasswordFormValues,
+  DeleteAccountFormValues,
   ForgotPasswordValues,
   LoginValues,
+  ProfileDetailsFormValues,
   RegisterValues,
   ResetPasswordValues,
   TransactionValidatedValues,

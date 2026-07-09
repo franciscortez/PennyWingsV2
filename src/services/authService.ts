@@ -86,21 +86,27 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate) =>
     .select()
     .single<Profile>()
 
-export const deleteAccount = async (user: User, password: string) => {
+export const deleteAccount = async (user: User, password?: string) => {
   if (!user.email) {
     return { data: null, error: new Error('User email is required.') }
   }
 
-  if (!password) {
-    return { data: null, error: new Error('Password is required for deletion.') }
-  }
+  const isGoogle =
+    user.app_metadata?.provider === 'google' ||
+    user.identities?.some((id) => id.provider === 'google')
 
-  const { error: reauthError } = await signIn(user.email, password)
+  if (!isGoogle) {
+    if (!password) {
+      return { data: null, error: new Error('Password is required for deletion.') }
+    }
 
-  if (reauthError) {
-    return {
-      data: null,
-      error: new Error('Incorrect password. Please try again.'),
+    const { error: reauthError } = await signIn(user.email, password)
+
+    if (reauthError) {
+      return {
+        data: null,
+        error: new Error('Incorrect password. Please try again.'),
+      }
     }
   }
 

@@ -23,7 +23,7 @@ export type AuthContextValue = {
   user: User | null
   profile: Profile | null
   loading: boolean
-  deleteAccount: (password: string) => AuthResult
+  deleteAccount: (password?: string) => AuthResult
   refreshProfile: () => Promise<void>
   resetPassword: typeof resetPassword
   signIn: typeof signIn

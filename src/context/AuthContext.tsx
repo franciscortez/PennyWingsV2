@@ -167,7 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   )
 
   const deleteAccount = useCallback(
-    async (password: string) => {
+    async (password?: string) => {
       if (!user) {
         return { data: null, error: new Error('No user logged in.') }
       }

@@ -5,6 +5,7 @@ import PublicRoute from '@/components/PublicRoute'
 import { AuthProvider } from '@/context/AuthContext'
 import { ThemeProvider } from '@/context/ThemeContext'
 import Accounts from '@/pages/Accounts'
+import ArchivedAccounts from '@/pages/ArchivedAccounts'
 import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
 import Monitoring from '@/pages/Monitoring'
@@ -44,6 +45,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Accounts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/accounts/archive"
+            element={
+              <ProtectedRoute>
+                <ArchivedAccounts />
               </ProtectedRoute>
             }
           />

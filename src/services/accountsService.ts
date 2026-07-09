@@ -123,6 +123,52 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
   }
 }
 
+export const fetchArchivedAccounts = async (
+  userId: string,
+): Promise<AccountsData> => {
+  if (!userId) {
+    return emptyAccountsData
+  }
+
+  const [cardsResult, walletsResult] = await Promise.all([
+    supabase
+      .from('bank_cards')
+      .select(
+        'id, card_name, card_type, balance, color, text_color, last_four, is_active, created_at, user_id',
+      )
+      .eq('user_id', userId)
+      .eq('is_active', false)
+      .order('updated_at', { ascending: false }),
+    supabase
+      .from('e_wallets')
+      .select(
+        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, created_at, user_id',
+      )
+      .eq('user_id', userId)
+      .eq('is_active', false)
+      .order('updated_at', { ascending: false }),
+  ])
+
+  const firstError = cardsResult.error ?? walletsResult.error
+
+  if (firstError) {
+    throw firstError
+  }
+
+  const cards: CardRow[] = cardsResult.data ?? []
+  const wallets: WalletRow[] = walletsResult.data ?? []
+  const walletAccounts = wallets.map(mapWalletAccount)
+  const accounts = [...cards.map(mapCardAccount), ...walletAccounts]
+
+  return {
+    accounts,
+    cardCount: cards.length,
+    cashCount: walletAccounts.filter((account) => account.kind === 'cash').length,
+    totalBalance: accounts.reduce((sum, account) => sum + account.balance, 0),
+    walletCount: walletAccounts.filter((account) => account.kind === 'wallet').length,
+  }
+}
+
 export const createCardAccount = async (
   userId: string,
   values: AccountCreateValues,
@@ -230,6 +276,33 @@ export const archiveAccount = async (
   const { error } = await supabase
     .from('e_wallets')
     .update({ is_active: false, updated_at: updatedAt })
+    .eq('id', accountId)
+    .eq('user_id', userId)
+
+  if (error) throw AppError.from(error)
+}
+
+export const restoreAccount = async (
+  userId: string,
+  accountId: string,
+  kind: AccountKind,
+) => {
+  const updatedAt = new Date().toISOString()
+
+  if (kind === 'card') {
+    const { error } = await supabase
+      .from('bank_cards')
+      .update({ is_active: true, updated_at: updatedAt })
+      .eq('id', accountId)
+      .eq('user_id', userId)
+
+    if (error) throw AppError.from(error)
+    return
+  }
+
+  const { error } = await supabase
+    .from('e_wallets')
+    .update({ is_active: true, updated_at: updatedAt })
     .eq('id', accountId)
     .eq('user_id', userId)
 

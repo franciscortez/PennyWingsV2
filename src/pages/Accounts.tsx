@@ -1,6 +1,6 @@
 import { FaBorderAll, FaBuildingColumns, FaMoneyBillWave, FaWallet } from 'react-icons/fa6'
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import Layout from '@/components/Layout'
 import { useAccountsData } from '@/hooks/useAccountsData'
@@ -203,13 +203,21 @@ export default function Accounts() {
 
   return (
     <Layout>
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-          My Accounts
-        </h1>
-        <p className="text-gray-500 dark:text-slate-400">
-          Manage your bank cards and digital wallets in one place.
-        </p>
+      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
+            My Accounts
+          </h1>
+          <p className="text-gray-500 dark:text-slate-400">
+            Manage your bank cards and digital wallets in one place.
+          </p>
+        </div>
+        <Link
+          to="/accounts/archive"
+          className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-pink-100 bg-white px-5 py-3 text-sm font-black text-pink-600 transition hover:border-pink-200 hover:bg-pink-50 dark:border-slate-800 dark:bg-slate-900 dark:text-pink-400 dark:hover:bg-slate-800"
+        >
+          Archived Accounts
+        </Link>
       </div>
 
       <TotalBalanceSection

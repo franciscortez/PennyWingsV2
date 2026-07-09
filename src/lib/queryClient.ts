@@ -17,6 +17,7 @@ export const queryClient = new QueryClient({
 
 export const queryKeys = {
   accounts: (userId: string) => ['accounts', userId] as const,
+  archivedAccounts: (userId: string) => ['accounts', userId, 'archived'] as const,
   categories: (userId: string) => ['categories', userId] as const,
   dashboard: (userId: string) => ['dashboard', userId] as const,
   dashboardData: (userId: string, txLimit: number) =>

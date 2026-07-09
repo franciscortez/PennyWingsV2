@@ -19,40 +19,67 @@ const lastFourSchema = z
   })
   .optional()
 
-export const accountSchema = z
-  .object({
-    accountIdentifier: z.string().trim().optional(),
-    accountType: z.string().trim().min(1, 'Account type is required.'),
-    balance: moneyValue,
-    color: z.string().trim().min(1, 'Choose an account color.'),
-    kind: z.enum(accountKinds),
-    lastFour: lastFourSchema,
-    name: z.string().trim().min(1, 'Account name is required.'),
-    textColor: z.string().trim().min(1, 'Choose a text color.'),
-  })
-  .refine(
-    (data) =>
-      data.kind === 'wallet' ||
-      data.kind === 'cash' ||
-      cardTypes.includes(data.accountType as (typeof cardTypes)[number]),
-    {
+const accountDetailsShape = {
+  accountIdentifier: z.string().trim().optional(),
+  accountType: z.string().trim().min(1, 'Account type is required.'),
+  color: z.string().trim().min(1, 'Choose an account color.'),
+  kind: z.enum(accountKinds),
+  lastFour: lastFourSchema,
+  name: z.string().trim().min(1, 'Account name is required.'),
+  textColor: z.string().trim().min(1, 'Choose a text color.'),
+}
+
+type AccountDetails = {
+  accountType: string
+  kind: (typeof accountKinds)[number]
+}
+
+const validateAccountType = (
+  data: AccountDetails,
+  context: z.RefinementCtx,
+) => {
+  const validCardType =
+    data.kind === 'wallet' ||
+    data.kind === 'cash' ||
+    cardTypes.includes(data.accountType as (typeof cardTypes)[number])
+
+  if (!validCardType) {
+    context.addIssue({
+      code: 'custom',
       message: 'Choose a valid card type.',
       path: ['accountType'],
-    },
-  )
-  .refine(
-    (data) =>
-      data.kind === 'card' ||
-      walletTypes.includes(data.accountType as (typeof walletTypes)[number]),
-    {
+    })
+  }
+
+  const validWalletType =
+    data.kind === 'card' ||
+    walletTypes.includes(data.accountType as (typeof walletTypes)[number])
+
+  if (!validWalletType) {
+    context.addIssue({
+      code: 'custom',
       message: 'Choose a valid wallet type.',
       path: ['accountType'],
-    },
-  )
-  .refine((data) => data.kind !== 'cash' || data.accountType === 'cash', {
-    message: 'Cash accounts must use the cash type.',
-    path: ['accountType'],
-  })
+    })
+  }
 
-export const accountUpdateSchema = accountSchema
+  if (data.kind === 'cash' && data.accountType !== 'cash') {
+    context.addIssue({
+      code: 'custom',
+      message: 'Cash accounts must use the cash type.',
+      path: ['accountType'],
+    })
+  }
+}
+
+export const accountSchema = z
+  .object({
+    ...accountDetailsShape,
+    balance: moneyValue,
+  })
+  .superRefine(validateAccountType)
+
+export const accountUpdateSchema = z
+  .object(accountDetailsShape)
+  .superRefine(validateAccountType)
 

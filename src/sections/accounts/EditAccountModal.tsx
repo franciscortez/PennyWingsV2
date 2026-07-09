@@ -27,7 +27,6 @@ export function EditAccountModal({
 }: EditAccountModalProps) {
   const [name, setName] = useState(account.name)
   const [accountType, setAccountType] = useState(account.accountType)
-  const [balance, setBalance] = useState(String(account.balance))
   const [lastFour, setLastFour] = useState(account.lastFour ?? '')
   const [accountIdentifier, setAccountIdentifier] = useState(
     account.accountIdentifier ?? '',
@@ -46,7 +45,6 @@ export function EditAccountModal({
     const rawValues: AccountUpdateValues = {
       accountIdentifier: isCard ? undefined : accountIdentifier,
       accountType: isCash ? 'cash' : accountType,
-      balance: Number(balance),
       color,
       kind: account.kind,
       lastFour: isCard ? lastFour : undefined,
@@ -146,29 +144,6 @@ export function EditAccountModal({
               ) : null}
             </div>
           ) : null}
-
-          {/* Balance */}
-          <div>
-            <label
-              htmlFor="account-balance-input"
-              className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
-            >
-              Current Balance (₱)
-            </label>
-            <input
-              id="account-balance-input"
-              type="number"
-              step="0.01"
-              value={balance}
-              onChange={(e) => setBalance(e.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
-            />
-            {errors.balance ? (
-              <p className="mt-1 text-xs font-bold text-red-500">
-                {errors.balance}
-              </p>
-            ) : null}
-          </div>
 
           {/* Card Suffix / Wallet Identifier */}
           {isCard ? (

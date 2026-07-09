@@ -32,16 +32,7 @@ export type AccountCreateValues = {
   textColor: string
 }
 
-export type AccountUpdateValues = {
-  accountIdentifier?: string
-  accountType: string
-  balance: number
-  color: string
-  kind: AccountKind
-  lastFour?: string
-  name: string
-  textColor: string
-}
+export type AccountUpdateValues = Omit<AccountCreateValues, 'balance'>
 
 export type AccountsData = {
   accounts: Account[]

@@ -220,7 +220,8 @@ export const fetchMonitoringData = async (
           'id, category_id, limit_amount, period, created_at, category:categories(id, name, type, icon, color)',
         )
         .eq('user_id', userId)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .overrideTypes<RawBudgetRow[]>(),
       supabase
         .from('goals')
         .select(
@@ -230,7 +231,8 @@ export const fetchMonitoringData = async (
           linked_wallet:e_wallets!goals_linked_wallet_id_fkey(id, wallet_name, wallet_type, balance, color, is_active)`,
         )
         .eq('user_id', userId)
-        .order('created_at', { ascending: false }),
+        .order('created_at', { ascending: false })
+        .overrideTypes<RawGoalRow[]>(),
       supabase
         .from('categories')
         .select('id, name, type, icon, color')
@@ -257,12 +259,10 @@ export const fetchMonitoringData = async (
   }
 
   const expenses = (expensesResult.data ?? []) as ExpenseTransactionRow[]
-  const budgets = ((budgetsResult.data ?? []) as unknown as RawBudgetRow[]).map(
-    (budget) => mapBudget(budget, expenses),
+  const budgets = (budgetsResult.data ?? []).map((budget) =>
+    mapBudget(budget, expenses),
   )
-  const goals = ((goalsResult.data ?? []) as unknown as RawGoalRow[]).map(
-    mapGoal,
-  )
+  const goals = (goalsResult.data ?? []).map(mapGoal)
   const budgetSpentTotal = budgets.reduce(
     (sum, budget) => sum + budget.spentAmount,
     0,

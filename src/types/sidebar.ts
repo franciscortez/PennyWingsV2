@@ -1,8 +1,9 @@
-export type SidebarProfile = {
-  id: string
-  full_name: string | null
-  avatar_url: string | null
-}
+import type { Tables } from '@/lib/database.types'
+
+export type SidebarProfile = Pick<
+  Tables<'profiles'>,
+  'avatar_url' | 'full_name' | 'id'
+>
 
 export type SidebarInfo = {
   avatarUrl: string | null

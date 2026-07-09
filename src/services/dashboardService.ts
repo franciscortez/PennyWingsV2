@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import type { Tables } from '@/lib/database.types'
 import type {
   DashboardAccount,
   DashboardData,
@@ -6,41 +7,27 @@ import type {
   DashboardTransaction,
 } from '@/types'
 
-type CardRow = {
-  id: string
-  card_name: string
-  card_type: string | null
-  balance: number | string | null
-  color: string | null
-  text_color: string | null
-}
+type CardRow = Pick<
+  Tables<'bank_cards'>,
+  'balance' | 'card_name' | 'card_type' | 'color' | 'id' | 'text_color'
+>
 
-type WalletRow = {
-  id: string
-  wallet_name: string
-  wallet_type: string | null
-  balance: number | string | null
-  color: string | null
-  text_color: string | null
-}
+type WalletRow = Pick<
+  Tables<'e_wallets'>,
+  'balance' | 'color' | 'id' | 'text_color' | 'wallet_name' | 'wallet_type'
+>
 
-type MonthTransactionRow = {
-  amount: number | string | null
-  category_id: string | null
-  type: string
-}
+type MonthTransactionRow = Pick<
+  Tables<'transactions'>,
+  'amount' | 'category_id' | 'type'
+>
 
-type BudgetRow = {
-  category_id: string
-  limit_amount: number | string | null
-}
+type BudgetRow = Pick<Tables<'budgets'>, 'category_id' | 'limit_amount'>
 
-type GoalRow = {
-  current_amount: number | string | null
-  linked_card_id: string | null
-  linked_wallet_id: string | null
-  target_amount: number | string | null
-}
+type GoalRow = Pick<
+  Tables<'goals'>,
+  'current_amount' | 'linked_card_id' | 'linked_wallet_id' | 'target_amount'
+>
 
 type RawDashboardTransaction = DashboardTransaction & {
   category?: DashboardTransaction['category'] | DashboardTransaction['category'][]
@@ -238,7 +225,8 @@ export const fetchDashboardData = async (
       .eq('user_id', userId)
       .order('transaction_date', { ascending: false })
       .order('created_at', { ascending: false })
-      .limit(txLimit),
+      .limit(txLimit)
+      .overrideTypes<RawDashboardTransaction[]>(),
     supabase
       .from('transactions')
       .select('type, amount, category_id')
@@ -267,19 +255,20 @@ export const fetchDashboardData = async (
     throw firstError
   }
 
-  const cards = (cardsResult.data ?? []) as CardRow[]
-  const wallets = (walletsResult.data ?? []) as WalletRow[]
-  const monthTransactions = (monthTransactionsResult.data ??
-    []) as MonthTransactionRow[]
-  const budgets = (budgetsResult.data ?? []) as BudgetRow[]
-  const goals = (goalsResult.data ?? []) as GoalRow[]
+  const cards: CardRow[] = cardsResult.data ?? []
+  const wallets: WalletRow[] = walletsResult.data ?? []
+  const monthTransactions: MonthTransactionRow[] =
+    monthTransactionsResult.data ?? []
+  const budgets: BudgetRow[] = budgetsResult.data ?? []
+  const goals: GoalRow[] = goalsResult.data ?? []
   const accounts = [
     ...cards.map(mapCardAccount),
     ...wallets.map(mapWalletAccount),
   ]
   const monthlyStats = getMonthlyStats(monthTransactions)
-  const transactions = ((transactionsResult.data ?? []) as unknown as RawDashboardTransaction[])
-    .map(mapDashboardTransaction)
+  const transactions = (transactionsResult.data ?? []).map(
+    mapDashboardTransaction,
+  )
 
   return {
     accounts,

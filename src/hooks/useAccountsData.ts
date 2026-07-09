@@ -41,6 +41,9 @@ export function useAccountsData(userId: string | undefined) {
         queryKey: queryKeys.accounts(userId),
       }),
       queryClient.invalidateQueries({
+        queryKey: queryKeys.archivedAccounts(userId),
+      }),
+      queryClient.invalidateQueries({
         queryKey: queryKeys.dashboard(userId),
       }),
       queryClient.invalidateQueries({

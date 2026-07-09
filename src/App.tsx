@@ -4,13 +4,13 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import PublicRoute from '@/components/PublicRoute'
 import { AuthProvider } from '@/context/AuthContext'
 import Accounts from '@/pages/Accounts'
-import ComingSoon from '@/pages/ComingSoon'
 import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
 import Monitoring from '@/pages/Monitoring'
 import NotFound from '@/pages/NotFound'
 import Reports from '@/pages/Reports'
 import Transactions from '@/pages/Transactions'
+import Profile from '@/pages/Profile'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
 import Login from '@/pages/auth/Login'
 import Register from '@/pages/auth/Register'
@@ -57,7 +57,7 @@ export default function App() {
             path="/profile"
             element={
               <ProtectedRoute>
-                <ComingSoon title="Profile" />
+                <Profile />
               </ProtectedRoute>
             }
           />

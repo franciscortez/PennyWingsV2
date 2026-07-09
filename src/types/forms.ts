@@ -13,6 +13,12 @@ import type {
 } from '@/validation/monitoringSchemas'
 import type { transactionSchema } from '@/validation/transactionSchemas'
 
+import type {
+  profileDetailsSchema,
+  changePasswordSchema,
+  deleteAccountFormSchema,
+} from '@/validation/profileSchemas'
+
 export type AccountFormValues = z.infer<typeof accountSchema>
 export type BudgetValidatedValues = z.infer<typeof budgetSchema>
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordAuthSchema>
@@ -21,3 +27,7 @@ export type LoginValues = z.infer<typeof loginAuthSchema>
 export type RegisterValues = z.infer<typeof registerAuthSchema>
 export type ResetPasswordValues = z.infer<typeof resetPasswordAuthSchema>
 export type TransactionValidatedValues = z.infer<typeof transactionSchema>
+
+export type ProfileDetailsFormValues = z.infer<typeof profileDetailsSchema>
+export type ChangePasswordFormValues = z.infer<typeof changePasswordSchema>
+export type DeleteAccountFormValues = z.infer<typeof deleteAccountFormSchema>

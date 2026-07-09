@@ -23,7 +23,7 @@ export function AccountCardChip({
         <path d="M66 0 V80" stroke="black" strokeWidth="1" />
         <rect x="33" y="20" width="34" height="40" stroke="black" strokeWidth="1" />
       </svg>
-      <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent" />
+      <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/30 to-transparent" />
     </div>
   )
 }

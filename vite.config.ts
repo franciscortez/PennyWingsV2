@@ -10,4 +10,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  server: {
+    allowedHosts: ["stepanie-truceless-absentmindedly.ngrok-free.dev"],
+  },
 });

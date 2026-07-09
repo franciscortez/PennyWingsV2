@@ -1,4 +1,0 @@
-ALTER TABLE bank_cards ADD COLUMN IF NOT EXISTS last_four TEXT;
-ALTER TABLE e_wallets ADD COLUMN IF NOT EXISTS account_identifier TEXT;
-ALTER TABLE transactions ADD COLUMN IF NOT EXISTS receipt_url TEXT;
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;;

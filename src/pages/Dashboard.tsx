@@ -5,6 +5,7 @@ import { useErrorAlert } from '@/hooks/useErrorAlert'
 import {
   CardsSection,
   DashboardHeader,
+  DashboardSkeleton,
   MiniStatsSection,
   ProgressOverviewSection,
   RecentActivitySection,
@@ -22,6 +23,14 @@ export default function Dashboard() {
     transactions,
   } = useDashboardData(user?.id)
   useErrorAlert(error)
+
+  if (loading) {
+    return (
+      <Layout>
+        <DashboardSkeleton />
+      </Layout>
+    )
+  }
 
   const savingsRate =
     monthlyStats.income > 0

@@ -7,7 +7,11 @@ import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useTransactionsData } from '@/hooks/useTransactionsData'
 import { alerts } from '@/lib/alert'
-import { TransactionForm, TransactionsTable } from '@/sections/transactions'
+import {
+  TransactionForm,
+  TransactionsSkeleton,
+  TransactionsTable,
+} from '@/sections/transactions'
 import type {
   Transaction,
   TransactionFilterType,
@@ -83,6 +87,14 @@ export default function Transactions() {
       setPage(1, true)
     }
   }, [loading, page, setPage, totalPages])
+
+  if (loading) {
+    return (
+      <Layout>
+        <TransactionsSkeleton />
+      </Layout>
+    )
+  }
 
   const setFilterType = (type: TransactionFilterType) => {
     setSearchParams((current) => {
@@ -178,7 +190,7 @@ export default function Transactions() {
           <button
             type="button"
             onClick={openCreateForm}
-            className="flex items-center justify-center gap-2 rounded-[2rem] bg-pink-500 px-8 py-4 font-black text-white transition hover:bg-pink-600"
+            className="flex items-center justify-center gap-2 rounded-4xl bg-pink-500 px-8 py-4 font-black text-white transition hover:bg-pink-600"
           >
             <Plus className="h-5 w-5" aria-hidden="true" />
             New Transaction

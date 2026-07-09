@@ -10,6 +10,7 @@ import { alerts } from '@/lib/alert'
 import {
   AccountCreationWizard,
   AccountsListSection,
+  AccountsSkeleton,
   CategoryBalanceCards,
   EditAccountModal,
   TotalBalanceSection,
@@ -113,6 +114,14 @@ export default function Accounts() {
     () => accounts.filter((a) => a.kind === 'cash').reduce((sum, a) => sum + a.balance, 0),
     [accounts],
   )
+
+  if (loading) {
+    return (
+      <Layout>
+        <AccountsSkeleton />
+      </Layout>
+    )
+  }
 
   const openWizard = () => {
     setWizardOpen(true)

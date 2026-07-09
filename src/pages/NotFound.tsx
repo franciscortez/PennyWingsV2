@@ -34,7 +34,7 @@ export default function NotFound() {
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-500 text-white">
             <PennyWingsMark className="h-7 w-7" />
           </span>
-          <span className="bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-lg font-black text-transparent">
+          <span className="bg-linear-to-r from-pink-600 to-pink-500 bg-clip-text text-lg font-black text-transparent">
             PennyWings
           </span>
         </AppButton>
@@ -66,7 +66,7 @@ function NotFoundPanel({
   onBack: () => void
 }) {
   return (
-    <section className="animate-fade-in relative z-10 w-full max-w-3xl rounded-[2rem] border border-pink-100 bg-white p-6 text-center shadow-2xl shadow-pink-100/70 md:p-10">
+    <section className="animate-fade-in relative z-10 w-full max-w-3xl rounded-4xl border border-pink-100 bg-white p-6 text-center shadow-2xl shadow-pink-100/70 md:p-10">
       <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-pink-50 text-pink-600">
         <Compass className="h-10 w-10" aria-hidden="true" />
       </div>

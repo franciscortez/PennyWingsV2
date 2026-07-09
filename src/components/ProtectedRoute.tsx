@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Navigate } from 'react-router'
 
 import { PageLoader } from '@/components/ui'
+import { ThemeProvider } from '@/context/ThemeContext'
 import { useAuth } from '@/hooks/useAuth'
 
 type ProtectedRouteProps = {
@@ -12,12 +13,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { loading, user } = useAuth()
 
   if (loading) {
-    return <PageLoader />
+    return (
+      <ThemeProvider>
+        <PageLoader />
+      </ThemeProvider>
+    )
   }
 
   if (!user) {
     return <Navigate to="/login" replace />
   }
 
-  return children
+  return <ThemeProvider>{children}</ThemeProvider>
 }

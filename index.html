@@ -8,12 +8,23 @@
     <script>
       ;(() => {
         try {
+          const publicPaths = new Set([
+            '/',
+            '/forgot-password',
+            '/login',
+            '/register',
+            '/reset-password',
+            '/signup',
+          ])
+          const isPublicPath = publicPaths.has(window.location.pathname)
           const savedTheme = localStorage.getItem('theme')
           const prefersDark = window.matchMedia(
             '(prefers-color-scheme: dark)',
           ).matches
           const theme =
-            savedTheme === 'light' || savedTheme === 'dark'
+            isPublicPath
+              ? 'light'
+              : savedTheme === 'light' || savedTheme === 'dark'
               ? savedTheme
               : prefersDark
                 ? 'dark'

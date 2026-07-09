@@ -108,6 +108,9 @@ export function useTransactionsData({
       queryClient.invalidateQueries({
         queryKey: queryKeys.dashboard(userId),
       }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.reports(userId),
+      }),
     ])
   }, [queryClient, userId])
 

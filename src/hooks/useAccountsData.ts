@@ -43,6 +43,9 @@ export function useAccountsData(userId: string | undefined) {
       queryClient.invalidateQueries({
         queryKey: queryKeys.dashboard(userId),
       }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.reports(userId),
+      }),
     ])
   }, [queryClient, userId])
 

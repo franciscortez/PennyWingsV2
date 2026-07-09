@@ -1,6 +1,7 @@
 import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useDashboardData } from '@/hooks/useDashboardData'
+import { useErrorAlert } from '@/hooks/useErrorAlert'
 import {
   CardsSection,
   DashboardHeader,
@@ -20,6 +21,7 @@ export default function Dashboard() {
     totalBalance,
     transactions,
   } = useDashboardData(user?.id)
+  useErrorAlert(error)
 
   const savingsRate =
     monthlyStats.income > 0
@@ -35,12 +37,6 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-10">
         <DashboardHeader />
-
-        {error ? (
-          <div className="rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-bold text-red-600">
-            {error}
-          </div>
-        ) : null}
 
         <CardsSection
           loading={loading}

@@ -74,12 +74,10 @@ export function AccountCreationWizard({
 }: AccountCreationWizardProps) {
   const [step, setStep] = useState<Step>(1)
   const [form, setForm] = useState<WizardForm>(initialForm)
-  const [formError, setFormError] = useState('')
 
   const handleFieldChange = useCallback(
     <TField extends keyof WizardForm>(field: TField, value: WizardForm[TField]) => {
       setForm((current) => ({ ...current, [field]: value }))
-      setFormError('')
     },
     [],
   )
@@ -92,14 +90,12 @@ export function AccountCreationWizard({
         provider: '',
         setupType,
       }))
-      setFormError('')
     },
     [],
   )
 
   const handleStep1Next = () => {
     if (!form.setupType) {
-      setFormError('Choose an account type.')
       alerts.warning('Choose an account type.')
       return
     }
@@ -109,17 +105,14 @@ export function AccountCreationWizard({
 
   const handleStep2Next = () => {
     if (!form.provider) {
-      setFormError('Choose a bank or wallet provider.')
       alerts.warning('Choose a bank or wallet provider.')
       return
     }
 
-    setFormError('')
     setStep(3)
   }
 
   const handleBack = () => {
-    setFormError('')
     setStep((current) => {
       if (current === 3 && form.setupType === 'cash') {
         return 1
@@ -164,7 +157,6 @@ export function AccountCreationWizard({
 
     if (!result.success) {
       const message = getZodErrorMessage(result.error, 'Invalid account details.')
-      setFormError(message)
       alerts.warning(message)
       return
     }
@@ -227,12 +219,6 @@ export function AccountCreationWizard({
               </div>
             ))}
           </div>
-
-          {formError ? (
-            <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
-              {formError}
-            </div>
-          ) : null}
 
           <div key={step} className="animate-fade-in">
             {step === 1 ? (

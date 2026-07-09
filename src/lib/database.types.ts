@@ -398,31 +398,31 @@ export type Database = {
       process_transaction: {
         Args: {
           p_amount: number
-          p_card_id?: string
+          p_card_id?: string | null
           p_category_id: string
-          p_description: string
+          p_description: string | null
           p_payment_method: string
-          p_to_card_id?: string
-          p_to_wallet_id?: string
+          p_to_card_id?: string | null
+          p_to_wallet_id?: string | null
           p_transaction_date: string
           p_type: string
           p_user_id?: string
-          p_wallet_id?: string
+          p_wallet_id?: string | null
         }
         Returns: Json
       }
       process_transaction_checked: {
         Args: {
           p_amount: number
-          p_card_id: string
+          p_card_id: string | null
           p_category_id: string
-          p_description: string
+          p_description: string | null
           p_payment_method: string
-          p_to_card_id: string
-          p_to_wallet_id: string
+          p_to_card_id: string | null
+          p_to_wallet_id: string | null
           p_transaction_date: string
           p_type: string
-          p_wallet_id: string
+          p_wallet_id: string | null
         }
         Returns: undefined
       }
@@ -451,6 +451,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      sync_monthly_reports: { Args: never; Returns: undefined }
       update_card_balance: {
         Args: { p_delta: number; p_id: string }
         Returns: undefined
@@ -458,16 +459,16 @@ export type Database = {
       update_transaction: {
         Args: {
           p_amount: number
-          p_card_id?: string
+          p_card_id?: string | null
           p_category_id: string
-          p_description: string
+          p_description: string | null
           p_id: string
           p_payment_method: string
-          p_to_card_id?: string
-          p_to_wallet_id?: string
+          p_to_card_id?: string | null
+          p_to_wallet_id?: string | null
           p_transaction_date: string
           p_type: string
-          p_wallet_id?: string
+          p_wallet_id?: string | null
         }
         Returns: undefined
       }

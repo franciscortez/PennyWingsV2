@@ -16,8 +16,8 @@ import { getZodErrorMessage } from '@/validation/zodError'
 
 type TransactionFormProps = {
   cardAccounts: Account[]
+  cashAccount: Account | null
   categories: TransactionCategory[]
-  error: string
   onClose: () => void
   onSubmit: (values: TransactionFormValues) => Promise<boolean>
   saving: boolean
@@ -30,6 +30,15 @@ type TransactionFormState = Omit<TransactionFormValues, 'amount'> & {
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
+
+const accountBalanceFormatter = new Intl.NumberFormat('en-PH', {
+  currency: 'PHP',
+  minimumFractionDigits: 2,
+  style: 'currency',
+})
+
+const accountOptionLabel = (account: Account) =>
+  `${account.name} — ${accountBalanceFormatter.format(account.balance)}`
 
 const defaultFormState = (): TransactionFormState => ({
   amount: '',
@@ -67,8 +76,8 @@ const toFormState = (transaction: Transaction | null): TransactionFormState => {
 
 export function TransactionForm({
   cardAccounts,
+  cashAccount,
   categories,
-  error,
   onClose,
   onSubmit,
   saving,
@@ -78,7 +87,6 @@ export function TransactionForm({
   const [form, setForm] = useState<TransactionFormState>(() =>
     toFormState(transaction),
   )
-  const [formError, setFormError] = useState('')
 
   const filteredCategories = useMemo(
     () =>
@@ -95,7 +103,6 @@ export function TransactionForm({
     value: TransactionFormState[TField],
   ) => {
     setForm((current) => ({ ...current, [field]: value }))
-    setFormError('')
   }
 
   const updateType = (type: TransactionType) => {
@@ -112,7 +119,6 @@ export function TransactionForm({
       type,
       wallet_id: current.payment_method === 'ewallet' ? current.wallet_id : '',
     }))
-    setFormError('')
   }
 
   const updatePaymentMethod = (paymentMethod: PaymentMethod) => {
@@ -122,7 +128,6 @@ export function TransactionForm({
       payment_method: paymentMethod,
       wallet_id: '',
     }))
-    setFormError('')
   }
 
   const updateDestinationMethod = (
@@ -134,18 +139,15 @@ export function TransactionForm({
       to_payment_method: paymentMethod,
       to_wallet_id: '',
     }))
-    setFormError('')
   }
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setFormError('')
 
     const result = transactionSchema.safeParse(form)
 
     if (!result.success) {
       const message = getZodErrorMessage(result.error, 'Invalid transaction.')
-      setFormError(message)
       alerts.warning(message)
       return
     }
@@ -182,12 +184,6 @@ export function TransactionForm({
             </button>
           </div>
 
-          {formError || error ? (
-            <div className="mb-5 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
-              {formError || error}
-            </div>
-          ) : null}
-
           <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
             <TransactionTypePicker value={form.type} onChange={updateType} />
 
@@ -210,6 +206,7 @@ export function TransactionForm({
 
             <AccountSourcePanel
               cardAccounts={cardAccounts}
+              cashAccount={cashAccount}
               form={form}
               onPaymentMethodChange={updatePaymentMethod}
               onUpdate={updateField}
@@ -340,12 +337,14 @@ function TransactionTypePicker({
 
 function AccountSourcePanel({
   cardAccounts,
+  cashAccount,
   form,
   onPaymentMethodChange,
   onUpdate,
   walletAccounts,
 }: {
   cardAccounts: Account[]
+  cashAccount: Account | null
   form: TransactionFormState
   onPaymentMethodChange: (paymentMethod: PaymentMethod) => void
   onUpdate: <TField extends keyof TransactionFormState>(
@@ -382,7 +381,7 @@ function AccountSourcePanel({
             <option value="">Select Card</option>
             {cardAccounts.map((account) => (
               <option key={account.id} value={account.id}>
-                {account.name}
+                {accountOptionLabel(account)}
               </option>
             ))}
           </select>
@@ -396,13 +395,15 @@ function AccountSourcePanel({
             <option value="">Select Wallet</option>
             {walletAccounts.map((account) => (
               <option key={account.id} value={account.id}>
-                {account.name}
+                {accountOptionLabel(account)}
               </option>
             ))}
           </select>
         ) : (
           <div className="flex items-center rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold text-gray-400">
-            Cash on Hand
+            {cashAccount
+              ? accountOptionLabel(cashAccount)
+              : 'No cash account available'}
           </div>
         )}
       </div>
@@ -457,7 +458,7 @@ function DestinationPanel({
               .filter((account) => account.id !== form.card_id)
               .map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.name}
+                  {accountOptionLabel(account)}
                 </option>
               ))}
           </select>
@@ -473,7 +474,7 @@ function DestinationPanel({
               .filter((account) => account.id !== form.wallet_id)
               .map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.name}
+                  {accountOptionLabel(account)}
                 </option>
               ))}
           </select>

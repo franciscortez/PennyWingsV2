@@ -9,6 +9,7 @@ import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
 import Monitoring from '@/pages/Monitoring'
 import NotFound from '@/pages/NotFound'
+import Reports from '@/pages/Reports'
 import Transactions from '@/pages/Transactions'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
 import Login from '@/pages/auth/Login'
@@ -64,7 +65,7 @@ export default function App() {
             path="/reports"
             element={
               <ProtectedRoute>
-                <ComingSoon title="Reports" />
+                <Reports />
               </ProtectedRoute>
             }
           />

@@ -30,6 +30,7 @@ export type {
   MonitoringData,
   MonitoringTab,
 } from '@/types/monitoring'
+export type { MonthlyReport } from '@/types/reports'
 export type {
   AccountFormValues,
   ForgotPasswordValues,

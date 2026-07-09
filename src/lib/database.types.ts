@@ -1,5 +1,3 @@
-// Public-schema snapshot matching the Supabase generated-types shape.
-// Regenerate with the Supabase CLI after database migrations.
 export type Json =
   | string
   | number
@@ -9,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.4"
+  }
   public: {
     Tables: {
       bank_cards: {
@@ -83,11 +86,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'budgets_category_id_fkey'
-            columns: ['category_id']
+            foreignKeyName: "budgets_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -205,20 +208,71 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'goals_linked_card_id_fkey'
-            columns: ['linked_card_id']
+            foreignKeyName: "goals_linked_card_id_fkey"
+            columns: ["linked_card_id"]
             isOneToOne: false
-            referencedRelation: 'bank_cards'
-            referencedColumns: ['id']
+            referencedRelation: "bank_cards"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'goals_linked_wallet_id_fkey'
-            columns: ['linked_wallet_id']
+            foreignKeyName: "goals_linked_wallet_id_fkey"
+            columns: ["linked_wallet_id"]
             isOneToOne: false
-            referencedRelation: 'e_wallets'
-            referencedColumns: ['id']
+            referencedRelation: "e_wallets"
+            referencedColumns: ["id"]
           },
         ]
+      }
+      monthly_reports: {
+        Row: {
+          account_snapshot: Json
+          category_breakdown: Json
+          created_at: string
+          expense_total: number
+          generated_at: string
+          id: string
+          income_total: number
+          net_cashflow: number
+          report_month: string
+          transaction_count: number
+          transfer_total: number
+          updated_at: string
+          user_id: string
+          withdrawal_total: number
+        }
+        Insert: {
+          account_snapshot?: Json
+          category_breakdown?: Json
+          created_at?: string
+          expense_total?: number
+          generated_at?: string
+          id?: string
+          income_total?: number
+          net_cashflow?: number
+          report_month: string
+          transaction_count?: number
+          transfer_total?: number
+          updated_at?: string
+          user_id: string
+          withdrawal_total?: number
+        }
+        Update: {
+          account_snapshot?: Json
+          category_breakdown?: Json
+          created_at?: string
+          expense_total?: number
+          generated_at?: string
+          id?: string
+          income_total?: number
+          net_cashflow?: number
+          report_month?: string
+          transaction_count?: number
+          transfer_total?: number
+          updated_at?: string
+          user_id?: string
+          withdrawal_total?: number
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -298,96 +352,258 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: 'transactions_card_id_fkey'
-            columns: ['card_id']
+            foreignKeyName: "transactions_card_id_fkey"
+            columns: ["card_id"]
             isOneToOne: false
-            referencedRelation: 'bank_cards'
-            referencedColumns: ['id']
+            referencedRelation: "bank_cards"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'transactions_category_id_fkey'
-            columns: ['category_id']
+            foreignKeyName: "transactions_category_id_fkey"
+            columns: ["category_id"]
             isOneToOne: false
-            referencedRelation: 'categories'
-            referencedColumns: ['id']
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'transactions_to_card_id_fkey'
-            columns: ['to_card_id']
+            foreignKeyName: "transactions_to_card_id_fkey"
+            columns: ["to_card_id"]
             isOneToOne: false
-            referencedRelation: 'bank_cards'
-            referencedColumns: ['id']
+            referencedRelation: "bank_cards"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'transactions_to_wallet_id_fkey'
-            columns: ['to_wallet_id']
+            foreignKeyName: "transactions_to_wallet_id_fkey"
+            columns: ["to_wallet_id"]
             isOneToOne: false
-            referencedRelation: 'e_wallets'
-            referencedColumns: ['id']
+            referencedRelation: "e_wallets"
+            referencedColumns: ["id"]
           },
           {
-            foreignKeyName: 'transactions_wallet_id_fkey'
-            columns: ['wallet_id']
+            foreignKeyName: "transactions_wallet_id_fkey"
+            columns: ["wallet_id"]
             isOneToOne: false
-            referencedRelation: 'e_wallets'
-            referencedColumns: ['id']
+            referencedRelation: "e_wallets"
+            referencedColumns: ["id"]
           },
         ]
       }
     }
-    Views: Record<never, never>
+    Views: {
+      [_ in never]: never
+    }
     Functions: {
-      delete_transaction: {
-        Args: { p_id: string }
-        Returns: Json
-      }
+      delete_transaction: { Args: { p_id: string }; Returns: undefined }
+      map_share_user_id: { Args: never; Returns: undefined }
       process_transaction: {
         Args: {
           p_amount: number
-          p_card_id: string | null
+          p_card_id?: string
           p_category_id: string
-          p_description: string | null
+          p_description: string
           p_payment_method: string
-          p_to_card_id: string | null
-          p_to_wallet_id: string | null
+          p_to_card_id?: string
+          p_to_wallet_id?: string
           p_transaction_date: string
           p_type: string
-          p_wallet_id: string | null
+          p_user_id?: string
+          p_wallet_id?: string
         }
         Returns: Json
+      }
+      process_transaction_checked: {
+        Args: {
+          p_amount: number
+          p_card_id: string
+          p_category_id: string
+          p_description: string
+          p_payment_method: string
+          p_to_card_id: string
+          p_to_wallet_id: string
+          p_transaction_date: string
+          p_type: string
+          p_wallet_id: string
+        }
+        Returns: undefined
+      }
+      save_monthly_report: {
+        Args: { p_report_month?: string }
+        Returns: {
+          account_snapshot: Json
+          category_breakdown: Json
+          created_at: string
+          expense_total: number
+          generated_at: string
+          id: string
+          income_total: number
+          net_cashflow: number
+          report_month: string
+          transaction_count: number
+          transfer_total: number
+          updated_at: string
+          user_id: string
+          withdrawal_total: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "monthly_reports"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_card_balance: {
+        Args: { p_delta: number; p_id: string }
+        Returns: undefined
       }
       update_transaction: {
         Args: {
           p_amount: number
-          p_card_id: string | null
+          p_card_id?: string
           p_category_id: string
-          p_description: string | null
+          p_description: string
           p_id: string
           p_payment_method: string
-          p_to_card_id: string | null
-          p_to_wallet_id: string | null
+          p_to_card_id?: string
+          p_to_wallet_id?: string
           p_transaction_date: string
           p_type: string
-          p_wallet_id: string | null
+          p_wallet_id?: string
         }
-        Returns: Json
+        Returns: undefined
+      }
+      update_wallet_balance: {
+        Args: { p_delta: number; p_id: string }
+        Returns: undefined
       }
     }
-    Enums: Record<never, never>
-    CompositeTypes: Record<never, never>
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
 }
 
-type PublicSchema = Database['public']
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-  TableName extends keyof PublicSchema['Tables'],
-> = PublicSchema['Tables'][TableName]['Row']
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
-  TableName extends keyof PublicSchema['Tables'],
-> = PublicSchema['Tables'][TableName]['Insert']
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
-  TableName extends keyof PublicSchema['Tables'],
-> = PublicSchema['Tables'][TableName]['Update']
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {},
+  },
+} as const

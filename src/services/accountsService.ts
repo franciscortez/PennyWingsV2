@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Tables } from '@/lib/database.types'
+import { AppError } from '@/lib/errors'
 import type {
   Account,
   AccountCreateValues,
@@ -119,8 +120,8 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
 export const createCardAccount = async (
   userId: string,
   values: AccountCreateValues,
-) =>
-  supabase.from('bank_cards').insert({
+) => {
+  const { error } = await supabase.from('bank_cards').insert({
     balance: values.balance,
     card_name: values.name,
     card_type: values.accountType,
@@ -131,11 +132,14 @@ export const createCardAccount = async (
     user_id: userId,
   })
 
+  if (error) throw AppError.from(error)
+}
+
 export const createWalletAccount = async (
   userId: string,
   values: AccountCreateValues,
-) =>
-  supabase.from('e_wallets').insert({
+) => {
+  const { error } = await supabase.from('e_wallets').insert({
     account_identifier: values.accountIdentifier || null,
     balance: values.balance,
     color: values.color,
@@ -146,13 +150,17 @@ export const createWalletAccount = async (
     wallet_type: values.accountType,
   })
 
+  if (error) throw AppError.from(error)
+}
+
 export const createAccount = async (
   userId: string,
   values: AccountCreateValues,
-) =>
-  values.kind === 'card'
+) => {
+  await (values.kind === 'card'
     ? createCardAccount(userId, values)
-    : createWalletAccount(userId, values)
+    : createWalletAccount(userId, values))
+}
 
 export const updateAccount = async (
   userId: string,
@@ -162,7 +170,7 @@ export const updateAccount = async (
   const updatedAt = new Date().toISOString()
 
   if (values.kind === 'card') {
-    return supabase
+    const { error } = await supabase
       .from('bank_cards')
       .update({
         card_name: values.name,
@@ -174,9 +182,12 @@ export const updateAccount = async (
       })
       .eq('id', accountId)
       .eq('user_id', userId)
+
+    if (error) throw AppError.from(error)
+    return
   }
 
-  return supabase
+  const { error } = await supabase
     .from('e_wallets')
     .update({
       account_identifier: values.accountIdentifier || null,
@@ -188,6 +199,8 @@ export const updateAccount = async (
     })
     .eq('id', accountId)
     .eq('user_id', userId)
+
+  if (error) throw AppError.from(error)
 }
 
 export const archiveAccount = async (
@@ -198,17 +211,22 @@ export const archiveAccount = async (
   const updatedAt = new Date().toISOString()
 
   if (kind === 'card') {
-    return supabase
+    const { error } = await supabase
       .from('bank_cards')
       .update({ is_active: false, updated_at: updatedAt })
       .eq('id', accountId)
       .eq('user_id', userId)
+
+    if (error) throw AppError.from(error)
+    return
   }
 
-  return supabase
+  const { error } = await supabase
     .from('e_wallets')
     .update({ is_active: false, updated_at: updatedAt })
     .eq('id', accountId)
     .eq('user_id', userId)
+
+  if (error) throw AppError.from(error)
 }
 

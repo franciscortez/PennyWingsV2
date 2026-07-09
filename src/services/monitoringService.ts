@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { AppError } from '@/lib/errors'
 import type {
   Budget,
   BudgetFormValues,
@@ -307,20 +308,23 @@ export const fetchMonitoringData = async (
 export const createBudget = async (
   userId: string,
   values: BudgetFormValues,
-) =>
-  supabase.from('budgets').insert({
+) => {
+  const { error } = await supabase.from('budgets').insert({
     category_id: values.categoryId,
     limit_amount: values.limitAmount,
     period: values.period,
     user_id: userId,
   })
 
+  if (error) throw AppError.from(error)
+}
+
 export const updateBudget = async (
   userId: string,
   budgetId: string,
   values: BudgetFormValues,
-) =>
-  supabase
+) => {
+  const { error } = await supabase
     .from('budgets')
     .update({
       category_id: values.categoryId,
@@ -331,11 +335,21 @@ export const updateBudget = async (
     .eq('id', budgetId)
     .eq('user_id', userId)
 
-export const deleteBudget = async (userId: string, budgetId: string) =>
-  supabase.from('budgets').delete().eq('id', budgetId).eq('user_id', userId)
+  if (error) throw AppError.from(error)
+}
 
-export const createGoal = async (userId: string, values: GoalFormValues) =>
-  supabase.from('goals').insert({
+export const deleteBudget = async (userId: string, budgetId: string) => {
+  const { error } = await supabase
+    .from('budgets')
+    .delete()
+    .eq('id', budgetId)
+    .eq('user_id', userId)
+
+  if (error) throw AppError.from(error)
+}
+
+export const createGoal = async (userId: string, values: GoalFormValues) => {
+  const { error } = await supabase.from('goals').insert({
     current_amount: values.currentAmount,
     linked_card_id: values.linkedCardId,
     linked_wallet_id: values.linkedWalletId,
@@ -345,12 +359,15 @@ export const createGoal = async (userId: string, values: GoalFormValues) =>
     user_id: userId,
   })
 
+  if (error) throw AppError.from(error)
+}
+
 export const updateGoal = async (
   userId: string,
   goalId: string,
   values: GoalFormValues,
-) =>
-  supabase
+) => {
+  const { error } = await supabase
     .from('goals')
     .update({
       current_amount: values.currentAmount,
@@ -364,5 +381,15 @@ export const updateGoal = async (
     .eq('id', goalId)
     .eq('user_id', userId)
 
-export const deleteGoal = async (userId: string, goalId: string) =>
-  supabase.from('goals').delete().eq('id', goalId).eq('user_id', userId)
+  if (error) throw AppError.from(error)
+}
+
+export const deleteGoal = async (userId: string, goalId: string) => {
+  const { error } = await supabase
+    .from('goals')
+    .delete()
+    .eq('id', goalId)
+    .eq('user_id', userId)
+
+  if (error) throw AppError.from(error)
+}

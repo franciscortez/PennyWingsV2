@@ -205,11 +205,13 @@ export const fetchDashboardData = async (
       .from('bank_cards')
       .select('id, card_name, card_type, balance, color, text_color')
       .eq('user_id', userId)
+      .eq('is_active', true)
       .order('created_at', { ascending: false }),
     supabase
       .from('e_wallets')
       .select('id, wallet_name, wallet_type, balance, color, text_color')
       .eq('user_id', userId)
+      .eq('is_active', true)
       .order('created_at', { ascending: false }),
     supabase
       .from('transactions')

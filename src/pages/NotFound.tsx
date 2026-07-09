@@ -2,7 +2,6 @@ import { ArrowLeft, Compass, LayoutDashboard, Search } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router'
 
-import Layout from '@/components/Layout'
 import { AppButton, PageLoader } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { PennyWingsMark } from '@/sections/shared'
@@ -15,22 +14,10 @@ export default function NotFound() {
     return <PageLoader />
   }
 
-  if (user) {
-    return (
-      <Layout>
-        <NotFoundPanel
-          homeTo="/dashboard"
-          homeLabel="Back to Dashboard"
-          onBack={() => navigate(-1)}
-        />
-      </Layout>
-    )
-  }
-
   return (
     <main className="min-h-screen overflow-hidden bg-pink-50 px-4 py-6 text-gray-900 md:px-8">
       <header className="mx-auto flex max-w-6xl items-center justify-between">
-        <AppButton to="/" variant="ghost" className="rounded-xl px-2 text-gray-700">
+        <AppButton to={user ? '/dashboard' : '/'} variant="ghost" className="rounded-xl px-2 text-gray-700">
           <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-500 text-white">
             <PennyWingsMark className="h-7 w-7" />
           </span>
@@ -38,17 +25,23 @@ export default function NotFound() {
             PennyWings
           </span>
         </AppButton>
-        <AppButton to="/login" variant="secondary" size="sm">
-          Sign In
-        </AppButton>
+        {user ? (
+          <AppButton to="/dashboard" variant="secondary" size="sm">
+            Dashboard
+          </AppButton>
+        ) : (
+          <AppButton to="/login" variant="secondary" size="sm">
+            Sign In
+          </AppButton>
+        )}
       </header>
 
       <section className="relative mx-auto flex min-h-[calc(100vh-6rem)] max-w-6xl items-center justify-center py-14">
         <div className="absolute left-4 top-16 h-64 w-64 rounded-full bg-pink-200 opacity-30 blur-3xl" />
         <div className="absolute bottom-16 right-4 h-72 w-72 rounded-full bg-pink-300 opacity-30 blur-3xl" />
         <NotFoundPanel
-          homeTo="/"
-          homeLabel="Back to Home"
+          homeTo={user ? '/dashboard' : '/'}
+          homeLabel={user ? 'Back to Dashboard' : 'Back to Home'}
           onBack={() => navigate(-1)}
         />
       </section>

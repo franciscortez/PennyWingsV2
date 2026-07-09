@@ -21,6 +21,10 @@ export const queryKeys = {
   dashboard: (userId: string) => ['dashboard', userId] as const,
   dashboardData: (userId: string, txLimit: number) =>
     [...queryKeys.dashboard(userId), txLimit] as const,
+  jointInvites: (resourceType: string, resourceId: string) =>
+    ['jointInvites', resourceType, resourceId] as const,
+  jointMembers: (resourceType: string, resourceId: string) =>
+    ['jointMembers', resourceType, resourceId] as const,
   monitoring: (userId: string) => ['monitoring', userId] as const,
   monitoringData: (userId: string, tab: MonitoringTab) =>
     [...queryKeys.monitoring(userId), tab] as const,

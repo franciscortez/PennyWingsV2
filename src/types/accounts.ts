@@ -1,5 +1,7 @@
 export type AccountKind = 'card' | 'wallet' | 'cash'
 
+export type ResourceType = 'bank_card' | 'e_wallet'
+
 export type AccountColor = {
   background: string
   label: string
@@ -19,6 +21,7 @@ export type Account = {
   lastFour?: string
   name: string
   textColor: string
+  userId: string
 }
 
 export type AccountCreateValues = {
@@ -40,5 +43,28 @@ export type AccountsData = {
   cashCount: number
   totalBalance: number
   walletCount: number
+}
+
+export type AccountMember = {
+  fullName: string | null
+  id: string
+  invitedBy: string
+  joinedAt: string
+  resourceId: string
+  resourceType: ResourceType
+  role: string
+  userId: string
+}
+
+export type AccountInvite = {
+  acceptedAt: string | null
+  acceptedBy: string | null
+  createdAt: string
+  expiresAt: string
+  id: string
+  ownerId: string
+  resourceId: string
+  resourceType: ResourceType
+  revokedAt: string | null
 }
 

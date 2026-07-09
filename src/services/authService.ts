@@ -61,6 +61,23 @@ export const fetchProfile = async (userId: string) => {
   return { data, error }
 }
 
+export const createProfile = async (user: User) => {
+  const fullName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'Unknown User'
+  const avatarUrl = user.user_metadata?.avatar_url || null
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .insert({
+      avatar_url: avatarUrl,
+      full_name: fullName,
+      id: user.id,
+    })
+    .select()
+    .single<Profile>()
+
+  return { data, error }
+}
+
 export const updateProfile = async (userId: string, updates: ProfileUpdate) =>
   supabase
     .from('profiles')
@@ -99,6 +116,7 @@ export const deleteAccount = async (user: User, password: string) => {
 }
 
 export const authService = {
+  createProfile,
   deleteAccount,
   fetchProfile,
   getCurrentUser,

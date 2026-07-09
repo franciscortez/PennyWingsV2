@@ -20,6 +20,7 @@ type CardRow = Pick<
   | 'is_active'
   | 'last_four'
   | 'text_color'
+  | 'user_id'
 >
 
 type WalletRow = Pick<
@@ -31,6 +32,7 @@ type WalletRow = Pick<
   | 'id'
   | 'is_active'
   | 'text_color'
+  | 'user_id'
   | 'wallet_name'
   | 'wallet_type'
 >
@@ -56,6 +58,7 @@ const mapCardAccount = (card: CardRow): Account => ({
   lastFour: card.last_four ?? undefined,
   name: card.card_name,
   textColor: card.text_color ?? '#ffffff',
+  userId: card.user_id,
 })
 
 const mapWalletAccount = (wallet: WalletRow): Account => ({
@@ -69,24 +72,27 @@ const mapWalletAccount = (wallet: WalletRow): Account => ({
   kind: wallet.wallet_type === 'cash' ? 'cash' : 'wallet',
   name: wallet.wallet_name,
   textColor: wallet.text_color ?? '#ffffff',
+  userId: wallet.user_id,
 })
 
 export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
+  if (!userId) {
+    return emptyAccountsData
+  }
+  /* RLS returns both owned and member accounts automatically. */
   const [cardsResult, walletsResult] = await Promise.all([
     supabase
       .from('bank_cards')
       .select(
-        'id, card_name, card_type, balance, color, text_color, last_four, is_active, created_at',
+        'id, card_name, card_type, balance, color, text_color, last_four, is_active, created_at, user_id',
       )
-      .eq('user_id', userId)
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
     supabase
       .from('e_wallets')
       .select(
-        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, created_at',
+        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, created_at, user_id',
       )
-      .eq('user_id', userId)
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
   ])

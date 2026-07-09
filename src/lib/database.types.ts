@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_memberships: {
+        Row: {
+          id: string
+          invited_by: string
+          joined_at: string
+          resource_id: string
+          resource_type: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          invited_by: string
+          joined_at?: string
+          resource_id: string
+          resource_type: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          invited_by?: string
+          joined_at?: string
+          resource_id?: string
+          resource_type?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bank_cards: {
         Row: {
           balance: number
@@ -223,6 +253,45 @@ export type Database = {
           },
         ]
       }
+      joint_account_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_by: string | null
+          code_hash: string
+          created_at: string
+          expires_at: string
+          id: string
+          owner_id: string
+          resource_id: string
+          resource_type: string
+          revoked_at: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          owner_id: string
+          resource_id: string
+          resource_type: string
+          revoked_at?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by?: string | null
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          owner_id?: string
+          resource_id?: string
+          resource_type?: string
+          revoked_at?: string | null
+        }
+        Relationships: []
+      }
       monthly_reports: {
         Row: {
           account_snapshot: Json
@@ -304,6 +373,7 @@ export type Database = {
           card_id: string | null
           category_id: string | null
           created_at: string
+          created_by: string | null
           description: string | null
           id: string
           payment_method: string
@@ -321,6 +391,7 @@ export type Database = {
           card_id?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           payment_method: string
@@ -338,6 +409,7 @@ export type Database = {
           card_id?: string | null
           category_id?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string | null
           id?: string
           payment_method?: string

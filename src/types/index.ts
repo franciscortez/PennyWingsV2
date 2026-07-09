@@ -2,9 +2,12 @@ export type {
   Account,
   AccountColor,
   AccountCreateValues,
+  AccountInvite,
   AccountKind,
+  AccountMember,
   AccountUpdateValues,
   AccountsData,
+  ResourceType,
 } from '@/types/accounts'
 export type {
   AuthContextValue,

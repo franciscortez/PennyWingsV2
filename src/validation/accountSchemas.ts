@@ -83,3 +83,13 @@ export const accountUpdateSchema = z
   .object(accountDetailsShape)
   .superRefine(validateAccountType)
 
+export const joinAccountSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .min(1, 'Enter an invitation code.')
+    .regex(/^WING-\d{6}$/, 'Code must be in WING-XXXXXX format (e.g., WING-123456).'),
+})
+
+

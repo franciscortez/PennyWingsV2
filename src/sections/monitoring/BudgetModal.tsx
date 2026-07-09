@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 
 import {
-  FormError,
   ModalActions,
   ModalShell,
   type ModalMode,
@@ -44,11 +43,9 @@ export function BudgetModal({
     budget ? String(budget.limitAmount) : '',
   )
   const [period, setPeriod] = useState<BudgetPeriod>(budget?.period ?? 'monthly')
-  const [formError, setFormError] = useState('')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setFormError('')
 
     const result = budgetSchema.safeParse({
       categoryId,
@@ -58,7 +55,6 @@ export function BudgetModal({
 
     if (!result.success) {
       const message = getZodErrorMessage(result.error, 'Invalid budget.')
-      setFormError(message)
       alerts.warning(message)
       return
     }
@@ -73,7 +69,6 @@ export function BudgetModal({
       onClose={onClose}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        {formError ? <FormError message={formError} /> : null}
         <div>
           <label
             htmlFor="budget-category"

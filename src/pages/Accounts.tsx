@@ -5,6 +5,7 @@ import { useSearchParams } from 'react-router'
 import Layout from '@/components/Layout'
 import { useAccountsData } from '@/hooks/useAccountsData'
 import { useAuth } from '@/hooks/useAuth'
+import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { alerts } from '@/lib/alert'
 import {
   AccountCreationWizard,
@@ -60,6 +61,7 @@ export default function Accounts() {
     totalBalance,
     walletCount,
   } = useAccountsData(user?.id)
+  useErrorAlert(error)
   const [searchParams, setSearchParams] = useSearchParams()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
@@ -208,12 +210,6 @@ export default function Accounts() {
         loading={loading}
         walletBalance={walletBalance}
       />
-
-      {error ? (
-        <div className="mb-8 rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-bold text-red-600">
-          {error}
-        </div>
-      ) : null}
 
       <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row">
         <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-4xl border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm md:w-fit">

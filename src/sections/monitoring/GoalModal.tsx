@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from 'react'
 
 import {
-  FormError,
   ModalActions,
   ModalShell,
   type ModalMode,
@@ -43,11 +42,9 @@ export function GoalModal({
   )
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? '')
   const [linkedValue, setLinkedValue] = useState(initialLinkedValue)
-  const [formError, setFormError] = useState('')
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setFormError('')
 
     const [linkedKind, linkedId] = linkedValue.split(':')
     const result = goalSchema.safeParse({
@@ -61,7 +58,6 @@ export function GoalModal({
 
     if (!result.success) {
       const message = getZodErrorMessage(result.error, 'Invalid goal.')
-      setFormError(message)
       alerts.warning(message)
       return
     }
@@ -76,7 +72,6 @@ export function GoalModal({
       onClose={onClose}
     >
       <form onSubmit={handleSubmit} className="space-y-5">
-        {formError ? <FormError message={formError} /> : null}
         <div>
           <label
             htmlFor="goal-name"

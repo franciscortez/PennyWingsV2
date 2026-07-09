@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router'
 
 import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
+import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useTransactionsData } from '@/hooks/useTransactionsData'
 import { alerts } from '@/lib/alert'
 import { TransactionForm, TransactionsTable } from '@/sections/transactions'
@@ -36,10 +37,10 @@ export default function Transactions() {
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(
     null,
   )
-  const [formError, setFormError] = useState('')
 
   const {
     cardAccounts,
+    cashAccount,
     categories,
     createTransaction,
     deletingId,
@@ -60,6 +61,7 @@ export default function Transactions() {
     type: filterType,
     userId: user?.id,
   })
+  useErrorAlert(error)
 
   const setPage = useCallback((nextPage: number, replace = false) => {
     setSearchParams(
@@ -110,27 +112,23 @@ export default function Transactions() {
   }
 
   const openCreateForm = () => {
-    setFormError('')
     setEditingTransaction(null)
     setFormOpen(true)
   }
 
   const openEditForm = (transaction: Transaction) => {
-    setFormError('')
     setEditingTransaction(transaction)
     setFormOpen(true)
   }
 
   const closeForm = () => {
     if (!saving) {
-      setFormError('')
       setEditingTransaction(null)
       setFormOpen(false)
     }
   }
 
   const handleFormSubmit = async (values: TransactionFormValues) => {
-    setFormError('')
     const action = editingTransaction ? 'updated' : 'created'
 
     const { error: saveError } = editingTransaction
@@ -138,7 +136,6 @@ export default function Transactions() {
       : await createTransaction(values)
 
     if (saveError) {
-      setFormError(saveError.message)
       alerts.error(saveError.message)
       return false
     }
@@ -188,12 +185,6 @@ export default function Transactions() {
           </button>
         </header>
 
-        {error ? (
-          <div className="rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-bold text-red-600">
-            {error}
-          </div>
-        ) : null}
-
         <TransactionsTable
           deletingId={deletingId}
           filterType={filterType}
@@ -216,8 +207,8 @@ export default function Transactions() {
         <TransactionForm
           key={editingTransaction?.id ?? 'new-transaction'}
           cardAccounts={cardAccounts}
+          cashAccount={cashAccount}
           categories={categories}
-          error={formError}
           saving={saving || optionsLoading}
           transaction={editingTransaction}
           walletAccounts={walletAccounts}

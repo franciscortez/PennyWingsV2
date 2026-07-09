@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router'
 
 import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
+import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useMonitoringData } from '@/hooks/useMonitoringData'
 import { alerts } from '@/lib/alert'
 import {
@@ -56,6 +57,7 @@ export default function Monitoring() {
     saving,
     summary,
   } = useMonitoringData(user?.id, activeTab)
+  useErrorAlert(error)
 
   const linkedGoalCount = useMemo(
     () => goals.filter((goal) => goal.linkedAccount).length,
@@ -174,12 +176,6 @@ export default function Monitoring() {
           onCreateBudget={openCreateBudgetModal}
           onCreateGoal={openCreateGoalModal}
         />
-
-        {error ? (
-          <div className="rounded-3xl border border-red-100 bg-red-50 px-5 py-4 text-sm font-bold text-red-600">
-            {error}
-          </div>
-        ) : null}
 
         <MonitoringSummarySection
           budgetCount={budgets.length}

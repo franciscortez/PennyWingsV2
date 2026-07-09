@@ -47,7 +47,6 @@ export function ActionButtons({
     </div>
   )
 }
-
 export function MetricBox({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-2xl border border-pink-50 bg-pink-50/50 p-4">
@@ -180,14 +179,6 @@ export function ModalActions({
       >
         {saving ? waitingLabel : submitLabel}
       </button>
-    </div>
-  )
-}
-
-export function FormError({ message }: { message: string }) {
-  return (
-    <div className="rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-red-600">
-      {message}
     </div>
   )
 }

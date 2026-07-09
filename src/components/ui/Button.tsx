@@ -24,7 +24,7 @@ type AppButtonLinkProps = ButtonBaseProps &
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary:
-    'bg-pink-600 text-white hover:bg-pink-700 shadow-lg shadow-pink-200/70',
+    'bg-pink-600 text-white hover:bg-pink-700',
   secondary:
     'border border-pink-100 bg-white text-pink-700 hover:border-pink-200 hover:bg-pink-50',
   ghost: 'text-gray-400 hover:bg-pink-50 hover:text-pink-600',

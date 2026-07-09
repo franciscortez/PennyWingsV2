@@ -1,6 +1,7 @@
 import { ArrowRight, Clock, ReceiptText } from 'lucide-react'
 import { Link } from 'react-router'
 
+import { formatShortDate } from '@/lib/date'
 import type { DashboardTransaction } from '@/types/dashboard'
 
 type RecentActivitySectionProps = {
@@ -13,17 +14,6 @@ const compactCurrency = new Intl.NumberFormat('en-PH', {
   maximumFractionDigits: 0,
   style: 'currency',
 })
-
-const formatDate = (value: string | null) => {
-  if (!value) {
-    return 'No date'
-  }
-
-  return new Date(value).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-  })
-}
 
 const getTransactionSource = (transaction: DashboardTransaction) => {
   if (transaction.type === 'transfer') {
@@ -45,15 +35,15 @@ export function RecentActivitySection({
   transactions,
 }: RecentActivitySectionProps) {
   return (
-    <section className="rounded-[2.5rem] border border-pink-50 bg-white p-6 sm:p-10">
+    <section className="rounded-[2.5rem] border border-pink-50 bg-white p-6 sm:p-10 dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h3 className="flex items-center gap-3 text-2xl font-black tracking-tight text-gray-900">
-          <Clock className="h-7 w-7 text-pink-500" aria-hidden="true" />
+        <h3 className="flex items-center gap-3 text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
+          <Clock className="h-7 w-7 text-pink-500 dark:text-pink-400" aria-hidden="true" />
           Recent Activity
         </h3>
         <Link
           to="/transactions"
-          className="group flex items-center gap-1 self-start text-sm font-black text-pink-500 transition hover:text-pink-600 sm:self-auto"
+          className="group flex items-center gap-1 self-start text-sm font-black text-pink-500 transition hover:text-pink-600 dark:text-pink-400 dark:hover:text-pink-300 sm:self-auto"
         >
           View All History
           <ArrowRight
@@ -68,7 +58,7 @@ export function RecentActivitySection({
           {[1, 2, 3].map((item) => (
             <div
               key={item}
-              className="h-24 animate-pulse rounded-[2rem] border border-pink-50 bg-pink-50/70"
+              className="h-24 animate-pulse rounded-[2rem] border border-pink-50 bg-pink-50/70 dark:border-slate-850 dark:bg-slate-800/70"
             />
           ))}
         </div>
@@ -79,11 +69,11 @@ export function RecentActivitySection({
           ))}
         </div>
       ) : (
-        <div className="rounded-[2.5rem] border-2 border-dashed border-pink-100 bg-pink-50/40 px-6 py-16 text-center">
-          <p className="mb-2 font-black uppercase tracking-widest text-gray-500">
+        <div className="rounded-[2.5rem] border-2 border-dashed border-pink-100 bg-pink-50/40 px-6 py-16 text-center dark:border-slate-800 dark:bg-slate-950/40">
+          <p className="mb-2 font-black uppercase tracking-widest text-gray-500 dark:text-slate-400">
             No Transactions Yet
           </p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 dark:text-slate-500">
             Head to the transactions page to track your first penny.
           </p>
         </div>
@@ -107,17 +97,17 @@ function TransactionRow({
   const amountPrefix = isIncome ? '+' : isTransfer ? '' : '-'
 
   return (
-    <div className="flex items-center gap-4 rounded-[2rem] border border-pink-50 bg-white p-4 transition hover:translate-x-1 hover:bg-pink-50/30 sm:p-5">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-pink-50 text-pink-500">
+    <div className="flex items-center gap-4 rounded-[2rem] border border-pink-50 bg-white p-4 transition hover:translate-x-1 hover:bg-pink-50/30 sm:p-5 dark:border-slate-800 dark:bg-slate-900 dark:hover:bg-slate-800/40">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-pink-50 text-pink-500 dark:bg-slate-800 dark:text-pink-400">
         <ReceiptText className="h-6 w-6" aria-hidden="true" />
       </div>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-base font-black tracking-tight text-gray-900 sm:text-lg">
+        <p className="truncate text-base font-black tracking-tight text-gray-900 sm:text-lg dark:text-slate-100">
           {transaction.description ?? transaction.category?.name ?? 'Uncategorized'}
         </p>
-        <p className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400">
+        <p className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-slate-550">
           <span>{transaction.category?.name ?? 'No Category'}</span>
-          <span>{formatDate(transaction.transaction_date)}</span>
+          <span>{formatShortDate(transaction.transaction_date)}</span>
         </p>
       </div>
       <div className="shrink-0 text-right">
@@ -125,7 +115,7 @@ function TransactionRow({
           {amountPrefix}
           {compactCurrency.format(Number(transaction.amount ?? 0))}
         </p>
-        <p className="ml-auto max-w-[120px] truncate text-[10px] font-black uppercase tracking-tight text-gray-300">
+        <p className="ml-auto max-w-[120px] truncate text-[10px] font-black uppercase tracking-tight text-gray-300 dark:text-slate-500">
           {getTransactionSource(transaction)}
         </p>
       </div>

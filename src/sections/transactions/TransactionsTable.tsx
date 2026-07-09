@@ -8,6 +8,7 @@ import {
   Trash2,
 } from 'lucide-react'
 
+import { formatDate } from '@/lib/date'
 import type { Transaction, TransactionFilterType } from '@/types'
 
 type TransactionsTableProps = {
@@ -38,16 +39,8 @@ const filters: TransactionFilterType[] = [
 const currency = new Intl.NumberFormat('en-PH', {
   currency: 'PHP',
   maximumFractionDigits: 2,
-  minimumFractionDigits: 2,
   style: 'currency',
 })
-
-const formatDate = (value: string) =>
-  new Date(value).toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
 
 const getTransactionAccount = (transaction: Transaction) => {
   if (transaction.type === 'transfer') {
@@ -81,7 +74,7 @@ const getAmountStyle = (transaction: Transaction) => {
   if (transaction.type === 'income') {
     return {
       amountClass: 'text-emerald-500',
-      badgeClass: 'bg-emerald-50 text-emerald-500',
+      badgeClass: 'bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-400',
       prefix: '+',
     }
   }
@@ -89,7 +82,7 @@ const getAmountStyle = (transaction: Transaction) => {
   if (transaction.type === 'transfer') {
     return {
       amountClass: 'text-blue-500',
-      badgeClass: 'bg-blue-50 text-blue-500',
+      badgeClass: 'bg-blue-50 text-blue-500 dark:bg-blue-950/30 dark:text-blue-400',
       prefix: '',
     }
   }
@@ -97,14 +90,14 @@ const getAmountStyle = (transaction: Transaction) => {
   if (transaction.type === 'withdrawal') {
     return {
       amountClass: 'text-amber-500',
-      badgeClass: 'bg-amber-50 text-amber-500',
+      badgeClass: 'bg-amber-50 text-amber-500 dark:bg-amber-950/30 dark:text-amber-400',
       prefix: '-',
     }
   }
 
   return {
     amountClass: 'text-rose-500',
-    badgeClass: 'bg-rose-50 text-rose-500',
+    badgeClass: 'bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-400',
     prefix: '-',
   }
 }
@@ -143,17 +136,17 @@ export function TransactionsTable({
 }: TransactionsTableProps) {
   return (
     <>
-      <section className="flex flex-col items-center gap-4 rounded-[2.5rem] border border-pink-50 bg-white p-6 lg:flex-row">
+      <section className="flex flex-col items-center gap-4 rounded-[2.5rem] border border-pink-50 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 lg:flex-row">
         <div className="relative w-full flex-1 text-left">
           <label
             htmlFor="transaction-search"
-            className="mb-2 ml-4 block text-[10px] font-black uppercase tracking-widest text-gray-400"
+            className="mb-2 ml-4 block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
           >
             Search Ledger
           </label>
           <div className="relative">
             <Search
-              className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-pink-300"
+              className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-pink-300 dark:text-slate-550"
               aria-hidden="true"
             />
             <input
@@ -162,13 +155,13 @@ export function TransactionsTable({
               placeholder="Description, category..."
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
-              className="w-full rounded-[1.5rem] border border-pink-100 bg-pink-50/30 py-4 pl-12 pr-6 font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              className="w-full rounded-[1.5rem] border border-pink-100 bg-pink-50/30 py-4 pl-12 pr-6 font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
             />
           </div>
         </div>
 
         <div className="w-full text-left lg:w-auto">
-          <p className="mb-2 ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+          <p className="mb-2 ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
             Filter Type
           </p>
           <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
@@ -179,8 +172,8 @@ export function TransactionsTable({
                 onClick={() => onFilterChange(filter)}
                 className={`whitespace-nowrap rounded-[1.2rem] px-6 py-4 text-xs font-bold uppercase tracking-widest transition ${
                   filterType === filter
-                    ? 'bg-gray-900 text-white'
-                    : 'border border-pink-100 bg-pink-50/50 text-gray-400 hover:bg-pink-100/50 hover:text-pink-500'
+                    ? 'bg-gray-900 text-white dark:bg-slate-800 dark:text-pink-400'
+                    : 'border border-pink-100 bg-pink-50/50 text-gray-400 hover:bg-pink-100/50 hover:text-pink-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-pink-400'
                 }`}
               >
                 {filter}
@@ -190,14 +183,14 @@ export function TransactionsTable({
         </div>
       </section>
 
-      <section className="overflow-hidden rounded-[3rem] border border-pink-50 bg-white">
+      <section className="overflow-hidden rounded-[3rem] border border-pink-50 bg-white dark:border-slate-800 dark:bg-slate-900">
         {loading ? (
           <LoadingRows />
         ) : transactions.length ? (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
-                <tr className="border-b border-pink-100 bg-pink-50/50">
+                <tr className="border-b border-pink-100 bg-pink-50/50 dark:border-slate-800 dark:bg-slate-950/40">
                   <TableHead>Transaction</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Account</TableHead>
@@ -206,7 +199,7 @@ export function TransactionsTable({
                   <TableHead className="text-center">Action</TableHead>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-pink-50">
+              <tbody className="divide-y divide-pink-50 dark:divide-slate-800">
                 {transactions.map((transaction) => (
                   <TransactionRow
                     key={transaction.id}
@@ -246,7 +239,7 @@ function TableHead({
 }) {
   return (
     <th
-      className={`px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 ${className}`}
+      className={`px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-slate-550 ${className}`}
     >
       {children}
     </th>
@@ -267,25 +260,25 @@ function TransactionRow({
   const { amountClass, badgeClass, prefix } = getAmountStyle(transaction)
 
   return (
-    <tr className="group transition hover:bg-pink-50/30">
+    <tr className="group transition hover:bg-pink-50/30 dark:hover:bg-slate-850/30">
       <td className="px-8 py-6">
         <div>
-          <p className="mb-1 font-black leading-none tracking-tight text-gray-900">
+          <p className="mb-1 font-black leading-none tracking-tight text-gray-900 dark:text-slate-100">
             {transaction.description || transaction.category?.name || 'Untitled'}
           </p>
-          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+          <p className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500">
             <Clock className="h-3 w-3" aria-hidden="true" />
             {formatDate(transaction.transaction_date)}
           </p>
         </div>
       </td>
       <td className="px-8 py-6">
-        <span className="inline-flex items-center gap-2 rounded-xl border border-pink-100 bg-pink-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-pink-500">
+        <span className="inline-flex items-center gap-2 rounded-xl border border-pink-100 bg-pink-50 px-4 py-2 text-xs font-black uppercase tracking-widest text-pink-500 dark:border-slate-800 dark:bg-slate-800 dark:text-pink-400">
           {transaction.category?.name || 'Uncategorized'}
         </span>
       </td>
       <td className="px-8 py-6">
-        <div className="flex items-center gap-2 text-gray-500">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-slate-400">
           <Landmark className="h-4 w-4 opacity-50" aria-hidden="true" />
           <span className="max-w-52 truncate text-[10px] font-bold uppercase tracking-wider">
             {getTransactionAccount(transaction)}
@@ -293,7 +286,7 @@ function TransactionRow({
         </div>
       </td>
       <td className="px-8 py-6">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-450">
           {getPaymentLabel(transaction)}
         </span>
       </td>
@@ -314,7 +307,7 @@ function TransactionRow({
             type="button"
             onClick={() => onEdit(transaction)}
             disabled={deleting}
-            className="rounded-xl p-3 text-gray-300 transition hover:bg-sky-50 hover:text-blue-500 disabled:pointer-events-none disabled:opacity-40"
+            className="rounded-xl p-3 text-gray-300 transition hover:bg-sky-50 hover:text-blue-500 dark:text-slate-600 dark:hover:bg-sky-950/40 dark:hover:text-blue-400 disabled:pointer-events-none disabled:opacity-40"
             aria-label="Edit transaction"
           >
             <Edit3 className="h-5 w-5" aria-hidden="true" />
@@ -323,7 +316,7 @@ function TransactionRow({
             type="button"
             onClick={() => onDelete(transaction)}
             disabled={deleting}
-            className="rounded-xl p-3 text-gray-300 transition hover:bg-rose-50 hover:text-rose-500 disabled:pointer-events-none disabled:opacity-40"
+            className="rounded-xl p-3 text-gray-300 transition hover:bg-rose-50 hover:text-rose-500 dark:text-slate-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 disabled:pointer-events-none disabled:opacity-40"
             aria-label="Delete transaction"
           >
             <Trash2 className="h-5 w-5" aria-hidden="true" />
@@ -340,16 +333,16 @@ function LoadingRows() {
       {[1, 2, 3, 4, 5].map((item) => (
         <div
           key={item}
-          className="flex items-center gap-5 rounded-[2rem] border border-pink-50 bg-white p-5"
+          className="flex items-center gap-5 rounded-[2rem] border border-pink-50 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="h-12 w-12 shrink-0 rounded-xl bg-pink-100" />
+          <div className="h-12 w-12 shrink-0 rounded-xl bg-pink-100 dark:bg-slate-800" />
           <div className="flex-1 space-y-3">
-            <div className="h-4 w-2/3 rounded-full bg-pink-100" />
-            <div className="h-3 w-1/3 rounded-full bg-pink-100" />
+            <div className="h-4 w-2/3 rounded-full bg-pink-100 dark:bg-slate-800" />
+            <div className="h-3 w-1/3 rounded-full bg-pink-100 dark:bg-slate-800" />
           </div>
           <div className="shrink-0 space-y-2 text-right">
-            <div className="ml-auto h-5 w-20 rounded-full bg-pink-100" />
-            <div className="ml-auto h-3 w-12 rounded-full bg-pink-100" />
+            <div className="ml-auto h-5 w-20 rounded-full bg-pink-100 dark:bg-slate-800" />
+            <div className="ml-auto h-3 w-12 rounded-full bg-pink-100 dark:bg-slate-800" />
           </div>
         </div>
       ))}
@@ -360,10 +353,10 @@ function LoadingRows() {
 function EmptyState() {
   return (
     <div className="py-24 text-center">
-      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-pink-50">
-        <CreditCard className="h-10 w-10 text-pink-300" aria-hidden="true" />
+      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-[2rem] bg-pink-50 dark:bg-slate-950">
+        <CreditCard className="h-10 w-10 text-pink-300 dark:text-slate-700" aria-hidden="true" />
       </div>
-      <p className="text-lg font-black uppercase tracking-widest text-gray-400">
+      <p className="text-lg font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
         No entries found
       </p>
     </div>
@@ -386,11 +379,11 @@ function Pagination({
   const visiblePages = getVisiblePages(page, totalPages)
 
   return (
-    <div className="flex items-center justify-between border-t border-pink-100 bg-pink-50/30 px-8 py-6">
-      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+    <div className="flex items-center justify-between border-t border-pink-100 bg-pink-50/30 px-8 py-6 dark:border-slate-800 dark:bg-slate-950/30">
+      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
         Showing{' '}
-        <span className="text-pink-500">{(page - 1) * pageSize + 1}</span> to{' '}
-        <span className="text-pink-500">
+        <span className="text-pink-500 dark:text-pink-400">{(page - 1) * pageSize + 1}</span> to{' '}
+        <span className="text-pink-500 dark:text-pink-400">
           {Math.min(page * pageSize, totalCount)}
         </span>{' '}
         of {totalCount}
@@ -409,7 +402,7 @@ function Pagination({
             return (
               <span key={visiblePage} className="flex gap-1">
                 {showGap ? (
-                  <span className="flex h-10 w-10 items-center justify-center text-gray-300">
+                  <span className="flex h-10 w-10 items-center justify-center text-gray-300 dark:text-slate-600">
                     ...
                   </span>
                 ) : null}
@@ -418,8 +411,8 @@ function Pagination({
                   onClick={() => onPageChange(visiblePage)}
                   className={`h-10 w-10 rounded-xl text-xs font-black transition ${
                     page === visiblePage
-                      ? 'bg-pink-500 text-white'
-                      : 'border border-pink-100 bg-white text-gray-400 hover:bg-pink-50'
+                      ? 'bg-pink-500 text-white dark:bg-pink-600'
+                      : 'border border-pink-100 bg-white text-gray-400 hover:bg-pink-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-pink-400'
                   }`}
                 >
                   {visiblePage}
@@ -455,7 +448,7 @@ function PaginationButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="rounded-xl border border-pink-100 bg-white p-3 text-gray-400 transition hover:border-pink-200 hover:text-pink-500 disabled:opacity-30"
+      className="rounded-xl border border-pink-100 bg-white p-3 text-gray-400 transition hover:border-pink-200 hover:text-pink-500 disabled:opacity-30 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:text-pink-400"
       aria-label={label}
     >
       <ArrowLeft

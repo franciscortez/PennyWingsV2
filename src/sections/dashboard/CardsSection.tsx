@@ -70,22 +70,22 @@ export function CardsSection({
         </div>
       </article>
 
-      <article className="flex flex-col rounded-[2.5rem] border border-pink-50 bg-white p-6 sm:p-8">
-        <h3 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800">
+      <article className="flex flex-col rounded-[2.5rem] border border-pink-50 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
+        <h3 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800 dark:text-slate-200">
           <span className="h-8 w-2 rounded-full bg-pink-500" />
           Pulse Report
         </h3>
         <div className="flex-1 space-y-6">
-          <div className="rounded-3xl border border-pink-100/70 bg-pink-50/60 p-5">
+          <div className="rounded-3xl border border-pink-100/70 bg-pink-50/60 p-5 dark:border-slate-800/80 dark:bg-slate-950/40">
             <div className="mb-3 flex items-end justify-between">
-              <p className="text-xs font-black uppercase tracking-widest text-gray-400">
+              <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
                 Savings Rate
               </p>
-              <p className="text-lg font-black text-pink-600">
+              <p className="text-lg font-black text-pink-600 dark:text-pink-400">
                 {loading ? '...' : `${savingsRate}%`}
               </p>
             </div>
-            <div className="h-3 overflow-hidden rounded-full border border-pink-100 bg-white">
+            <div className="h-3 overflow-hidden rounded-full border border-pink-100 bg-white dark:border-slate-800 dark:bg-slate-800">
               <div
                 className="h-full rounded-full bg-pink-500 transition-all duration-500"
                 style={{
@@ -143,12 +143,12 @@ function DashboardAction({
   return (
     <Link
       to={to}
-      className="group flex flex-col items-center justify-center gap-3 rounded-[2rem] border border-pink-100 bg-white p-6 transition hover:-translate-y-1"
+      className="group flex flex-col items-center justify-center gap-3 rounded-[2rem] border border-pink-100 bg-white p-6 transition hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900"
     >
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 transition group-hover:bg-pink-500 group-hover:text-white">
+      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 transition group-hover:bg-pink-500 group-hover:text-white dark:bg-slate-800 dark:text-pink-400 dark:group-hover:bg-pink-500 dark:group-hover:text-white">
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
-      <span className="text-xs font-black uppercase tracking-tight text-gray-800">
+      <span className="text-xs font-black uppercase tracking-tight text-gray-800 dark:text-slate-200">
         {label}
       </span>
     </Link>

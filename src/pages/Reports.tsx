@@ -84,16 +84,16 @@ function EmptyReport({
   month: string
 }) {
   return (
-    <section className="relative overflow-hidden rounded-[2.75rem] border border-pink-100 bg-white px-6 py-14 text-center md:px-10">
-      <div className="absolute left-1/2 top-0 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-200/50 blur-3xl" />
+    <section className="relative overflow-hidden rounded-[2.75rem] border border-pink-100 bg-white px-6 py-14 text-center md:px-10 dark:border-slate-800 dark:bg-slate-900">
+      <div className="absolute left-1/2 top-0 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-200/50 blur-3xl dark:bg-pink-900/10" />
       <div className="relative">
-        <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-pink-50 text-pink-500">
+        <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-pink-50 text-pink-500 dark:bg-slate-850 dark:text-pink-400">
           <FileChartColumn className="h-10 w-10" aria-hidden="true" />
         </span>
-        <h2 className="mt-6 text-2xl font-black tracking-tight text-gray-950 md:text-3xl">
+        <h2 className="mt-6 text-2xl font-black tracking-tight text-gray-950 dark:text-white md:text-3xl">
           No report for {formatReportMonth(month)}
         </h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm font-medium leading-relaxed text-gray-500">
+        <p className="mx-auto mt-3 max-w-lg text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-450">
           Automatic reports begin with your first account or transaction.
           There is nothing to calculate for this earlier month.
         </p>

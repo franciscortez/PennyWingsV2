@@ -5,15 +5,45 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>pennywingsv2</title>
+    <script>
+      ;(() => {
+        try {
+          const savedTheme = localStorage.getItem('theme')
+          const prefersDark = window.matchMedia(
+            '(prefers-color-scheme: dark)',
+          ).matches
+          const theme =
+            savedTheme === 'light' || savedTheme === 'dark'
+              ? savedTheme
+              : prefersDark
+                ? 'dark'
+                : 'light'
+
+          document.documentElement.classList.toggle('dark', theme === 'dark')
+          document.documentElement.style.colorScheme = theme
+        } catch {
+          document.documentElement.classList.remove('dark')
+          document.documentElement.style.colorScheme = 'light'
+        }
+      })()
+    </script>
     <style>
       :root {
         background: #fff0f5;
+      }
+
+      html.dark {
+        background: #020617;
       }
 
       body {
         margin: 0;
         min-width: 320px;
         background: #fff0f5;
+      }
+
+      html.dark body {
+        background: #020617;
       }
 
       #root {
@@ -32,6 +62,11 @@
         box-sizing: border-box;
         background: #fff0f5;
         color: #ff7a93;
+      }
+
+      html.dark .initial-loader {
+        background: #020617;
+        color: #f472b6;
       }
 
       .initial-loader__mark {
@@ -61,14 +96,26 @@
         animation-delay: 0ms;
       }
 
+      html.dark .initial-loader__dot--one {
+        background: #ec4899;
+      }
+
       .initial-loader__dot--two {
         background: #ff7a93;
         animation-delay: 150ms;
       }
 
+      html.dark .initial-loader__dot--two {
+        background: #f472b6;
+      }
+
       .initial-loader__dot--three {
         background: #e85d7a;
         animation-delay: 300ms;
+      }
+
+      html.dark .initial-loader__dot--three {
+        background: #f9a8d4;
       }
 
       @keyframes initial-loader-bounce {

@@ -27,7 +27,7 @@ export function TotalBalanceSection({
       <div className="relative z-10 flex flex-col items-center justify-between gap-8 md:flex-row">
         <div className="text-center md:text-left">
           <div className="mb-2 flex items-center justify-center gap-2 md:justify-start">
-            <span className="h-2 w-2 animate-pulse rounded-full bg-pink-200" />
+            <span className="h-2 w-2 animate-pulse rounded-full bg-pink-200 dark:bg-pink-300" />
             <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-100">
               Total Net Worth
             </p>

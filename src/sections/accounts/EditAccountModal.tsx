@@ -35,7 +35,6 @@ export function EditAccountModal({
   const [textColor, setTextColor] = useState(account.textColor || '#ffffff')
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-
   const isCard = account.kind === 'card'
   const isCash = account.kind === 'cash'
 
@@ -74,13 +73,13 @@ export function EditAccountModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] bg-white p-6 shadow-2xl sm:p-8">
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] bg-white p-6 shadow-2xl sm:p-8 dark:border dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-gray-900">
+            <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
               Edit Account
             </h2>
-            <p className="text-xs font-bold text-gray-400">
+            <p className="text-xs font-bold text-gray-400 dark:text-slate-550">
               Update account preferences and details
             </p>
           </div>
@@ -88,7 +87,7 @@ export function EditAccountModal({
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gray-100 text-gray-400 hover:bg-gray-200 hover:text-gray-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-750 dark:hover:text-pink-400"
           >
             <FaXmark className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -99,7 +98,7 @@ export function EditAccountModal({
           <div>
             <label
               htmlFor="account-name-input"
-              className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+              className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500"
             >
               Account Name
             </label>
@@ -108,7 +107,7 @@ export function EditAccountModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
               placeholder="e.g. BDO Savings, GCash"
             />
             {errors.name ? (
@@ -121,7 +120,7 @@ export function EditAccountModal({
             <div>
               <label
                 htmlFor="account-type-select"
-                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500"
               >
                 Account Type
               </label>
@@ -129,10 +128,10 @@ export function EditAccountModal({
                 id="account-type-select"
                 value={accountType}
                 onChange={(e) => setAccountType(e.target.value)}
-                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
               >
                 {(isCard ? cardTypeOptions : walletTypeOptions).map((option) => (
-                  <option key={option.value} value={option.value}>
+                  <option key={option.value} value={option.value} className="dark:bg-slate-900">
                     {option.label}
                   </option>
                 ))}
@@ -150,7 +149,7 @@ export function EditAccountModal({
             <div>
               <label
                 htmlFor="last-four-input"
-                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500"
               >
                 Card Last 4 Digits (Optional)
               </label>
@@ -160,7 +159,7 @@ export function EditAccountModal({
                 maxLength={4}
                 value={lastFour}
                 onChange={(e) => setLastFour(e.target.value.replace(/\D/g, ''))}
-                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
                 placeholder="1234"
               />
               {errors.lastFour ? (
@@ -173,7 +172,7 @@ export function EditAccountModal({
             <div>
               <label
                 htmlFor="account-identifier-input"
-                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500"
+                className="mb-1 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500"
               >
                 Account Identifier (Optional)
               </label>
@@ -182,7 +181,7 @@ export function EditAccountModal({
                 type="text"
                 value={accountIdentifier}
                 onChange={(e) => setAccountIdentifier(e.target.value)}
-                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+                className="w-full rounded-2xl border border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-bold text-gray-800 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
                 placeholder="Mobile number or account ID"
               />
               {errors.accountIdentifier ? (
@@ -195,7 +194,7 @@ export function EditAccountModal({
 
           {/* Card Color Palette */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500">
               Account Card Theme
             </label>
             <div className="grid grid-cols-8 gap-2">
@@ -227,7 +226,7 @@ export function EditAccountModal({
 
           {/* Text Color Selection */}
           <div>
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500">
+            <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500">
               Card Text Color
             </label>
             <div className="flex gap-3">
@@ -238,12 +237,12 @@ export function EditAccountModal({
                   onClick={() => setTextColor(option.value)}
                   className={`flex items-center gap-2 rounded-2xl border px-4 py-2 text-xs font-bold transition-all ${
                     textColor === option.value
-                      ? 'border-pink-500 bg-pink-50 text-pink-600'
-                      : 'border-gray-200 bg-white text-gray-600 hover:border-pink-200'
+                      ? 'border-pink-500 bg-pink-50 text-pink-600 dark:border-pink-600 dark:bg-pink-950/20 dark:text-pink-400'
+                      : 'border-gray-200 bg-white text-gray-600 hover:border-pink-200 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700'
                   }`}
                 >
                   <span
-                    className="h-3 w-3 rounded-full border border-gray-300"
+                    className="h-3 w-3 rounded-full border border-gray-300 dark:border-slate-700"
                     style={{ backgroundColor: option.value }}
                   />
                   {option.label}
@@ -258,7 +257,7 @@ export function EditAccountModal({
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="rounded-2xl border border-gray-200 px-6 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50"
+              className="rounded-2xl border border-gray-200 px-6 py-3 text-sm font-bold text-gray-600 hover:bg-gray-50 dark:border-slate-750 dark:text-slate-400 dark:hover:bg-slate-800"
             >
               Cancel
             </button>

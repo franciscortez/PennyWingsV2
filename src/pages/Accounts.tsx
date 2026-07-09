@@ -204,10 +204,10 @@ export default function Accounts() {
   return (
     <Layout>
       <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900">
+        <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
           My Accounts
         </h1>
-        <p className="text-gray-500">
+        <p className="text-gray-500 dark:text-slate-400">
           Manage your bank cards and digital wallets in one place.
         </p>
       </div>
@@ -227,7 +227,7 @@ export default function Accounts() {
       />
 
       <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row">
-        <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-4xl border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm md:w-fit">
+        <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-4xl border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/30 md:w-fit">
           {tabs.map((tab) => {
             const Icon = tab.icon
             const active = activeTab === tab.id
@@ -239,8 +239,8 @@ export default function Accounts() {
                 onClick={() => handleTabChange(tab.id)}
                 className={`flex flex-1 snap-center items-center justify-center gap-2 rounded-[1.2rem] px-6 py-3 font-bold transition-all md:flex-none ${
                   active
-                    ? 'scale-105 bg-white text-pink-600'
-                    : 'text-gray-400 hover:text-pink-400'
+                    ? 'scale-105 bg-white text-pink-600 dark:bg-slate-800 dark:text-pink-400'
+                    : 'text-gray-400 hover:text-pink-400 dark:text-slate-400'
                 }`}
               >
                 <Icon className="h-5 w-5" aria-hidden="true" />
@@ -248,8 +248,8 @@ export default function Accounts() {
                 <span
                   className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
                     active
-                      ? 'bg-pink-100 text-pink-600'
-                      : 'bg-gray-100 text-gray-400'
+                      ? 'bg-pink-100 text-pink-600 dark:bg-slate-700 dark:text-pink-400'
+                      : 'bg-gray-100 text-gray-400 dark:bg-slate-800 dark:text-slate-500'
                   }`}
                 >
                   {loading ? '...' : tabCounts[tab.id]}
@@ -265,7 +265,7 @@ export default function Accounts() {
             placeholder="Search accounts..."
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-white px-5 py-3 text-sm font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+            className="w-full rounded-2xl border border-pink-100 bg-white px-5 py-3 text-sm font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
           />
         </div>
       </div>

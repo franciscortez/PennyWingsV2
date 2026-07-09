@@ -68,16 +68,16 @@ function SummaryCard({
   value: string
 }) {
   return (
-    <article className="flex min-h-32 items-center gap-4 rounded-[2rem] border border-pink-50 bg-white p-5">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-pink-50 text-pink-500">
+    <article className="flex min-h-32 items-center gap-4 rounded-[2rem] border border-pink-50 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-pink-50 text-pink-500 dark:bg-slate-800 dark:text-pink-400">
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
       <div className="min-w-0">
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400">
+        <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
           {label}
         </p>
-        <p className="truncate text-2xl font-black text-gray-900">{value}</p>
-        <p className="mt-1 truncate text-xs font-bold text-gray-400">{detail}</p>
+        <p className="truncate text-2xl font-black text-gray-900 dark:text-slate-100">{value}</p>
+        <p className="mt-1 truncate text-xs font-bold text-gray-400 dark:text-slate-500">{detail}</p>
       </div>
     </article>
   )

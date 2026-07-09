@@ -15,6 +15,7 @@ import { Link, useLocation } from 'react-router'
 import { AppButton } from '@/components/ui/Button'
 import { PennyWingsMark } from '@/sections/shared'
 import type { SidebarInfo } from '@/types'
+import { ThemeToggle } from './ThemeToggle'
 
 type SidebarProps = {
   mobileMenuOpen: boolean
@@ -31,8 +32,8 @@ const navigation = [
   { name: 'Accounts', href: '/accounts', icon: CreditCard, mobile: true },
   { name: 'Activity', href: '/transactions', icon: History, mobile: true },
   { name: 'Reports', href: '/reports', icon: BarChart3, mobile: true },
-  { name: 'Monitoring', href: '/monitoring', icon: Wallet, mobile: false },
-  { name: 'Settings', href: '/profile', icon: Settings, mobile: false },
+  { name: 'Monitoring', href: '/monitoring', icon: Wallet, mobile: true },
+  { name: 'Settings', href: '/profile', icon: Settings, mobile: false, mobileMenu: false },
 ]
 
 export function Sidebar({
@@ -46,7 +47,9 @@ export function Sidebar({
 }: SidebarProps) {
   const location = useLocation()
   const visibleMobileItems = navigation.filter((item) => item.mobile)
-  const hiddenMobileItems = navigation.filter((item) => !item.mobile)
+  const hiddenMobileItems = navigation.filter(
+    (item) => !item.mobile && item.mobileMenu !== false,
+  )
 
   return (
     <>
@@ -54,7 +57,6 @@ export function Sidebar({
         onSignOut={onSignOut}
         onToggleSidebar={onToggleSidebar}
         pathname={location.pathname}
-        sidebarInfo={sidebarInfo}
         sidebarOpen={sidebarOpen}
       />
       <MobileNavigation
@@ -80,18 +82,16 @@ function DesktopSidebar({
   onSignOut,
   onToggleSidebar,
   pathname,
-  sidebarInfo,
   sidebarOpen,
 }: {
   onSignOut: () => void
   onToggleSidebar: () => void
   pathname: string
-  sidebarInfo: SidebarInfo
   sidebarOpen: boolean
 }) {
   return (
     <aside
-      className={`fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-pink-100 bg-white transition-[width] duration-300 md:flex ${
+      className={`fixed left-0 top-0 z-40 hidden h-screen flex-col border-r border-pink-100 bg-white transition-[width] duration-300 dark:border-slate-800 dark:bg-slate-900 md:flex ${
         sidebarOpen ? 'w-72 xl:w-80' : 'w-24'
       }`}
     >
@@ -119,6 +119,7 @@ function DesktopSidebar({
           size="icon"
           variant="ghost"
           aria-label={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
+          className="dark:text-slate-400 dark:hover:text-pink-400 dark:hover:bg-slate-800/60"
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
         </AppButton>
@@ -135,17 +136,14 @@ function DesktopSidebar({
         ))}
       </nav>
 
-      <div className="border-t border-pink-50 p-4">
-        <SidebarProfileCard
-          expanded={sidebarOpen}
-          sidebarInfo={sidebarInfo}
-        />
+      <div className="border-t border-pink-50 dark:border-slate-800/80 p-4 space-y-2">
+        <ThemeToggle expanded={sidebarOpen} />
         <AppButton
           type="button"
           onClick={onSignOut}
           variant="danger"
-          className={`mt-2 w-full rounded-xl py-3 ${
-            sidebarOpen ? 'gap-3 px-4' : 'px-0'
+          className={`w-full rounded-xl py-3 ${
+            sidebarOpen ? 'justify-start gap-3 px-4' : 'justify-center px-0'
           }`}
           title={sidebarOpen ? undefined : 'Sign out'}
         >
@@ -163,37 +161,6 @@ function DesktopSidebar({
   )
 }
 
-function SidebarProfileCard({
-  expanded,
-  sidebarInfo,
-}: {
-  expanded: boolean
-  sidebarInfo: SidebarInfo
-}) {
-  return (
-    <Link
-      to="/profile"
-      title={expanded ? undefined : sidebarInfo.displayName}
-      className={`flex items-center rounded-2xl border border-pink-50 bg-pink-50/60 py-3 transition hover:bg-pink-50 ${
-        expanded ? 'gap-3 px-3' : 'justify-center px-0'
-      }`}
-    >
-      <ProfileAvatar sidebarInfo={sidebarInfo} />
-      <span
-        className={`min-w-0 transition-all ${
-          expanded ? 'w-auto opacity-100' : 'w-0 opacity-0'
-        }`}
-      >
-        <span className="block truncate text-sm font-black text-gray-800">
-          {sidebarInfo.loading ? 'Loading...' : sidebarInfo.displayName}
-        </span>
-        <span className="block truncate text-xs font-bold text-gray-400">
-          {sidebarInfo.email ?? 'Profile'}
-        </span>
-      </span>
-    </Link>
-  )
-}
 
 function ProfileAvatar({ sidebarInfo }: { sidebarInfo: SidebarInfo }) {
   if (sidebarInfo.avatarUrl) {
@@ -232,8 +199,8 @@ function SidebarLink({
         expanded ? 'gap-3 px-4' : 'justify-center px-0'
       } ${
         active
-          ? 'bg-pink-50 text-pink-600'
-          : 'text-gray-400 hover:bg-pink-50/70 hover:text-pink-500'
+          ? 'bg-pink-50 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400'
+          : 'text-gray-400 hover:bg-pink-50/70 hover:text-pink-500 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-pink-400'
       }`}
     >
       <Icon className="h-6 w-6 shrink-0" aria-hidden="true" />
@@ -266,7 +233,7 @@ function MobileNavigation({
   const secondaryActive = secondaryItems.some((item) => item.href === pathname)
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 shadow-[0_-12px_30px_rgba(236,72,153,0.08)] backdrop-blur-md md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 md:hidden">
       <div className="flex w-full items-stretch">
         {items.map((item) => {
           const active = pathname === item.href
@@ -278,7 +245,9 @@ function MobileNavigation({
               to={item.href}
               onClick={onCloseMenu}
               className={`flex min-w-0 flex-1 basis-0 flex-col items-center justify-center rounded-2xl px-1 py-2.5 transition ${
-                active ? 'bg-pink-50 text-pink-600' : 'text-gray-400'
+                active
+                  ? 'bg-pink-50 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400'
+                  : 'text-gray-400 dark:text-slate-400'
               }`}
             >
               <Icon className="mb-1 h-5 w-5" aria-hidden="true" />
@@ -293,8 +262,8 @@ function MobileNavigation({
           onClick={onToggleMenu}
           className={`flex min-w-0 flex-1 basis-0 flex-col items-center justify-center rounded-2xl px-1 py-2.5 transition ${
             menuOpen || secondaryActive
-              ? 'bg-pink-50 text-pink-600'
-              : 'text-gray-400'
+              ? 'bg-pink-50 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400'
+              : 'text-gray-400 dark:text-slate-400'
           }`}
           aria-expanded={menuOpen}
           aria-haspopup="menu"
@@ -336,27 +305,32 @@ function MobileMenu({
         aria-label="Close more navigation"
       />
       <section
-        className="animate-fade-in absolute bottom-3 left-3 right-3 overflow-hidden rounded-4xl border border-pink-100 bg-white p-3 shadow-2xl shadow-pink-200/40"
+        className="animate-fade-in absolute bottom-3 left-3 right-3 overflow-hidden rounded-4xl border border-pink-100 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
         role="menu"
         aria-label="More navigation"
       >
         <Link
           to="/profile"
           onClick={onClose}
-          className="mb-2 flex items-center gap-3 rounded-3xl bg-linear-to-r from-pink-50 to-pink-100/60 p-4 transition hover:from-pink-100 hover:to-pink-50"
+          className="mb-2 flex items-center gap-3 rounded-3xl bg-linear-to-r from-pink-50 to-pink-100/60 p-4 transition hover:from-pink-100 hover:to-pink-50 dark:from-slate-800 dark:to-slate-800/60 dark:hover:from-slate-800/80 dark:hover:to-slate-800"
           role="menuitem"
         >
           <ProfileAvatar sidebarInfo={sidebarInfo} />
           <div className="min-w-0">
-            <p className="truncate text-sm font-black text-gray-800">
+            <p className="truncate text-sm font-black text-gray-800 dark:text-slate-200">
               {sidebarInfo.loading ? 'Loading...' : sidebarInfo.displayName}
             </p>
-            <p className="truncate text-xs font-bold text-gray-400">
+            <p className="truncate text-xs font-bold text-gray-400 dark:text-slate-500">
               {sidebarInfo.email ?? 'Profile'}
             </p>
           </div>
           <ProfileLinkIndicator />
         </Link>
+
+        {/* Theme Toggle in Mobile Menu */}
+        <div className="mb-2 p-2 border border-pink-50 dark:border-slate-800/60 rounded-3xl bg-pink-50/20 dark:bg-slate-800/20">
+          <ThemeToggle expanded={true} />
+        </div>
 
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))' }}>
           {items.map((item) => {
@@ -367,13 +341,13 @@ function MobileMenu({
                 key={item.name}
                 to={item.href}
                 onClick={onClose}
-                className="flex w-full min-w-0 flex-col items-center justify-center gap-2 rounded-3xl border border-pink-50 bg-pink-50/40 px-2 py-4 text-center transition hover:border-pink-200 hover:bg-pink-50"
+                className="flex w-full min-w-0 flex-col items-center justify-center gap-2 rounded-3xl border border-pink-50 bg-pink-50/40 px-2 py-4 text-center transition hover:border-pink-200 hover:bg-pink-50 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700 dark:hover:bg-slate-800"
                 role="menuitem"
               >
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-pink-500 shadow-sm">
+                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white text-pink-500 dark:bg-slate-900 dark:text-pink-400">
                   <Icon className="h-5 w-5" aria-hidden="true" />
                 </span>
-                <span className="truncate text-[10px] font-black uppercase tracking-tight text-gray-600">
+                <span className="truncate text-[10px] font-black uppercase tracking-tight text-gray-600 dark:text-slate-400">
                   {item.name}
                 </span>
               </Link>
@@ -398,7 +372,7 @@ function MobileMenu({
 
 function ProfileLinkIndicator() {
   return (
-    <span className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white text-pink-400">
+    <span className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white text-pink-400 dark:bg-slate-900 dark:text-pink-500">
       <ChevronRight className="h-4 w-4" aria-hidden="true" />
     </span>
   )

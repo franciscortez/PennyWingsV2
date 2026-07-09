@@ -72,7 +72,7 @@ export function BudgetModal({
         <div>
           <label
             htmlFor="budget-category"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
           >
             Category
           </label>
@@ -80,11 +80,11 @@ export function BudgetModal({
             id="budget-category"
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
           >
-            <option value="">Choose expense category</option>
+            <option value="" className="dark:bg-slate-900">Choose expense category</option>
             {categories.map((category) => (
-              <option key={category.id} value={category.id}>
+              <option key={category.id} value={category.id} className="dark:bg-slate-900">
                 {category.name}
               </option>
             ))}
@@ -94,7 +94,7 @@ export function BudgetModal({
           <div>
             <label
               htmlFor="budget-limit"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
             >
               Limit
             </label>
@@ -105,14 +105,14 @@ export function BudgetModal({
               step="0.01"
               value={limitAmount}
               onChange={(event) => setLimitAmount(event.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
               placeholder="0.00"
             />
           </div>
           <div>
             <label
               htmlFor="budget-period"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
             >
               Period
             </label>
@@ -120,10 +120,10 @@ export function BudgetModal({
               id="budget-period"
               value={period}
               onChange={(event) => setPeriod(event.target.value as BudgetPeriod)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
             >
               {periodOptions.map((option) => (
-                <option key={option.value} value={option.value}>
+                <option key={option.value} value={option.value} className="dark:bg-slate-900">
                   {option.label}
                 </option>
               ))}

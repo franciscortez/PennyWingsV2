@@ -19,10 +19,10 @@ export function MonitoringHeader({
         <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-pink-500">
           Monitoring
         </p>
-        <h1 className="text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
+        <h1 className="text-3xl font-black tracking-tight text-gray-950 dark:text-white sm:text-4xl">
           Budgets & Goals
         </h1>
-        <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500 sm:text-base">
+        <p className="mt-2 max-w-2xl text-sm font-medium text-gray-500 dark:text-slate-400 sm:text-base">
           Keep spending limits and savings targets visible before they drift.
         </p>
       </div>

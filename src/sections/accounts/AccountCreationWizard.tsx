@@ -176,27 +176,27 @@ export function AccountCreationWizard({
         className="absolute inset-0 animate-fade-in bg-black/40"
         aria-label="Close account setup"
       />
-      <section className="relative z-10 flex max-h-[95vh] w-full max-w-md flex-col overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in">
-        <div className="flex items-center justify-between border-b border-pink-50 p-6 pb-4 sm:p-8 sm:pb-4">
+      <section className="relative z-10 flex max-h-[95vh] w-full max-w-md flex-col overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-pink-50 p-6 pb-4 sm:p-8 sm:pb-4 dark:border-slate-800">
           <div className="flex items-center gap-2">
             {step > 1 ? (
               <button
                 type="button"
                 onClick={handleBack}
-                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-pink-50 active:scale-90"
+                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-pink-50 active:scale-90 dark:hover:bg-slate-800"
                 aria-label="Back"
               >
                 <FaArrowLeft className="h-5 w-5" aria-hidden="true" />
               </button>
             ) : null}
-            <h2 className="text-2xl font-black tracking-tight text-gray-800">
+            <h2 className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
               {form.setupType === 'cash' ? 'Cash on Hand' : `Step ${step} of 3`}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-2 text-gray-400 transition-all duration-200 hover:rotate-90 hover:bg-pink-50 active:scale-90"
+            className="rounded-full p-2 text-gray-400 transition-all duration-200 hover:rotate-90 hover:bg-pink-50 active:scale-90 dark:hover:bg-slate-800"
             aria-label="Close account setup"
           >
             <FaXmark className="h-6 w-6" aria-hidden="true" />
@@ -208,7 +208,7 @@ export function AccountCreationWizard({
             {[1, 2, 3].map((item) => (
               <div
                 key={item}
-                className="relative h-2 flex-1 overflow-hidden rounded-full bg-pink-100"
+                className="relative h-2 flex-1 overflow-hidden rounded-full bg-pink-100 dark:bg-slate-800"
               >
                 <div
                   className="absolute inset-0 bg-pink-500 transition-all duration-200 ease-out"
@@ -267,7 +267,7 @@ const StepOne = memo(function StepOne({
 }) {
   return (
     <div className="space-y-6">
-      <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400">
+      <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
         What kind of account?
       </label>
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
@@ -284,20 +284,20 @@ const StepOne = memo(function StepOne({
                 onClick={() => onSelectType(type.id)}
                 className={`flex flex-col items-center justify-center gap-2 rounded-4xl border-2 p-4 text-center transition-all duration-200 active:scale-95 sm:gap-3 sm:p-6 ${
                   active
-                    ? 'scale-[1.02] border-pink-500 bg-pink-50'
-                    : 'border-transparent bg-pink-50/50 hover:border-pink-200 hover:bg-white'
+                    ? 'scale-[1.02] border-pink-500 bg-pink-50 dark:border-pink-600 dark:bg-pink-950/20'
+                    : 'border-transparent bg-pink-50/50 hover:border-pink-200 hover:bg-white dark:bg-slate-850/50 dark:hover:border-slate-700 dark:hover:bg-slate-800'
                 }`}
               >
                 <span
                   className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-transform sm:h-14 sm:w-14 ${
-                    active ? 'bg-pink-500 text-white' : 'bg-white text-pink-500'
+                    active ? 'bg-pink-500 text-white dark:bg-pink-600' : 'bg-white text-pink-500 dark:bg-slate-900 dark:text-pink-400'
                   }`}
                 >
                   <Icon className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden="true" />
                 </span>
                 <span
                   className={`text-xs font-bold sm:text-base ${
-                    active ? 'text-pink-700' : 'text-gray-700'
+                    active ? 'text-pink-700 dark:text-pink-400' : 'text-gray-700 dark:text-slate-300'
                   }`}
                 >
                   {type.label}
@@ -335,18 +335,18 @@ const StepTwo = memo(function StepTwo({
   return (
     <div className="space-y-6">
       <div>
-        <label className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400">
+        <label className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
           Select Provider
         </label>
         <select
           required
           value={form.provider}
           onChange={(event) => onChange('provider', event.target.value)}
-          className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+          className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
         >
-          <option value="">Choose a bank/wallet...</option>
+          <option value="" className="dark:bg-slate-900">Choose a bank/wallet...</option>
           {providers.map((provider) => (
-            <option key={provider} value={provider}>
+            <option key={provider} value={provider} className="dark:bg-slate-900">
               {provider}
             </option>
           ))}
@@ -354,7 +354,7 @@ const StepTwo = memo(function StepTwo({
       </div>
 
       <div>
-        <label className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400">
+        <label className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
           Custom Name (Optional)
         </label>
         <input
@@ -362,7 +362,7 @@ const StepTwo = memo(function StepTwo({
           placeholder="e.g. My Savings"
           value={form.accountName}
           onChange={(event) => onChange('accountName', event.target.value)}
-          className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+          className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
         />
       </div>
 
@@ -400,11 +400,11 @@ const StepThree = memo(function StepThree({
   return (
     <div className="space-y-8">
       <div className="text-center">
-        <label className="mb-4 block text-xs font-black uppercase tracking-[0.2em] text-gray-400">
+        <label className="mb-4 block text-xs font-black uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
           Initial Balance
         </label>
         <div className="relative inline-block w-full">
-          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-pink-300 sm:text-4xl">
+          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-pink-300 sm:text-4xl dark:text-slate-650">
             PHP
           </span>
           <input
@@ -415,13 +415,13 @@ const StepThree = memo(function StepThree({
             placeholder="0.00"
             value={form.balance}
             onChange={(event) => onChange('balance', event.target.value)}
-            className="w-full rounded-[2.5rem] border-2 border-pink-100 bg-pink-50/50 py-6 pl-24 pr-6 text-center text-3xl font-black text-gray-800 outline-none transition-all placeholder:text-pink-300 focus:border-pink-500 sm:py-8 sm:text-4xl"
+            className="w-full rounded-[2.5rem] border-2 border-pink-100 bg-pink-50/50 py-6 pl-24 pr-6 text-center text-3xl font-black text-gray-800 outline-none transition-all placeholder:text-pink-300 focus:border-pink-500 sm:py-8 sm:text-4xl dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400">
+        <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
           Card Color
         </label>
         <div className="flex flex-wrap gap-2">
@@ -432,8 +432,8 @@ const StepThree = memo(function StepThree({
               onClick={() => handleColorClick(color)}
               className={`h-8 w-8 rounded-xl transition-transform ${
                 form.color.value === color.value
-                  ? 'scale-110 ring-2 ring-pink-500 ring-offset-2'
-                  : 'border border-gray-200 hover:scale-105'
+                  ? 'scale-110 ring-2 ring-pink-500 ring-offset-2 dark:ring-offset-slate-900'
+                  : 'border border-gray-200 hover:scale-105 dark:border-slate-700'
               }`}
               style={{ backgroundColor: color.value }}
               aria-label={color.label}
@@ -443,7 +443,7 @@ const StepThree = memo(function StepThree({
       </div>
 
       <div
-        className="flex h-16 items-center justify-center rounded-3xl border border-pink-100 text-lg font-bold"
+        className="flex h-16 items-center justify-center rounded-3xl border border-pink-100 text-lg font-bold dark:border-slate-850"
         style={{
           background: `linear-gradient(135deg, ${form.color.value}, ${form.color.value}DD)`,
           color: form.color.text,

@@ -7,7 +7,7 @@ export function AccountCardChip({
 }: AccountCardChipProps) {
   return (
     <div
-      className={`${className} relative overflow-hidden rounded-lg bg-amber-400/80 shadow-inner ring-1 ring-amber-300`}
+      className={`${className} relative overflow-hidden rounded-lg bg-amber-400/80 ring-1 ring-amber-300`}
     >
       <svg
         viewBox="0 0 100 80"

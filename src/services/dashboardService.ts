@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { getCurrentMonthRange } from '@/lib/date'
 import type { Tables } from '@/lib/database.types'
 import type {
   DashboardAccount,
@@ -54,17 +55,6 @@ export const emptyDashboardData: DashboardData = {
 const toNumber = (value: unknown) => Number(value ?? 0)
 
 const clampPercent = (value: number) => Math.min(100, Math.max(0, value))
-
-const getMonthRange = () => {
-  const now = new Date()
-  const start = new Date(now.getFullYear(), now.getMonth(), 1)
-  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  }
-}
 
 const getMonthlyStats = (
   transactions: MonthTransactionRow[],
@@ -191,7 +181,7 @@ export const fetchDashboardData = async (
   userId: string,
   txLimit = 5,
 ): Promise<DashboardData> => {
-  const { start, end } = getMonthRange()
+  const { start, end } = getCurrentMonthRange()
 
   const [
     cardsResult,

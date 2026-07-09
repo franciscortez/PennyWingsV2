@@ -71,8 +71,7 @@ export function CategoryBalanceCards({
         return (
           <div
             key={cat.id}
-            className="group relative overflow-hidden rounded-[2rem] border border-white/60 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-            style={{ boxShadow: `0 4px 20px ${cat.shadowColor}` }}
+            className="group relative overflow-hidden rounded-[2rem] border border-white/60 bg-white p-5 transition-all duration-300 hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900"
           >
             {/* Decorative gradient blur */}
             <div
@@ -91,10 +90,10 @@ export function CategoryBalanceCards({
 
               {/* Label + Balance */}
               <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400">
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-500">
                   {cat.label}
                 </p>
-                <p className="truncate text-lg font-black tracking-tight text-gray-900">
+                <p className="truncate text-lg font-black tracking-tight text-gray-900 dark:text-slate-100">
                   {loading ? '...' : currency.format(balance)}
                 </p>
               </div>

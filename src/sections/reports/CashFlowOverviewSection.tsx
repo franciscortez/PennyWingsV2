@@ -31,18 +31,18 @@ export function CashFlowOverviewSection({
 
   return (
     <section className="space-y-6">
-      <article className="rounded-[2.5rem] border border-pink-50 bg-white p-6 md:p-8">
+      <article className="rounded-[2.5rem] border border-pink-50 bg-white p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-gray-950">
+            <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-gray-950 dark:text-white">
               <span className="h-7 w-2 rounded-full bg-pink-500" />
               Income vs. Expense
             </h2>
-            <p className="mt-1 text-sm font-medium italic text-gray-400">
+            <p className="mt-1 text-sm font-medium italic text-gray-400 dark:text-slate-500">
               Monthly cash flow comparison
             </p>
           </div>
-          <p className="text-sm font-black text-gray-500">
+          <p className="text-sm font-black text-gray-500 dark:text-slate-400">
             Flow: {compactReportCurrency.format(report.incomeTotal + report.expenseTotal)}
           </p>
         </div>
@@ -65,7 +65,7 @@ export function CashFlowOverviewSection({
         </div>
       </article>
 
-      <article className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-gray-950 to-gray-800 p-7 text-white md:p-9">
+      <article className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-gray-950 to-gray-800 p-7 text-white md:p-9 dark:border dark:border-slate-800">
         <div className="absolute -right-12 -top-12 h-52 w-52 rounded-full bg-pink-500/20 blur-3xl" />
         <div className="relative">
           <div className="mb-5 flex items-center gap-3">
@@ -108,15 +108,15 @@ function FlowBar({
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-4">
-        <span className="flex items-center gap-2 text-sm font-black text-gray-600">
+        <span className="flex items-center gap-2 text-sm font-black text-gray-600 dark:text-slate-400">
           <Icon className="h-5 w-5 text-pink-500" aria-hidden="true" />
           {label}
         </span>
-        <span className="text-sm font-black text-gray-950">
+        <span className="text-sm font-black text-gray-950 dark:text-slate-100">
           {reportCurrency.format(value)}
         </span>
       </div>
-      <div className="h-4 overflow-hidden rounded-full bg-pink-50">
+      <div className="h-4 overflow-hidden rounded-full bg-pink-50 dark:bg-slate-950">
         <div
           className={`h-full min-w-1 rounded-full transition-all duration-700 ${color}`}
           style={{ width: `${width}%` }}

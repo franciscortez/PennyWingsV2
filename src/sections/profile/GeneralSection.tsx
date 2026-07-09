@@ -66,11 +66,11 @@ export default function GeneralSection() {
   }
 
   return (
-    <article className="rounded-3xl border border-pink-100 bg-white p-6 shadow-sm sm:p-8">
+    <article className="rounded-3xl border border-pink-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:p-8">
       <form onSubmit={handleSubmitDetails(onUpdateDetails)} className="space-y-6">
         <div className="flex flex-col items-center gap-6 sm:flex-row">
           <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-pink-50 text-pink-500 shadow-inner">
+            <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-pink-50 text-pink-500 dark:bg-slate-800 dark:text-pink-400">
               {selectedAvatarUrl ? (
                 <img
                   src={selectedAvatarUrl}
@@ -83,8 +83,8 @@ export default function GeneralSection() {
             </div>
           </div>
           <div className="flex-1 text-center sm:text-left">
-            <h3 className="text-lg font-black text-gray-800">Your Avatar</h3>
-            <p className="text-xs font-bold text-gray-400">
+            <h3 className="text-lg font-black text-gray-800 dark:text-slate-200">Your Avatar</h3>
+            <p className="text-xs font-bold text-gray-400 dark:text-slate-500">
               Choose one of our premium preset avatars or paste a custom image URL.
             </p>
           </div>
@@ -92,7 +92,7 @@ export default function GeneralSection() {
 
         {/* Preset Avatars */}
         <div className="space-y-3">
-          <label className="block text-xs font-black uppercase tracking-widest text-gray-400">
+          <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
             Preset Options
           </label>
           <div className="grid grid-cols-6 gap-3">
@@ -101,10 +101,10 @@ export default function GeneralSection() {
                 key={url}
                 type="button"
                 onClick={() => setDetailsValue('avatarUrl', url)}
-                className={`aspect-square overflow-hidden rounded-2xl border-2 bg-pink-50 transition-all hover:scale-105 ${
+                className={`aspect-square overflow-hidden rounded-2xl border-2 bg-pink-50 transition-all hover:scale-105 dark:bg-slate-800 ${
                   selectedAvatarUrl === url
-                    ? 'border-pink-500 scale-105 shadow-md shadow-pink-100'
-                    : 'border-pink-100'
+                    ? 'border-pink-500 scale-105 dark:border-pink-400'
+                    : 'border-pink-100 dark:border-slate-700'
                 }`}
               >
                 <img src={url} alt={`Preset ${i + 1}`} className="h-full w-full object-cover" />
@@ -116,17 +116,17 @@ export default function GeneralSection() {
         {/* Fields */}
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400">
+            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
               Full Name
             </label>
             <input
               type="text"
               placeholder="Display Name"
               {...registerDetails('fullName')}
-              className={`w-full rounded-2xl border-2 px-4 py-3 text-sm font-bold text-gray-800 outline-none transition-all ${
+              className={`w-full rounded-2xl border-2 px-4 py-3 text-sm font-bold text-gray-800 outline-none transition-all dark:bg-slate-800 dark:text-slate-200 ${
                 detailsErrors.fullName
-                  ? 'border-red-300 focus:border-red-500'
-                  : 'border-pink-100 focus:border-pink-500'
+                  ? 'border-red-300 focus:border-red-500 dark:border-red-900/50'
+                  : 'border-pink-100 focus:border-pink-500 dark:border-slate-700 dark:focus:border-pink-500'
               }`}
             />
             {detailsErrors.fullName && (
@@ -135,24 +135,24 @@ export default function GeneralSection() {
           </div>
 
           <div className="space-y-2">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400">
+            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
               Email Address
             </label>
             <input
               type="email"
               disabled
               value={user?.email || ''}
-              className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-400 cursor-not-allowed"
+              className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-400 cursor-not-allowed dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-500"
             />
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400">
+            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
               Custom Avatar URL
             </label>
-            <span className="flex items-center gap-1 text-[10px] font-bold text-pink-500">
+            <span className="flex items-center gap-1 text-[10px] font-bold text-pink-500 dark:text-pink-400">
               <ImageIcon className="h-3 w-3" /> Image URL
             </span>
           </div>
@@ -160,10 +160,10 @@ export default function GeneralSection() {
             type="text"
             placeholder="https://example.com/avatar.jpg"
             {...registerDetails('avatarUrl')}
-            className={`w-full rounded-2xl border-2 px-4 py-3 text-sm font-bold text-gray-800 outline-none transition-all ${
+            className={`w-full rounded-2xl border-2 px-4 py-3 text-sm font-bold text-gray-800 outline-none transition-all dark:bg-slate-800 dark:text-slate-200 ${
               detailsErrors.avatarUrl
-                ? 'border-red-300 focus:border-red-500'
-                : 'border-pink-100 focus:border-pink-500'
+                ? 'border-red-300 focus:border-red-500 dark:border-red-900/50'
+                : 'border-pink-100 focus:border-pink-500 dark:border-slate-700 dark:focus:border-pink-500'
             }`}
           />
           {detailsErrors.avatarUrl && (

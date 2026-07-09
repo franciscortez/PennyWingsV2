@@ -22,16 +22,16 @@ export default function ProfilePage() {
         <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-pink-500">
           Settings
         </p>
-        <h1 className="text-3xl font-black tracking-tight text-gray-950 sm:text-4xl">
+        <h1 className="text-3xl font-black tracking-tight text-gray-950 dark:text-white sm:text-4xl">
           Profile & Account
         </h1>
-        <p className="mt-2 max-w-2xl text-sm font-medium italic text-gray-500 sm:text-base">
+        <p className="mt-2 max-w-2xl text-sm font-medium italic text-gray-500 dark:text-slate-400 sm:text-base">
           Update your display name, avatars, safety settings, and login credentials.
         </p>
       </header>
 
       {/* Tabs */}
-      <div className="mb-10 flex gap-2 border-b border-pink-100 pb-px">
+      <div className="mb-10 flex gap-2 border-b border-pink-100 dark:border-slate-800 pb-px">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -42,8 +42,8 @@ export default function ProfilePage() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-all ${
                 isActive
-                  ? 'border-pink-500 text-pink-600'
-                  : 'border-transparent text-gray-400 hover:text-gray-600'
+                  ? 'border-pink-500 text-pink-600 dark:border-pink-400 dark:text-pink-400'
+                  : 'border-transparent text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200'
               }`}
             >
               <Icon className="h-4 w-4" />

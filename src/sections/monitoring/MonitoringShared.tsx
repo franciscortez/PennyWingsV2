@@ -20,7 +20,7 @@ export function ActionButtons({
 }) {
   const buttonClass = light
     ? 'bg-white/15 text-white hover:bg-white/25 disabled:opacity-40'
-    : 'border border-pink-50 bg-white text-gray-300 hover:bg-pink-50 hover:text-pink-600 disabled:opacity-40'
+    : 'border border-pink-50 bg-white text-gray-300 hover:bg-pink-50 hover:text-pink-600 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-750 dark:hover:text-pink-400'
 
   return (
     <div className="flex shrink-0 gap-1">
@@ -47,13 +47,14 @@ export function ActionButtons({
     </div>
   )
 }
+
 export function MetricBox({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-pink-50 bg-pink-50/50 p-4">
-      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+    <div className="rounded-2xl border border-pink-50 bg-pink-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
+      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
         {label}
       </p>
-      <p className="mt-1 truncate text-base font-black text-gray-900">{value}</p>
+      <p className="mt-1 truncate text-base font-black text-gray-900 dark:text-slate-200">{value}</p>
     </div>
   )
 }
@@ -72,20 +73,20 @@ export function EmptyPanel({
   title: string
 }) {
   return (
-    <section className="rounded-[2.5rem] border-2 border-dashed border-pink-200/70 bg-white px-6 py-20 text-center">
-      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-pink-50 text-pink-500">
+    <section className="rounded-[2.5rem] border-2 border-dashed border-pink-200/70 bg-white px-6 py-20 text-center dark:border-slate-800 dark:bg-slate-900">
+      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-pink-50 text-pink-500 dark:bg-slate-850 dark:text-pink-400">
         <Icon className="h-10 w-10" aria-hidden="true" />
       </div>
-      <h2 className="text-lg font-black uppercase tracking-widest text-gray-500">
+      <h2 className="text-lg font-black uppercase tracking-widest text-gray-500 dark:text-slate-400">
         {title}
       </h2>
-      <p className="mx-auto mt-2 max-w-md text-sm font-medium text-gray-400">
+      <p className="mx-auto mt-2 max-w-md text-sm font-medium text-gray-400 dark:text-slate-500">
         {description}
       </p>
       <button
         type="button"
         onClick={onAction}
-        className="mt-8 inline-flex items-center justify-center gap-2 rounded-[2rem] bg-pink-500 px-7 py-4 font-black text-white transition hover:bg-pink-600"
+        className="mt-8 inline-flex items-center justify-center gap-2 rounded-[2rem] bg-pink-500 px-7 py-4 font-black text-white transition hover:bg-pink-600 dark:hover:bg-pink-600"
       >
         <Plus className="h-5 w-5" aria-hidden="true" />
         {actionLabel}
@@ -100,11 +101,11 @@ export function CardSkeletonGrid() {
       {[1, 2, 3, 4].map((item) => (
         <div
           key={item}
-          className="h-72 animate-pulse rounded-[2rem] border border-pink-50 bg-white p-6"
+          className="h-72 animate-pulse rounded-[2rem] border border-pink-50 bg-white p-6 dark:border-slate-800 dark:bg-slate-900"
         >
-          <div className="mb-8 h-12 w-2/3 rounded-2xl bg-pink-50" />
-          <div className="mb-4 h-20 rounded-2xl bg-pink-50/70" />
-          <div className="h-3 rounded-full bg-pink-50" />
+          <div className="mb-8 h-12 w-2/3 rounded-2xl bg-pink-50 dark:bg-slate-800" />
+          <div className="mb-4 h-20 rounded-2xl bg-pink-50/70 dark:bg-slate-850/70" />
+          <div className="h-3 rounded-full bg-pink-50 dark:bg-slate-800" />
         </div>
       ))}
     </section>
@@ -130,16 +131,16 @@ export function ModalShell({
         className="absolute inset-0 bg-black/40"
         aria-label="Close monitoring form"
       />
-      <section className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] border border-pink-100 bg-white p-6 shadow-2xl sm:p-8">
+      <section className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] border border-pink-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:p-8">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-black tracking-tight text-gray-900">
+          <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
             {title}
           </h2>
           <button
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-50 text-gray-400 transition hover:text-pink-600 disabled:opacity-50"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-50 text-gray-400 transition hover:text-pink-600 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-450 dark:hover:text-pink-400"
             aria-label="Close monitoring form"
           >
             <X className="h-5 w-5" aria-hidden="true" />
@@ -168,7 +169,7 @@ export function ModalActions({
         type="button"
         onClick={onClose}
         disabled={saving}
-        className="rounded-2xl border border-pink-100 px-6 py-3 text-sm font-black text-gray-500 transition hover:bg-pink-50 disabled:opacity-50"
+        className="rounded-2xl border border-pink-100 px-6 py-3 text-sm font-black text-gray-500 transition hover:bg-pink-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
       >
         Cancel
       </button>

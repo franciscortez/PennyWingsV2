@@ -35,7 +35,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 text-gray-900 md:flex">
+    <div className="min-h-screen bg-pink-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100 md:flex">
       <Sidebar
         mobileMenuOpen={moreOpen}
         onCloseMobileMenu={() => setMoreOpen(false)}

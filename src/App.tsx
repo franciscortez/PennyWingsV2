@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import PublicRoute from '@/components/PublicRoute'
 import { AuthProvider } from '@/context/AuthContext'
+import { ThemeProvider } from '@/context/ThemeContext'
 import Accounts from '@/pages/Accounts'
 import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
@@ -18,9 +19,10 @@ import ResetPassword from '@/pages/auth/ResetPassword'
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
           <Route
             path="/"
             element={
@@ -114,5 +116,6 @@ export default function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
-  )
+  </ThemeProvider>
+)
 }

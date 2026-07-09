@@ -25,8 +25,8 @@ export function MonitoringTabs({
   onChange,
 }: MonitoringTabsProps) {
   return (
-    <section className="flex flex-col gap-4 rounded-[2.5rem] border border-pink-50 bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4">
-      <div className="flex gap-2 rounded-[2rem] bg-pink-50 p-1.5">
+    <section className="flex flex-col gap-4 rounded-[2.5rem] border border-pink-50 bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:p-4 dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex gap-2 rounded-[2rem] bg-pink-50 p-1.5 dark:bg-slate-950">
         {tabs.map((tab) => {
           const Icon = tab.icon
           const active = activeTab === tab.id
@@ -38,8 +38,8 @@ export function MonitoringTabs({
               onClick={() => onChange(tab.id)}
               className={`flex flex-1 items-center justify-center gap-2 rounded-[1.4rem] px-5 py-3 text-sm font-black transition sm:flex-none ${
                 active
-                  ? 'bg-white text-pink-600 shadow-sm'
-                  : 'text-gray-400 hover:text-pink-500'
+                  ? 'bg-white text-pink-600 dark:bg-slate-800 dark:text-pink-400'
+                  : 'text-gray-400 hover:text-pink-500 dark:text-slate-400 dark:hover:text-pink-400'
               }`}
             >
               <Icon className="h-5 w-5" aria-hidden="true" />
@@ -48,7 +48,7 @@ export function MonitoringTabs({
           )
         })}
       </div>
-      <p className="px-3 text-xs font-bold uppercase tracking-widest text-gray-400">
+      <p className="px-3 text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500">
         {activeTab === 'budgets'
           ? `${budgetCount} spending limit${budgetCount === 1 ? '' : 's'}`
           : `${goalCount} savings target${goalCount === 1 ? '' : 's'}`}

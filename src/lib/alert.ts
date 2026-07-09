@@ -8,8 +8,29 @@ type AlertMessage =
       title: string
     }
 
+const lightTheme = {
+  background: '#ffffff',
+  cancelButtonColor: '#94a3b8',
+  color: '#111827',
+  confirmButtonColor: '#ec4899',
+  dangerButtonColor: '#f43f5e',
+  iconColor: '#ec4899',
+}
+
+const darkTheme = {
+  background: '#0f172a',
+  cancelButtonColor: '#475569',
+  color: '#e2e8f0',
+  confirmButtonColor: '#db2777',
+  dangerButtonColor: '#e11d48',
+  iconColor: '#f472b6',
+}
+
 const normalizeMessage = (message: AlertMessage) =>
   typeof message === 'string' ? { title: message } : message
+
+const getAlertTheme = () =>
+  document.documentElement.classList.contains('dark') ? darkTheme : lightTheme
 
 const toast = Swal.mixin({
   toast: true,
@@ -17,22 +38,17 @@ const toast = Swal.mixin({
   showConfirmButton: false,
   timer: 2500,
   timerProgressBar: false,
-  background: '#ffffff',
-  color: '#1f2937',
-  iconColor: '#ec4899',
   customClass: {
-    popup: 'rounded-2xl border border-pink-50 shadow-lg',
+    popup:
+      'rounded-2xl border border-pink-50 shadow-lg dark:border-slate-800',
   },
 })
 
 const confirm = Swal.mixin({
-  background: '#ffffff',
-  color: '#111827',
-  confirmButtonColor: '#ec4899',
-  cancelButtonColor: '#94a3b8',
   reverseButtons: false,
   customClass: {
-    popup: 'rounded-[2.5rem] border border-pink-50 p-8 shadow-lg',
+    popup:
+      'rounded-[2.5rem] border border-pink-50 p-8 shadow-lg dark:border-slate-800',
     title: 'mb-2 text-2xl font-black tracking-tight',
     htmlContainer: 'mb-4 text-base font-medium opacity-80',
     confirmButton: 'mr-2 rounded-2xl px-8 py-4 text-sm font-black uppercase',
@@ -42,16 +58,25 @@ const confirm = Swal.mixin({
 
 const showToast = (icon: SweetAlertIcon, message: AlertMessage) => {
   const { text, title } = normalizeMessage(message)
+  const theme = getAlertTheme()
 
   void toast.fire({
+    background: theme.background,
+    color: theme.color,
     icon,
+    iconColor: theme.iconColor,
     text,
     title,
   })
 }
 
 const ask = async (options: SweetAlertOptions) => {
+  const theme = getAlertTheme()
   const result = await confirm.fire({
+    background: theme.background,
+    cancelButtonColor: theme.cancelButtonColor,
+    color: theme.color,
+    confirmButtonColor: theme.confirmButtonColor,
     showCancelButton: true,
     ...options,
   })
@@ -72,7 +97,7 @@ export const alerts = {
       icon: 'warning',
       confirmButtonText: 'Yes, Delete It',
       cancelButtonText: 'Cancel',
-      confirmButtonColor: '#f43f5e',
+      confirmButtonColor: getAlertTheme().dangerButtonColor,
     }),
   confirmLogout: () =>
     ask({

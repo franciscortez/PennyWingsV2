@@ -75,7 +75,7 @@ export function GoalModal({
         <div>
           <label
             htmlFor="goal-name"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
           >
             Goal Name
           </label>
@@ -84,7 +84,7 @@ export function GoalModal({
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
             placeholder="Emergency fund"
           />
         </div>
@@ -92,7 +92,7 @@ export function GoalModal({
           <div>
             <label
               htmlFor="goal-target"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
             >
               Target
             </label>
@@ -103,14 +103,14 @@ export function GoalModal({
               step="0.01"
               value={targetAmount}
               onChange={(event) => setTargetAmount(event.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
               placeholder="0.00"
             />
           </div>
           <div>
             <label
               htmlFor="goal-current"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
             >
               Saved
             </label>
@@ -121,7 +121,7 @@ export function GoalModal({
               step="0.01"
               value={currentAmount}
               onChange={(event) => setCurrentAmount(event.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
               placeholder="0.00"
             />
           </div>
@@ -129,7 +129,7 @@ export function GoalModal({
         <div>
           <label
             htmlFor="goal-link"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
           >
             Tracking Source
           </label>
@@ -137,14 +137,14 @@ export function GoalModal({
             id="goal-link"
             value={linkedValue}
             onChange={(event) => setLinkedValue(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
           >
-            <option value="none">Manual saved amount</option>
+            <option value="none" className="dark:bg-slate-900">Manual saved amount</option>
             {accounts.map((account) => {
               const kind = account.kind === 'card' ? 'card' : 'wallet'
 
               return (
-                <option key={`${kind}:${account.id}`} value={`${kind}:${account.id}`}>
+                <option key={`${kind}:${account.id}`} value={`${kind}:${account.id}`} className="dark:bg-slate-900">
                   {account.name} - {currency.format(account.balance)}
                 </option>
               )
@@ -154,7 +154,7 @@ export function GoalModal({
         <div>
           <label
             htmlFor="goal-date"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400"
+            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
           >
             Target Date
           </label>
@@ -163,7 +163,7 @@ export function GoalModal({
             type="date"
             value={targetDate}
             onChange={(event) => setTargetDate(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10"
+            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
           />
         </div>
         <ModalActions

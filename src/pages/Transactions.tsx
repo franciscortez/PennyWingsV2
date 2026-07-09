@@ -180,10 +180,10 @@ export default function Transactions() {
       <div className="space-y-8 pb-20">
         <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
-            <h1 className="mb-2 text-4xl font-black tracking-tight text-gray-900">
+            <h1 className="mb-2 text-4xl font-black tracking-tight text-gray-900 dark:text-white">
               Transaction History
             </h1>
-            <p className="font-bold text-gray-500">
+            <p className="font-bold text-gray-500 dark:text-slate-400">
               Manage your cashflow with precision.
             </p>
           </div>

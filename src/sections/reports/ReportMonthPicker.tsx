@@ -97,22 +97,22 @@ export function ReportMonthPicker({
       <button
         type="button"
         onClick={togglePicker}
-        className={`group flex min-h-12 w-full items-center gap-3 rounded-3xl border bg-white px-4 py-3 text-left transition sm:min-w-56 ${
+        className={`group flex min-h-12 w-full items-center gap-3 rounded-3xl border bg-white px-4 py-3 text-left transition sm:min-w-56 dark:border-slate-800 dark:bg-slate-900 ${
           open
             ? 'border-pink-400 ring-4 ring-pink-500/10'
-            : 'border-pink-100 hover:border-pink-300 hover:bg-pink-50/40'
+            : 'border-pink-100 hover:border-pink-300 hover:bg-pink-50/40 dark:border-slate-800 dark:hover:border-slate-700 dark:hover:bg-slate-800'
         }`}
         aria-expanded={open}
         aria-haspopup="dialog"
       >
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 transition group-hover:bg-pink-500 group-hover:text-white">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 transition group-hover:bg-pink-500 group-hover:text-white dark:bg-slate-950 dark:text-pink-400 dark:group-hover:bg-pink-600 dark:group-hover:text-white">
           <CalendarDays className="h-5 w-5" aria-hidden="true" />
         </span>
         <span className="min-w-0 flex-1">
           <span className="block text-[9px] font-black uppercase tracking-[0.18em] text-pink-400">
             Report Period
           </span>
-          <span className="block truncate text-sm font-black text-gray-800">
+          <span className="block truncate text-sm font-black text-gray-800 dark:text-slate-200">
             {formatReportMonth(`${value}-01`)}
           </span>
         </span>
@@ -128,9 +128,9 @@ export function ReportMonthPicker({
         <section
           role="dialog"
           aria-label="Choose report month"
-          className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-4xl border border-pink-100 bg-white shadow-2xl shadow-pink-200/50"
+          className="absolute right-0 top-[calc(100%+0.75rem)] z-50 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-4xl border border-pink-100 bg-white shadow-2xl shadow-pink-200/50 dark:border-slate-850 dark:bg-slate-900 dark:shadow-none"
         >
-          <div className="relative overflow-hidden bg-linear-to-br from-pink-500 to-pink-600 px-5 py-5 text-white">
+          <div className="relative overflow-hidden bg-linear-to-br from-pink-500 to-pink-600 px-5 py-5 text-white dark:from-pink-900/60 dark:to-pink-950/80">
             <div className="absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/15 blur-2xl" />
             <div className="relative flex items-center justify-between">
               <button
@@ -177,11 +177,11 @@ export function ReportMonthPicker({
                     disabled={disabled}
                     className={`relative min-h-16 rounded-2xl px-2 py-3 text-center transition ${
                       selected
-                        ? 'bg-pink-500 text-white shadow-lg shadow-pink-200'
+                        ? 'bg-pink-500 text-white'
                         : current
-                          ? 'border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100'
-                          : 'text-gray-500 hover:bg-pink-50 hover:text-pink-600'
-                    } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-200 disabled:shadow-none`}
+                          ? 'border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 dark:border-pink-900/60 dark:bg-pink-950/40 dark:text-pink-400 dark:hover:bg-pink-900/40'
+                          : 'text-gray-500 hover:bg-pink-50 hover:text-pink-600 dark:text-slate-450 dark:hover:bg-slate-800 dark:hover:text-pink-450'
+                    } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-200 dark:disabled:text-slate-700`}
                     aria-label={`${month.long} ${viewYear}`}
                     aria-pressed={selected}
                   >
@@ -206,7 +206,7 @@ export function ReportMonthPicker({
               <button
                 type="button"
                 onClick={selectCurrentMonth}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-pink-50 px-4 py-3 text-xs font-black text-pink-600 transition hover:bg-pink-100"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-pink-50 px-4 py-3 text-xs font-black text-pink-600 transition hover:bg-pink-100 dark:bg-slate-800 dark:text-pink-400 dark:hover:bg-slate-750"
               >
                 <Sparkles className="h-4 w-4" aria-hidden="true" />
                 Jump to current month

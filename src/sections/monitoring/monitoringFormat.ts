@@ -1,4 +1,5 @@
 import type { BudgetPeriod } from '@/types'
+import { formatDate as formatSharedDate } from '@/lib/date'
 
 export const currency = new Intl.NumberFormat('en-PH', {
   currency: 'PHP',
@@ -15,17 +16,8 @@ export const compactCurrency = new Intl.NumberFormat('en-PH', {
 export const formatPeriod = (period: BudgetPeriod) =>
   period.charAt(0).toUpperCase() + period.slice(1)
 
-export const formatDate = (value: string | null) => {
-  if (!value) {
-    return 'No target date'
-  }
-
-  return new Date(`${value}T00:00:00`).toLocaleDateString('en-US', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
+export const formatDate = (value: string | null) =>
+  formatSharedDate(value, undefined, 'No target date')
 
 export const getDaysLeftLabel = (daysLeft: number | null) => {
   if (daysLeft === null) {

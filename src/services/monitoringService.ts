@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { toDateInputValue } from '@/lib/date'
 import { AppError } from '@/lib/errors'
 import type {
   Budget,
@@ -80,27 +81,20 @@ const parseBudgetPeriod = (value: string | null): BudgetPeriod =>
     ? (value as BudgetPeriod)
     : 'monthly'
 
-const formatDate = (date: Date) =>
-  [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, '0'),
-    String(date.getDate()).padStart(2, '0'),
-  ].join('-')
-
 const getPeriodStart = (period: BudgetPeriod) => {
   const now = new Date()
 
   if (period === 'weekly') {
     const start = new Date(now)
     start.setDate(now.getDate() - now.getDay())
-    return formatDate(start)
+    return toDateInputValue(start)
   }
 
   if (period === 'yearly') {
-    return formatDate(new Date(now.getFullYear(), 0, 1))
+    return toDateInputValue(new Date(now.getFullYear(), 0, 1))
   }
 
-  return formatDate(new Date(now.getFullYear(), now.getMonth(), 1))
+  return toDateInputValue(new Date(now.getFullYear(), now.getMonth(), 1))
 }
 
 const getDaysLeft = (targetDate: string | null) => {
@@ -210,8 +204,8 @@ const mapGoal = (goal: RawGoalRow): Goal => {
 export const fetchMonitoringData = async (
   userId: string,
 ): Promise<MonitoringData> => {
-  const yearStart = formatDate(new Date(new Date().getFullYear(), 0, 1))
-  const today = formatDate(new Date())
+  const yearStart = toDateInputValue(new Date(new Date().getFullYear(), 0, 1))
+  const today = toDateInputValue()
 
   const [budgetsResult, goalsResult, categoriesResult, expensesResult] =
     await Promise.all([

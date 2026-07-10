@@ -41,6 +41,7 @@ export const emptyAccountsData: AccountsData = {
   accounts: [],
   cardCount: 0,
   cashCount: 0,
+  lentCount: 0,
   totalBalance: 0,
   walletCount: 0,
 }
@@ -69,7 +70,12 @@ const mapWalletAccount = (wallet: WalletRow): Account => ({
   createdAt: wallet.created_at,
   id: wallet.id,
   isActive: wallet.is_active !== false,
-  kind: wallet.wallet_type === 'cash' ? 'cash' : 'wallet',
+  kind:
+    wallet.wallet_type === 'cash'
+      ? 'cash'
+      : wallet.wallet_type === 'lent'
+        ? 'lent'
+        : 'wallet',
   name: wallet.wallet_name,
   textColor: wallet.text_color ?? '#ffffff',
   userId: wallet.user_id,
@@ -118,6 +124,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     accounts,
     cardCount: cards.length,
     cashCount: walletAccounts.filter((account) => account.kind === 'cash').length,
+    lentCount: walletAccounts.filter((account) => account.kind === 'lent').length,
     totalBalance: accounts.reduce((sum, account) => sum + account.balance, 0),
     walletCount: walletAccounts.filter((account) => account.kind === 'wallet').length,
   }
@@ -164,6 +171,7 @@ export const fetchArchivedAccounts = async (
     accounts,
     cardCount: cards.length,
     cashCount: walletAccounts.filter((account) => account.kind === 'cash').length,
+    lentCount: walletAccounts.filter((account) => account.kind === 'lent').length,
     totalBalance: accounts.reduce((sum, account) => sum + account.balance, 0),
     walletCount: walletAccounts.filter((account) => account.kind === 'wallet').length,
   }

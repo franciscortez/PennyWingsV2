@@ -4,7 +4,9 @@ export type TransactionFilterType = TransactionType | 'all'
 
 export type PaymentMethod = 'cash' | 'card' | 'ewallet'
 
-export type DestinationPaymentMethod = Exclude<PaymentMethod, 'cash'>
+export type FormPaymentMethod = PaymentMethod | 'lent'
+
+export type DestinationPaymentMethod = FormPaymentMethod
 
 export type TransactionCategory = {
   color: string | null
@@ -17,6 +19,7 @@ export type TransactionCategory = {
 export type TransactionAccountRelation = {
   color?: string | null
   name: string | null
+  walletType?: string | null
 }
 
 export type Transaction = {
@@ -58,7 +61,7 @@ export type TransactionFormValues = {
   card_id?: string
   category_id: string
   description?: string
-  payment_method: PaymentMethod
+  payment_method: FormPaymentMethod
   to_card_id?: string
   to_payment_method?: DestinationPaymentMethod
   to_wallet_id?: string

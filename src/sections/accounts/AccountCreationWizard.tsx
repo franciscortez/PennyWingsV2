@@ -1,6 +1,7 @@
 import {
   FaArrowLeft,
   FaBuilding,
+  FaHandHoldingDollar,
   FaMobileScreenButton,
   FaMoneyBillWave,
   FaWallet,
@@ -27,7 +28,7 @@ type AccountCreationWizardProps = {
   onCreate: (values: AccountCreateValues) => Promise<boolean>
 }
 
-type SetupType = 'traditional' | 'digital' | 'ewallet' | 'cash'
+type SetupType = 'traditional' | 'digital' | 'ewallet' | 'cash' | 'lent'
 type Step = 1 | 2 | 3
 
 type WizardForm = {
@@ -55,9 +56,17 @@ const accountTypes: Array<{
   { id: 'digital', label: 'Digital Bank', icon: FaMobileScreenButton },
   { id: 'ewallet', label: 'E-Wallet', icon: FaWallet },
   { id: 'cash', label: 'Cash on Hand', icon: FaMoneyBillWave },
+  { id: 'lent', label: 'Lent Money', icon: FaHandHoldingDollar },
 ]
 
-const providerOptions: Record<Exclude<SetupType, 'cash'>, string[]> = {
+const directSetupTypes = ['cash', 'lent'] as const
+
+const isDirectSetupType = (
+  setupType: SetupType | '',
+): setupType is (typeof directSetupTypes)[number] =>
+  directSetupTypes.includes(setupType as (typeof directSetupTypes)[number])
+
+const providerOptions: Record<Exclude<SetupType, 'cash' | 'lent'>, string[]> = {
   digital: digitalBankOptions,
   ewallet: eWalletProviderOptions,
   traditional: traditionalBankOptions,
@@ -86,7 +95,12 @@ export function AccountCreationWizard({
     (setupType: SetupType) => {
       setForm((current) => ({
         ...current,
-        accountName: setupType === 'cash' ? 'Cash on Hand' : current.accountName,
+        accountName:
+          setupType === 'cash'
+            ? 'Cash on Hand'
+            : setupType === 'lent'
+              ? ''
+              : current.accountName,
         provider: '',
         setupType,
       }))
@@ -100,7 +114,7 @@ export function AccountCreationWizard({
       return
     }
 
-    setStep(form.setupType === 'cash' ? 3 : 2)
+    setStep(isDirectSetupType(form.setupType) ? 3 : 2)
   }
 
   const handleStep2Next = () => {
@@ -114,7 +128,7 @@ export function AccountCreationWizard({
 
   const handleBack = () => {
     setStep((current) => {
-      if (current === 3 && form.setupType === 'cash') {
+      if (current === 3 && isDirectSetupType(form.setupType)) {
         return 1
       }
 
@@ -126,10 +140,14 @@ export function AccountCreationWizard({
     const name =
       form.setupType === 'cash'
         ? 'Cash on Hand'
-        : form.accountName.trim() || form.provider
+        : form.setupType === 'lent'
+          ? form.accountName.trim()
+          : form.accountName.trim() || form.provider
     const accountType =
       form.setupType === 'cash'
         ? 'cash'
+        : form.setupType === 'lent'
+          ? 'lent'
         : form.setupType === 'ewallet'
           ? formatProviderValue(form.provider)
           : form.setupType === 'traditional'
@@ -138,6 +156,8 @@ export function AccountCreationWizard({
     const kind =
       form.setupType === 'cash'
         ? 'cash'
+        : form.setupType === 'lent'
+          ? 'lent'
         : form.setupType === 'ewallet'
           ? 'wallet'
           : 'card'
@@ -190,7 +210,11 @@ export function AccountCreationWizard({
               </button>
             ) : null}
             <h2 className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
-              {form.setupType === 'cash' ? 'Cash on Hand' : `Step ${step} of 3`}
+              {isDirectSetupType(form.setupType)
+                ? form.setupType === 'cash'
+                  ? 'Cash on Hand'
+                  : 'Lent Money'
+                : `Step ${step} of 3`}
             </h2>
           </div>
           <button
@@ -213,7 +237,10 @@ export function AccountCreationWizard({
                 <div
                   className="absolute inset-0 bg-pink-500 transition-all duration-200 ease-out"
                   style={{
-                    width: item <= step || form.setupType === 'cash' ? '100%' : '0%',
+                    width:
+                      item <= step || isDirectSetupType(form.setupType)
+                        ? '100%'
+                        : '0%',
                   }}
                 />
               </div>
@@ -230,7 +257,7 @@ export function AccountCreationWizard({
               />
             ) : null}
 
-            {step === 2 && form.setupType && form.setupType !== 'cash' ? (
+            {step === 2 && form.setupType && !isDirectSetupType(form.setupType) ? (
               <StepTwo
                 form={form}
                 providers={providerOptions[form.setupType]}
@@ -272,7 +299,10 @@ const StepOne = memo(function StepOne({
       </label>
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         {accountTypes
-          .filter((type) => !(type.id === 'cash' && hasCashAccount))
+          .filter(
+            (type) =>
+              !(type.id === 'cash' && hasCashAccount),
+          )
           .map((type) => {
             const Icon = type.icon
             const active = form.setupType === type.id
@@ -399,6 +429,30 @@ const StepThree = memo(function StepThree({
 
   return (
     <div className="space-y-8">
+      {form.setupType === 'lent' ? (
+        <div>
+          <label
+            htmlFor="lent-account-name"
+            className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+          >
+            Person or Lending Label
+          </label>
+          <input
+            id="lent-account-name"
+            autoFocus
+            required
+            type="text"
+            placeholder="e.g. Juan's utang"
+            value={form.accountName}
+            onChange={(event) => onChange('accountName', event.target.value)}
+            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+          />
+          <p className="mt-2 text-xs font-medium text-gray-400 dark:text-slate-500">
+            Use a name that identifies who owes you this money.
+          </p>
+        </div>
+      ) : null}
+
       <div className="text-center">
         <label className="mb-4 block text-xs font-black uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
           Initial Balance
@@ -408,7 +462,7 @@ const StepThree = memo(function StepThree({
             PHP
           </span>
           <input
-            autoFocus
+            autoFocus={form.setupType !== 'lent'}
             required
             type="number"
             step="0.01"

@@ -17,15 +17,16 @@ const TX_SELECT = `
   card_id, wallet_id, category_id, to_card_id, to_wallet_id,
   category:categories(id, name, type, icon, color),
   card:bank_cards!transactions_card_id_fkey(card_name, color),
-  wallet:e_wallets!transactions_wallet_id_fkey(wallet_name, color),
+  wallet:e_wallets!transactions_wallet_id_fkey(wallet_name, wallet_type, color),
   to_card:bank_cards!transactions_to_card_id_fkey(card_name, color),
-  to_wallet:e_wallets!transactions_to_wallet_id_fkey(wallet_name, color)
+  to_wallet:e_wallets!transactions_to_wallet_id_fkey(wallet_name, wallet_type, color)
 `
 
 type AccountRelationRow = {
   card_name?: string | null
   color?: string | null
   wallet_name?: string | null
+  wallet_type?: string | null
 }
 
 type RawTransactionRow = {
@@ -71,6 +72,7 @@ const mapAccountRelation = (
   return {
     color: account.color ?? null,
     name: account.card_name ?? account.wallet_name ?? null,
+    walletType: account.wallet_type ?? null,
   }
 }
 

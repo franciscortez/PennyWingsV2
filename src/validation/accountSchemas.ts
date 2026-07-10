@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
-const accountKinds = ['card', 'wallet', 'cash'] as const
+const accountKinds = ['card', 'wallet', 'cash', 'lent'] as const
 const cardTypes = ['credit', 'debit', 'savings'] as const
-const walletTypes = ['gcash', 'maya', 'grabpay', 'paypal', 'other', 'cash'] as const
+const walletTypes = ['gcash', 'maya', 'grabpay', 'paypal', 'other', 'cash', 'lent'] as const
 
 const moneyValue = z.preprocess(
   (value) => (value === '' ? undefined : value),
@@ -41,6 +41,7 @@ const validateAccountType = (
   const validCardType =
     data.kind === 'wallet' ||
     data.kind === 'cash' ||
+    data.kind === 'lent' ||
     cardTypes.includes(data.accountType as (typeof cardTypes)[number])
 
   if (!validCardType) {
@@ -67,6 +68,14 @@ const validateAccountType = (
     context.addIssue({
       code: 'custom',
       message: 'Cash accounts must use the cash type.',
+      path: ['accountType'],
+    })
+  }
+
+  if (data.kind === 'lent' && data.accountType !== 'lent') {
+    context.addIssue({
+      code: 'custom',
+      message: 'Lent accounts must use the lent type.',
       path: ['accountType'],
     })
   }

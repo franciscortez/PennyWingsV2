@@ -129,6 +129,7 @@ export function useTransactionsData({
             : null
 
   const cardAccounts = accounts.filter((account) => account.kind === 'card')
+  const lentAccounts = accounts.filter((account) => account.kind === 'lent')
   const walletAccounts = accounts.filter((account) => account.kind === 'wallet')
   const cashAccount = accounts.find((account) => account.kind === 'cash') ?? null
 
@@ -140,9 +141,21 @@ export function useTransactionsData({
         throw new Error('Add a cash account before recording cash transactions.')
       }
 
+      if (
+        values.type === 'transfer' &&
+        values.to_payment_method === 'cash' &&
+        !cashWalletId
+      ) {
+        throw new Error('Add a cash account before transferring to cash.')
+      }
+
+      const sourceIsWallet =
+        values.payment_method === 'ewallet' || values.payment_method === 'lent'
+      const paymentMethod =
+        values.payment_method === 'lent' ? 'ewallet' : values.payment_method
       const cardId = values.payment_method === 'card' ? values.card_id ?? null : null
       const walletId =
-        values.payment_method === 'ewallet'
+        sourceIsWallet
           ? values.wallet_id ?? null
           : values.payment_method === 'cash'
             ? cashWalletId
@@ -152,8 +165,13 @@ export function useTransactionsData({
           ? values.to_card_id ?? null
           : null
       const toWalletId =
-        values.type === 'transfer' && values.to_payment_method === 'ewallet'
-          ? values.to_wallet_id ?? null
+        values.type === 'transfer'
+          ? values.to_payment_method === 'cash'
+            ? cashWalletId
+            : values.to_payment_method === 'ewallet' ||
+                values.to_payment_method === 'lent'
+              ? values.to_wallet_id ?? null
+              : null
           : null
 
       return {
@@ -161,7 +179,7 @@ export function useTransactionsData({
         card_id: cardId,
         category_id: values.category_id,
         description: normalizeDescription(values.description),
-        payment_method: values.payment_method,
+        payment_method: paymentMethod,
         to_card_id: toCardId,
         to_wallet_id: toWalletId,
         transaction_date: values.transaction_date,
@@ -284,6 +302,7 @@ export function useTransactionsData({
       ? (deleteMutation.variables?.id ?? null)
       : null,
     error: userId ? error : null,
+    lentAccounts,
     loading: userId ? transactionsQuery.isLoading : false,
     optionsLoading: userId
       ? categoriesQuery.isLoading || accountsQuery.isLoading

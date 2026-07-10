@@ -36,14 +36,14 @@ export function EditAccountModal({
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isCard = account.kind === 'card'
-  const isCash = account.kind === 'cash'
+  const isDirectAccount = account.kind === 'cash' || account.kind === 'lent'
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
 
     const rawValues: AccountUpdateValues = {
       accountIdentifier: isCard ? undefined : accountIdentifier,
-      accountType: isCash ? 'cash' : accountType,
+      accountType: isDirectAccount ? account.kind : accountType,
       color,
       kind: account.kind,
       lastFour: isCard ? lastFour : undefined,
@@ -116,7 +116,7 @@ export function EditAccountModal({
           </div>
 
           {/* Account Type */}
-          {!isCash ? (
+          {!isDirectAccount ? (
             <div>
               <label
                 htmlFor="account-type-select"
@@ -168,7 +168,7 @@ export function EditAccountModal({
                 </p>
               ) : null}
             </div>
-          ) : !isCash ? (
+          ) : !isDirectAccount ? (
             <div>
               <label
                 htmlFor="account-identifier-input"

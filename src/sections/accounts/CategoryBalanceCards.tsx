@@ -1,4 +1,9 @@
-import { FaBuildingColumns, FaMoneyBillWave, FaWallet } from 'react-icons/fa6'
+import {
+  FaBuildingColumns,
+  FaHandHoldingDollar,
+  FaMoneyBillWave,
+  FaWallet,
+} from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 
 import type { AccountKind } from '@/types'
@@ -6,6 +11,7 @@ import type { AccountKind } from '@/types'
 type CategoryBalanceCardsProps = {
   bankBalance: number
   cashBalance: number
+  lentBalance: number
   loading: boolean
   walletBalance: number
 }
@@ -48,22 +54,32 @@ const categories: Array<{
     label: 'Cash',
     shadowColor: '#10b98120',
   },
+  {
+    color: '#f59e0b',
+    gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    icon: FaHandHoldingDollar,
+    id: 'lent',
+    label: 'Lent',
+    shadowColor: '#f59e0b20',
+  },
 ]
 
 export function CategoryBalanceCards({
   bankBalance,
   cashBalance,
+  lentBalance,
   loading,
   walletBalance,
 }: CategoryBalanceCardsProps) {
   const balanceMap: Record<AccountKind, number> = {
     card: bankBalance,
     cash: cashBalance,
+    lent: lentBalance,
     wallet: walletBalance,
   }
 
   return (
-    <section className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <section className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {categories.map((cat) => {
         const Icon = cat.icon
         const balance = balanceMap[cat.id]

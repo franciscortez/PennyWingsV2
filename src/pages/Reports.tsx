@@ -12,7 +12,6 @@ import {
   ReportsHeader,
   ReportsSkeleton,
   ReportSummarySection,
-  SavedReportsSection,
 } from '@/sections/reports'
 import {
   currentMonthInput,
@@ -67,12 +66,6 @@ export default function Reports() {
             month={toReportMonth(selectedMonth)}
           />
         )}
-
-        <SavedReportsSection
-          onSelect={setSelectedMonth}
-          reports={reports}
-          selectedMonth={selectedMonth}
-        />
       </div>
     </Layout>
   )

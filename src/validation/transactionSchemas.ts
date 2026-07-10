@@ -1,8 +1,8 @@
 import { z } from 'zod'
 
 const transactionTypes = ['income', 'expense', 'withdrawal', 'transfer'] as const
-const paymentMethods = ['cash', 'card', 'ewallet'] as const
-const destinationPaymentMethods = ['card', 'ewallet'] as const
+const paymentMethods = ['cash', 'card', 'ewallet', 'lent'] as const
+const destinationPaymentMethods = ['cash', 'card', 'ewallet', 'lent'] as const
 
 const optionalId = z.string().optional()
 
@@ -31,7 +31,7 @@ export const transactionSchema = z
     if (data.type === 'withdrawal' && data.payment_method === 'cash') {
       context.addIssue({
         code: 'custom',
-        message: 'Withdrawals must come from a card or e-wallet.',
+        message: 'Withdrawals must come from a card, e-wallet, or lent account.',
         path: ['payment_method'],
       })
     }
@@ -48,6 +48,14 @@ export const transactionSchema = z
       context.addIssue({
         code: 'custom',
         message: 'Choose a source wallet.',
+        path: ['wallet_id'],
+      })
+    }
+
+    if (data.payment_method === 'lent' && !data.wallet_id) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Choose a source lent account.',
         path: ['wallet_id'],
       })
     }
@@ -72,6 +80,22 @@ export const transactionSchema = z
       })
     }
 
+    if (data.to_payment_method === 'lent' && !data.to_wallet_id) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Choose a destination lent account.',
+        path: ['to_wallet_id'],
+      })
+    }
+
+    if (data.to_payment_method === 'cash' && data.payment_method === 'cash') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Choose a different destination account.',
+        path: ['to_payment_method'],
+      })
+    }
+
     if (
       data.payment_method === 'card' &&
       data.to_payment_method === 'card' &&
@@ -86,8 +110,9 @@ export const transactionSchema = z
     }
 
     if (
-      data.payment_method === 'ewallet' &&
-      data.to_payment_method === 'ewallet' &&
+      (data.payment_method === 'ewallet' || data.payment_method === 'lent') &&
+      (data.to_payment_method === 'ewallet' ||
+        data.to_payment_method === 'lent') &&
       data.wallet_id &&
       data.wallet_id === data.to_wallet_id
     ) {

@@ -53,6 +53,7 @@ export type {
 export type { SidebarInfo, SidebarProfile } from '@/types/sidebar'
 export type {
   DestinationPaymentMethod,
+  FormPaymentMethod,
   PaymentMethod,
   Transaction,
   TransactionAccountRelation,

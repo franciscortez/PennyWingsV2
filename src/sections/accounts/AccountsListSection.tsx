@@ -1,5 +1,6 @@
 import {
   FaBuildingColumns,
+  FaHandHoldingDollar,
   FaMoneyBillWave,
   FaPencil,
   FaShareNodes,
@@ -41,6 +42,10 @@ const getAccountSubtitle = (account: Account) => {
     return 'Cash on hand'
   }
 
+  if (account.kind === 'lent') {
+    return 'Money lent out'
+  }
+
   if (account.lastFour) {
     return `•••• •••• •••• ${account.lastFour}`
   }
@@ -55,6 +60,7 @@ const getAccountSubtitle = (account: Account) => {
 function KindIconDisplay({ kind, className }: { kind: AccountKind; className?: string }) {
   if (kind === 'card') return <FaBuildingColumns className={className} aria-hidden="true" />
   if (kind === 'cash') return <FaMoneyBillWave className={className} aria-hidden="true" />
+  if (kind === 'lent') return <FaHandHoldingDollar className={className} aria-hidden="true" />
   return <FaWallet className={className} aria-hidden="true" />
 }
 
@@ -150,7 +156,13 @@ export function AccountsListSection({
 
   if (!accounts.length) {
     const EmptyIcon =
-      variant === 'card' ? FaBuildingColumns : variant === 'cash' ? FaMoneyBillWave : FaWallet
+      variant === 'card'
+        ? FaBuildingColumns
+        : variant === 'cash'
+          ? FaMoneyBillWave
+          : variant === 'lent'
+            ? FaHandHoldingDollar
+            : FaWallet
 
     return (
       <div className="animate-fade-in rounded-[2.5rem] border-2 border-dashed border-pink-200/60 bg-gradient-to-br from-pink-50/80 to-white py-20 text-center dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
@@ -322,7 +334,7 @@ function AccountCard({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {isOwner && onShare && account.kind !== 'cash' && (
+            {isOwner && onShare && account.kind !== 'cash' && account.kind !== 'lent' && (
               <button
                 type="button"
                 onClick={() => onShare(account)}

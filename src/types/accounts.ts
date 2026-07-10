@@ -1,4 +1,4 @@
-export type AccountKind = 'card' | 'wallet' | 'cash'
+export type AccountKind = 'card' | 'wallet' | 'cash' | 'lent'
 
 export type ResourceType = 'bank_card' | 'e_wallet'
 
@@ -41,6 +41,7 @@ export type AccountsData = {
   accounts: Account[]
   cardCount: number
   cashCount: number
+  lentCount: number
   totalBalance: number
   walletCount: number
 }

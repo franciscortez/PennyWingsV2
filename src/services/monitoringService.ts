@@ -121,7 +121,12 @@ const mapLinkedAccount = (
     return null
   }
 
-  const walletKind = account.wallet_type === 'cash' ? 'cash' : 'wallet'
+  const walletKind =
+    account.wallet_type === 'cash'
+      ? 'cash'
+      : account.wallet_type === 'lent'
+        ? 'lent'
+        : 'wallet'
 
   return {
     balance: toNumber(account.balance),

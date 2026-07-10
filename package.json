@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "db:fetch": "npx supabase migration fetch --linked",
-    "db:baseline:repair": "npx supabase migration repair --linked --status reverted 20260317071150 20260318073854 20260318074619 20260318080053 20260318111247 20260319071947 20260319072524 20260319083401 20260320121719 20260320121736 20260321021831 20260321113330 20260321113347 20260321113356 20260321113406 20260321113719 20260321115431 20260404135454 20260410122659 202607090002 202607090003 202607090004",
     "db:lint": "npx supabase db lint --linked",
     "db:migrations": "npx supabase migration list --linked",
     "db:push": "npx supabase db push --linked",

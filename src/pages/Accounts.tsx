@@ -1,4 +1,10 @@
-import { FaBorderAll, FaBuildingColumns, FaMoneyBillWave, FaWallet } from 'react-icons/fa6'
+import {
+  FaBorderAll,
+  FaBuildingColumns,
+  FaHandHoldingDollar,
+  FaMoneyBillWave,
+  FaWallet,
+} from 'react-icons/fa6'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
@@ -19,7 +25,7 @@ import {
 } from '@/sections/accounts'
 import type { Account, AccountCreateValues, AccountUpdateValues } from '@/types'
 
-type AccountTab = 'all' | 'cards' | 'wallets' | 'cash'
+type AccountTab = 'all' | 'cards' | 'wallets' | 'cash' | 'lent'
 
 const tabs: Array<{
   icon: typeof FaBorderAll
@@ -30,10 +36,16 @@ const tabs: Array<{
   { id: 'cards', label: 'Cards', icon: FaBuildingColumns },
   { id: 'wallets', label: 'E-Wallet', icon: FaWallet },
   { id: 'cash', label: 'Cash', icon: FaMoneyBillWave },
+  { id: 'lent', label: 'Lent', icon: FaHandHoldingDollar },
 ]
 
 const getTabFromUrl = (value: string | null): AccountTab =>
-  value === 'cards' || value === 'wallets' || value === 'cash' ? value : 'all'
+  value === 'cards' ||
+  value === 'wallets' ||
+  value === 'cash' ||
+  value === 'lent'
+    ? value
+    : 'all'
 
 const matchesSearch = (account: Account, searchQuery: string) => {
   const query = searchQuery.trim().toLowerCase()
@@ -59,6 +71,7 @@ export default function Accounts() {
     cashCount,
     editAccount,
     error,
+    lentCount,
     loading,
     saving,
     totalBalance,
@@ -96,6 +109,13 @@ export default function Accounts() {
       ),
     [accounts, searchQuery],
   )
+  const lentAccounts = useMemo(
+    () =>
+      accounts.filter(
+        (account) => account.kind === 'lent' && matchesSearch(account, searchQuery),
+      ),
+    [accounts, searchQuery],
+  )
   const allFilteredAccounts = useMemo(
     () => accounts.filter((account) => matchesSearch(account, searchQuery)),
     [accounts, searchQuery],
@@ -104,6 +124,7 @@ export default function Accounts() {
     all: allFilteredAccounts.length,
     cards: cardAccounts.length,
     cash: cashCount,
+    lent: lentCount,
     wallets: walletCount,
   }
 
@@ -117,6 +138,10 @@ export default function Accounts() {
   )
   const cashBalance = useMemo(
     () => accounts.filter((a) => a.kind === 'cash').reduce((sum, a) => sum + a.balance, 0),
+    [accounts],
+  )
+  const lentBalance = useMemo(
+    () => accounts.filter((a) => a.kind === 'lent').reduce((sum, a) => sum + a.balance, 0),
     [accounts],
   )
 
@@ -230,6 +255,7 @@ export default function Accounts() {
       <CategoryBalanceCards
         bankBalance={bankBalance}
         cashBalance={cashBalance}
+        lentBalance={lentBalance}
         loading={loading}
         walletBalance={walletBalance}
       />
@@ -319,7 +345,7 @@ export default function Accounts() {
               onShare={(account) => setSharingAccount(account)}
               variant="wallet"
             />
-          ) : (
+          ) : activeTab === 'cash' ? (
             <AccountsListSection
               accounts={cashAccounts}
               archivingId={archivingId}
@@ -330,6 +356,18 @@ export default function Accounts() {
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
               variant="cash"
+            />
+          ) : (
+            <AccountsListSection
+              accounts={lentAccounts}
+              archivingId={archivingId}
+              currentUserId={user?.id}
+              emptyDescription="Add lent money to track amounts other people owe you."
+              emptyTitle="No Lent Money Yet"
+              loading={loading}
+              onArchive={handleArchiveAccount}
+              onEdit={openEditModal}
+              variant="lent"
             />
           )}
         </div>

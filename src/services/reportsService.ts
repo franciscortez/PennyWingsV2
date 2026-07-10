@@ -59,7 +59,10 @@ const parseAccountSnapshot = (value: Json): ReportAccountSnapshot[] => {
       typeof balance !== 'number' ||
       typeof id !== 'string' ||
       typeof isActive !== 'boolean' ||
-      (kind !== 'card' && kind !== 'cash' && kind !== 'wallet') ||
+      (kind !== 'card' &&
+        kind !== 'cash' &&
+        kind !== 'lent' &&
+        kind !== 'wallet') ||
       typeof name !== 'string'
     ) {
       return []

@@ -6,7 +6,7 @@ import { toDateInputValue } from '@/lib/date'
 import type {
   Account,
   DestinationPaymentMethod,
-  PaymentMethod,
+  FormPaymentMethod,
   Transaction,
   TransactionCategory,
   TransactionFormValues,
@@ -19,6 +19,7 @@ type TransactionFormProps = {
   cardAccounts: Account[]
   cashAccount: Account | null
   categories: TransactionCategory[]
+  lentAccounts: Account[]
   onClose: () => void
   onSubmit: (values: TransactionFormValues) => Promise<boolean>
   saving: boolean
@@ -63,9 +64,19 @@ const toFormState = (transaction: Transaction | null): TransactionFormState => {
     card_id: transaction.card_id ?? '',
     category_id: transaction.category_id ?? '',
     description: transaction.description ?? '',
-    payment_method: transaction.payment_method,
+    payment_method:
+      transaction.payment_method === 'ewallet' &&
+      transaction.wallet?.walletType === 'lent'
+        ? 'lent'
+        : transaction.payment_method,
     to_card_id: transaction.to_card_id ?? '',
-    to_payment_method: transaction.to_card_id ? 'card' : 'ewallet',
+    to_payment_method: transaction.to_card_id
+      ? 'card'
+      : transaction.to_wallet?.walletType === 'cash'
+        ? 'cash'
+        : transaction.to_wallet?.walletType === 'lent'
+          ? 'lent'
+          : 'ewallet',
     to_wallet_id: transaction.to_wallet_id ?? '',
     transaction_date: transaction.transaction_date ?? toDateInputValue(),
     type: transaction.type,
@@ -77,6 +88,7 @@ export function TransactionForm({
   cardAccounts,
   cashAccount,
   categories,
+  lentAccounts,
   onClose,
   onSubmit,
   saving,
@@ -112,19 +124,35 @@ export function TransactionForm({
       payment_method:
         type === 'withdrawal' && current.payment_method === 'cash'
           ? 'card'
-          : current.payment_method,
+          : type !== 'transfer' &&
+              type !== 'withdrawal' &&
+              current.payment_method === 'lent'
+            ? 'ewallet'
+            : current.payment_method,
       to_card_id: type === 'transfer' ? current.to_card_id : '',
       to_wallet_id: type === 'transfer' ? current.to_wallet_id : '',
       type,
-      wallet_id: current.payment_method === 'ewallet' ? current.wallet_id : '',
+      wallet_id:
+        (current.payment_method === 'ewallet' ||
+          current.payment_method === 'lent') &&
+        (type === 'transfer' ||
+          type === 'withdrawal' ||
+          (current.payment_method === 'ewallet' &&
+            !lentAccounts.some((account) => account.id === current.wallet_id)))
+          ? current.wallet_id
+          : '',
     }))
   }
 
-  const updatePaymentMethod = (paymentMethod: PaymentMethod) => {
+  const updatePaymentMethod = (paymentMethod: FormPaymentMethod) => {
     setForm((current) => ({
       ...current,
       card_id: '',
       payment_method: paymentMethod,
+      to_payment_method:
+        paymentMethod === 'cash' && current.to_payment_method === 'cash'
+          ? 'card'
+          : current.to_payment_method,
       wallet_id: '',
     }))
   }
@@ -207,6 +235,7 @@ export function TransactionForm({
               cardAccounts={cardAccounts}
               cashAccount={cashAccount}
               form={form}
+              lentAccounts={lentAccounts}
               onPaymentMethodChange={updatePaymentMethod}
               onUpdate={updateField}
               walletAccounts={walletAccounts}
@@ -215,7 +244,9 @@ export function TransactionForm({
             {form.type === 'transfer' ? (
               <DestinationPanel
                 cardAccounts={cardAccounts}
+                cashAccount={cashAccount}
                 form={form}
+                lentAccounts={lentAccounts}
                 onDestinationMethodChange={updateDestinationMethod}
                 onUpdate={updateField}
                 walletAccounts={walletAccounts}
@@ -338,6 +369,7 @@ function AccountSourcePanel({
   cardAccounts,
   cashAccount,
   form,
+  lentAccounts,
   onPaymentMethodChange,
   onUpdate,
   walletAccounts,
@@ -345,13 +377,16 @@ function AccountSourcePanel({
   cardAccounts: Account[]
   cashAccount: Account | null
   form: TransactionFormState
-  onPaymentMethodChange: (paymentMethod: PaymentMethod) => void
+  lentAccounts: Account[]
+  onPaymentMethodChange: (paymentMethod: FormPaymentMethod) => void
   onUpdate: <TField extends keyof TransactionFormState>(
     field: TField,
     value: TransactionFormState[TField],
   ) => void
   walletAccounts: Account[]
 }) {
+  const showLentOption = form.type === 'transfer' || form.type === 'withdrawal'
+
   return (
     <div className="space-y-4 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
       <p className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
@@ -361,13 +396,14 @@ function AccountSourcePanel({
         <select
           value={form.payment_method}
           onChange={(event) =>
-            onPaymentMethodChange(event.target.value as PaymentMethod)
+            onPaymentMethodChange(event.target.value as FormPaymentMethod)
           }
           className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
         >
           {form.type !== 'withdrawal' ? <option value="cash" className="dark:bg-slate-900">Cash</option> : null}
           <option value="card" className="dark:bg-slate-900">Bank Card</option>
           <option value="ewallet" className="dark:bg-slate-900">E-Wallet</option>
+          {showLentOption ? <option value="lent" className="dark:bg-slate-900">Lent</option> : null}
         </select>
 
         {form.payment_method === 'card' ? (
@@ -384,15 +420,17 @@ function AccountSourcePanel({
               </option>
             ))}
           </select>
-        ) : form.payment_method === 'ewallet' ? (
+        ) : form.payment_method === 'ewallet' || form.payment_method === 'lent' ? (
           <select
             required
             value={form.wallet_id}
             onChange={(event) => onUpdate('wallet_id', event.target.value)}
             className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
           >
-            <option value="" className="dark:bg-slate-900">Select Wallet</option>
-            {walletAccounts.map((account) => (
+            <option value="" className="dark:bg-slate-900">
+              {form.payment_method === 'lent' ? 'Select Lent' : 'Select Wallet'}
+            </option>
+            {(form.payment_method === 'lent' ? lentAccounts : walletAccounts).map((account) => (
               <option key={account.id} value={account.id} className="dark:bg-slate-900">
                 {accountOptionLabel(account)}
               </option>
@@ -412,13 +450,17 @@ function AccountSourcePanel({
 
 function DestinationPanel({
   cardAccounts,
+  cashAccount,
   form,
+  lentAccounts,
   onDestinationMethodChange,
   onUpdate,
   walletAccounts,
 }: {
   cardAccounts: Account[]
+  cashAccount: Account | null
   form: TransactionFormState
+  lentAccounts: Account[]
   onDestinationMethodChange: (paymentMethod: DestinationPaymentMethod) => void
   onUpdate: <TField extends keyof TransactionFormState>(
     field: TField,
@@ -426,6 +468,8 @@ function DestinationPanel({
   ) => void
   walletAccounts: Account[]
 }) {
+  const canTransferToCash = form.payment_method !== 'cash' && Boolean(cashAccount)
+
   return (
     <div className="space-y-4 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
       <p className="ml-1 text-left text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
@@ -441,8 +485,10 @@ function DestinationPanel({
           }
           className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
         >
+          {canTransferToCash ? <option value="cash" className="dark:bg-slate-900">Cash</option> : null}
           <option value="card" className="dark:bg-slate-900">Bank Card</option>
           <option value="ewallet" className="dark:bg-slate-900">E-Wallet</option>
+          <option value="lent" className="dark:bg-slate-900">Lent</option>
         </select>
 
         {form.to_payment_method === 'card' ? (
@@ -461,15 +507,23 @@ function DestinationPanel({
                 </option>
               ))}
           </select>
-        ) : (
+        ) : form.to_payment_method === 'cash' ? (
+          <div className="flex items-center rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold text-gray-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
+            {cashAccount
+              ? accountOptionLabel(cashAccount)
+              : 'No cash account available'}
+          </div>
+        ) : form.to_payment_method === 'ewallet' || form.to_payment_method === 'lent' ? (
           <select
             required
             value={form.to_wallet_id}
             onChange={(event) => onUpdate('to_wallet_id', event.target.value)}
             className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
           >
-            <option value="" className="dark:bg-slate-900">Select Wallet</option>
-            {walletAccounts
+            <option value="" className="dark:bg-slate-900">
+              {form.to_payment_method === 'lent' ? 'Select Lent' : 'Select Wallet'}
+            </option>
+            {(form.to_payment_method === 'lent' ? lentAccounts : walletAccounts)
               .filter((account) => account.id !== form.wallet_id)
               .map((account) => (
                 <option key={account.id} value={account.id} className="dark:bg-slate-900">
@@ -477,7 +531,7 @@ function DestinationPanel({
                 </option>
               ))}
           </select>
-        )}
+        ) : null}
       </div>
     </div>
   )

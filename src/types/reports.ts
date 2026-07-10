@@ -1,4 +1,5 @@
 import type { Tables } from '@/lib/database.types'
+import type { AccountKind } from '@/types/accounts'
 
 export type ReportCategoryBreakdown = {
   categoryId: string | null
@@ -11,7 +12,7 @@ export type ReportAccountSnapshot = {
   balance: number
   id: string
   isActive: boolean
-  kind: 'card' | 'cash' | 'wallet'
+  kind: Extract<AccountKind, 'card' | 'cash' | 'lent' | 'wallet'>
   name: string
 }
 

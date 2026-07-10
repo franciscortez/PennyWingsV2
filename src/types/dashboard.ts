@@ -1,8 +1,10 @@
+import type { AccountKind } from '@/types/accounts'
+
 export type DashboardAccount = {
   accountType: string | null
   id: string
   name: string
-  kind: 'card' | 'wallet'
+  kind: Extract<AccountKind, 'card' | 'cash' | 'lent' | 'wallet'>
   balance: number
   color: string | null
   textColor: string | null

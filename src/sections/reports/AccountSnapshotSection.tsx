@@ -1,4 +1,4 @@
-import { Banknote, CreditCard, Wallet } from 'lucide-react'
+import { Banknote, CreditCard, HandCoins, Wallet } from 'lucide-react'
 
 import { reportCurrency } from '@/sections/reports/reportFormat'
 import type { MonthlyReport, ReportAccountSnapshot } from '@/types'
@@ -40,7 +40,9 @@ function AccountCard({ account }: { account: ReportAccountSnapshot }) {
       ? CreditCard
       : account.kind === 'cash'
         ? Banknote
-        : Wallet
+        : account.kind === 'lent'
+          ? HandCoins
+          : Wallet
 
   return (
     <article className="flex items-center gap-4 rounded-2xl border border-pink-50 bg-pink-50/40 p-4 dark:border-slate-800/80 dark:bg-slate-950/40">

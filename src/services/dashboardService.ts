@@ -158,7 +158,12 @@ const mapWalletAccount = (wallet: WalletRow): DashboardAccount => ({
   balance: toNumber(wallet.balance),
   color: wallet.color,
   id: wallet.id,
-  kind: 'wallet',
+  kind:
+    wallet.wallet_type === 'cash'
+      ? 'cash'
+      : wallet.wallet_type === 'lent'
+        ? 'lent'
+        : 'wallet',
   name: wallet.wallet_name,
   textColor: wallet.text_color,
 })

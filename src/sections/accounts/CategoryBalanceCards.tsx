@@ -79,24 +79,17 @@ export function CategoryBalanceCards({
   }
 
   return (
-    <section className="mb-10 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {categories.map((cat) => {
         const Icon = cat.icon
         const balance = balanceMap[cat.id]
 
         return (
-          <div
+          <article
             key={cat.id}
-            className="group relative overflow-hidden rounded-[2rem] border border-white/60 bg-white p-5 transition-all duration-300 hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900"
+            className="group min-h-32 rounded-[2rem] border border-pink-100 bg-white p-5 transition hover:border-pink-200 hover:shadow-sm hover:shadow-pink-100/70 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-none"
           >
-            {/* Decorative gradient blur */}
-            <div
-              className="absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-20 blur-2xl transition-transform duration-500 group-hover:scale-150"
-              style={{ background: cat.gradient }}
-            />
-
-            <div className="relative z-10 flex items-center gap-4">
-              {/* Icon */}
+            <div className="grid h-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
               <div
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white transition-transform duration-300 group-hover:scale-105"
                 style={{ background: cat.gradient }}
@@ -104,17 +97,16 @@ export function CategoryBalanceCards({
                 <Icon className="h-6 w-6" aria-hidden="true" />
               </div>
 
-              {/* Label + Balance */}
               <div className="min-w-0">
                 <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-500">
                   {cat.label}
                 </p>
-                <p className="truncate text-lg font-black tracking-tight text-gray-900 dark:text-slate-100">
+                <p className="truncate text-xl font-black tracking-tight text-gray-900 dark:text-slate-100">
                   {loading ? '...' : currency.format(balance)}
                 </p>
               </div>
             </div>
-          </div>
+          </article>
         )
       })}
     </section>

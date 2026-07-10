@@ -5,6 +5,7 @@ import {
   FaMoneyBillWave,
   FaWallet,
 } from 'react-icons/fa6'
+import { Archive, Plus, Search, UsersRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
@@ -68,14 +69,11 @@ export default function Accounts() {
     addAccount,
     archiveAccount,
     archivingId,
-    cashCount,
     editAccount,
     error,
-    lentCount,
     loading,
     saving,
     totalBalance,
-    walletCount,
     reload,
   } = useAccountsData(user?.id)
   useErrorAlert(error)
@@ -120,12 +118,21 @@ export default function Accounts() {
     () => accounts.filter((account) => matchesSearch(account, searchQuery)),
     [accounts, searchQuery],
   )
+  const accountCounts = useMemo(
+    () => ({
+      cards: accounts.filter((account) => account.kind === 'card').length,
+      cash: accounts.filter((account) => account.kind === 'cash').length,
+      lent: accounts.filter((account) => account.kind === 'lent').length,
+      wallets: accounts.filter((account) => account.kind === 'wallet').length,
+    }),
+    [accounts],
+  )
   const tabCounts: Record<AccountTab, number> = {
     all: allFilteredAccounts.length,
     cards: cardAccounts.length,
-    cash: cashCount,
-    lent: lentCount,
-    wallets: walletCount,
+    cash: cashAccounts.length,
+    lent: lentAccounts.length,
+    wallets: walletAccounts.length,
   }
 
   const bankBalance = useMemo(
@@ -228,83 +235,117 @@ export default function Accounts() {
 
   return (
     <Layout>
-      <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <div>
-          <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-gray-900 dark:text-white">
-            My Accounts
-          </h1>
-          <p className="text-gray-500 dark:text-slate-400">
-            Manage your bank cards and digital wallets in one place.
-          </p>
-        </div>
-        <Link
-          to="/accounts/archive"
-          className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-pink-100 bg-white px-5 py-3 text-sm font-black text-pink-600 transition hover:border-pink-200 hover:bg-pink-50 dark:border-slate-800 dark:bg-slate-900 dark:text-pink-400 dark:hover:bg-slate-800"
-        >
-          Archived Accounts
-        </Link>
-      </div>
+      <div className="space-y-6 pb-20 sm:space-y-8">
+        <header className="flex flex-col gap-5 rounded-[2rem] border border-pink-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="min-w-0">
+            <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-pink-500 dark:text-pink-400">
+              Accounts
+            </p>
+            <h1 className="text-3xl font-black tracking-tight text-gray-950 dark:text-white sm:text-4xl">
+              My Accounts
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm font-semibold leading-relaxed text-gray-500 dark:text-slate-400">
+              Track cards, wallets, cash, and lent money from one responsive
+              command center.
+            </p>
+          </div>
 
-      <TotalBalanceSection
-        loading={loading}
-        total={totalBalance}
-        onAddClick={openWizard}
-        onJoinClick={() => setJoinModalOpen(true)}
-      />
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:w-auto">
+            <button
+              type="button"
+              onClick={openWizard}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-pink-500 px-5 py-3 text-sm font-black text-white transition hover:bg-pink-600 active:scale-95"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              Add
+            </button>
+            <button
+              type="button"
+              onClick={() => setJoinModalOpen(true)}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-pink-100 bg-pink-50 px-5 py-3 text-sm font-black text-pink-600 transition hover:border-pink-200 hover:bg-pink-100 dark:border-slate-800 dark:bg-slate-950 dark:text-pink-400 dark:hover:bg-slate-800"
+            >
+              <UsersRound className="h-4 w-4" aria-hidden="true" />
+              Join
+            </button>
+            <Link
+              to="/accounts/archive"
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-pink-100 bg-white px-5 py-3 text-sm font-black text-gray-500 transition hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-pink-400"
+            >
+              <Archive className="h-4 w-4" aria-hidden="true" />
+              Archive
+            </Link>
+          </div>
+        </header>
 
-      <CategoryBalanceCards
-        bankBalance={bankBalance}
-        cashBalance={cashBalance}
-        lentBalance={lentBalance}
-        loading={loading}
-        walletBalance={walletBalance}
-      />
-
-      <div className="mb-10 flex flex-col items-center justify-between gap-4 md:flex-row">
-        <div className="no-scrollbar flex w-full snap-x gap-2 overflow-x-auto whitespace-nowrap rounded-4xl border border-pink-100 bg-pink-100/30 p-1.5 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/30 md:w-fit">
-          {tabs.map((tab) => {
-            const Icon = tab.icon
-            const active = activeTab === tab.id
-
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => handleTabChange(tab.id)}
-                className={`flex flex-1 snap-center items-center justify-center gap-2 rounded-[1.2rem] px-6 py-3 font-bold transition-all md:flex-none ${
-                  active
-                    ? 'scale-105 bg-white text-pink-600 dark:bg-slate-800 dark:text-pink-400'
-                    : 'text-gray-400 hover:text-pink-400 dark:text-slate-400'
-                }`}
-              >
-                <Icon className="h-5 w-5" aria-hidden="true" />
-                {tab.label}
-                <span
-                  className={`ml-2 rounded-full px-2 py-0.5 text-[10px] ${
-                    active
-                      ? 'bg-pink-100 text-pink-600 dark:bg-slate-700 dark:text-pink-400'
-                      : 'bg-gray-100 text-gray-400 dark:bg-slate-800 dark:text-slate-500'
-                  }`}
-                >
-                  {loading ? '...' : tabCounts[tab.id]}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-
-        <div className="relative w-full md:w-64">
-          <input
-            type="text"
-            placeholder="Search accounts..."
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-white px-5 py-3 text-sm font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+        <section className="space-y-4">
+          <TotalBalanceSection
+            cardCount={accountCounts.cards}
+            cashCount={accountCounts.cash}
+            lentCount={accountCounts.lent}
+            loading={loading}
+            total={totalBalance}
+            walletCount={accountCounts.wallets}
           />
-        </div>
-      </div>
 
-      <div className="pb-20">
+          <CategoryBalanceCards
+            bankBalance={bankBalance}
+            cashBalance={cashBalance}
+            lentBalance={lentBalance}
+            loading={loading}
+            walletBalance={walletBalance}
+          />
+        </section>
+
+        <section className="sticky top-3 z-20 rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+          <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:w-auto">
+              {tabs.map((tab) => {
+                const Icon = tab.icon
+                const active = activeTab === tab.id
+
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-black transition sm:min-w-fit sm:px-5 ${
+                      active
+                        ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20'
+                        : 'bg-pink-50 text-gray-500 hover:bg-pink-100 hover:text-pink-600 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-pink-400'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    <span>{tab.label}</span>
+                    <span
+                      className={`flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[10px] ${
+                        active
+                          ? 'bg-white/20 text-white'
+                          : 'bg-white text-gray-400 dark:bg-slate-900 dark:text-slate-500'
+                      }`}
+                    >
+                      {tabCounts[tab.id]}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="relative w-full xl:w-80">
+              <Search
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-300 dark:text-slate-500"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                placeholder="Search accounts"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="min-h-12 w-full rounded-2xl border border-pink-100 bg-pink-50/60 py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-pink-500 dark:focus:bg-slate-900"
+              />
+            </div>
+          </div>
+        </section>
+
         <div key={activeTab} className="animate-fade-in">
           {activeTab === 'all' ? (
             <AccountsListSection
@@ -375,7 +416,7 @@ export default function Accounts() {
 
       {wizardOpen ? (
         <AccountCreationWizard
-          hasCashAccount={cashCount > 0}
+          hasCashAccount={accountCounts.cash > 0}
           saving={saving}
           onClose={closeWizard}
           onCreate={handleCreateAccount}

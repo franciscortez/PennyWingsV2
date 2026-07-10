@@ -164,13 +164,13 @@ export function TransactionsTable({
           <p className="mb-2 ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
             Filter Type
           </p>
-          <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
             {filters.map((filter) => (
               <button
                 key={filter}
                 type="button"
                 onClick={() => onFilterChange(filter)}
-                className={`whitespace-nowrap rounded-[1.2rem] px-6 py-4 text-xs font-bold uppercase tracking-widest transition ${
+                className={`min-h-12 min-w-0 rounded-[1.2rem] px-3 py-3 text-xs font-bold uppercase tracking-widest transition sm:min-w-fit sm:px-6 sm:py-4 ${
                   filterType === filter
                     ? 'bg-gray-900 text-white dark:bg-slate-800 dark:text-pink-400'
                     : 'border border-pink-100 bg-pink-50/50 text-gray-400 hover:bg-pink-100/50 hover:text-pink-500 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-pink-400'

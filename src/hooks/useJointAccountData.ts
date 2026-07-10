@@ -129,7 +129,7 @@ export function useJoinAccount(userId: string | undefined) {
   const joinMutation = useMutation({
     mutationFn: async (code: string) => {
       if (!userId) throw new Error('No user logged in.')
-      await acceptInvite(code, userId)
+      await acceptInvite(code)
     },
     onSuccess: async () => {
       if (!userId) return

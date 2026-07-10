@@ -465,6 +465,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_joint_account_invite: {
+        Args: { p_code: string }
+        Returns: undefined
+      }
       delete_transaction: { Args: { p_id: string }; Returns: undefined }
       map_share_user_id: { Args: never; Returns: undefined }
       process_transaction: {
@@ -522,6 +526,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      revoke_joint_account_invite: {
+        Args: { p_invite_id: string }
+        Returns: undefined
       }
       sync_monthly_reports: { Args: never; Returns: undefined }
       update_card_balance: {

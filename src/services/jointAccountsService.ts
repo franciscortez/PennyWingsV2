@@ -56,82 +56,24 @@ export const createInvite = async (
 }
 
 /**
- * Accepts an invitation code. Validates that the code is not expired,
- * already accepted, or revoked, then creates a membership row.
+ * Accepts an invitation code through a database RPC so the invite row is
+ * locked, validated, marked accepted, and converted into membership atomically.
  */
-export const acceptInvite = async (code: string, userId: string) => {
-  const normalizedCode = code.trim().toUpperCase()
-  const codeHash = await hashInviteCode(normalizedCode)
+export const acceptInvite = async (code: string) => {
+  const { error } = await supabase.rpc('accept_joint_account_invite', {
+    p_code: code,
+  })
 
-  const { data: invite, error: findError } = await supabase
-    .from('joint_account_invites')
-    .select('id, resource_type, resource_id, owner_id, expires_at, accepted_by, revoked_at')
-    .eq('code_hash', codeHash)
-    .maybeSingle()
-
-  if (findError) throw AppError.from(findError)
-
-  if (!invite) {
-    throw new AppError('Invalid invitation code.')
-  }
-
-  if (invite.accepted_by) {
-    throw new AppError('This invitation has already been used.')
-  }
-
-  if (invite.revoked_at) {
-    throw new AppError('This invitation has been revoked.')
-  }
-
-  if (new Date(invite.expires_at) <= new Date()) {
-    throw new AppError('This invitation has expired.')
-  }
-
-  if (invite.owner_id === userId) {
-    throw new AppError('You already own this account.')
-  }
-
-  const { data: existing } = await supabase
-    .from('account_memberships')
-    .select('id')
-    .eq('resource_type', invite.resource_type)
-    .eq('resource_id', invite.resource_id)
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (existing) {
-    throw new AppError('You are already a member of this account.')
-  }
-
-  const now = new Date().toISOString()
-
-  const { error: acceptError } = await supabase
-    .from('joint_account_invites')
-    .update({ accepted_at: now, accepted_by: userId })
-    .eq('id', invite.id)
-
-  if (acceptError) throw AppError.from(acceptError)
-
-  const { error: memberError } = await supabase
-    .from('account_memberships')
-    .insert({
-      invited_by: invite.owner_id,
-      resource_id: invite.resource_id,
-      resource_type: invite.resource_type,
-      user_id: userId,
-    })
-
-  if (memberError) throw AppError.from(memberError)
+  if (error) throw AppError.from(error)
 }
 
 /**
  * Revokes an active invitation so it can no longer be used.
  */
 export const revokeInvite = async (inviteId: string) => {
-  const { error } = await supabase
-    .from('joint_account_invites')
-    .update({ revoked_at: new Date().toISOString() })
-    .eq('id', inviteId)
+  const { error } = await supabase.rpc('revoke_joint_account_invite', {
+    p_invite_id: inviteId,
+  })
 
   if (error) throw AppError.from(error)
 }

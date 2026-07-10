@@ -296,7 +296,7 @@ export default function Accounts() {
           />
         </section>
 
-        <section className="sticky top-3 z-20 rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+        <section className="rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:w-auto">
               {tabs.map((tab) => {

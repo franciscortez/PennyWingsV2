@@ -87,7 +87,7 @@ export function CategoryBalanceCards({
         return (
           <article
             key={cat.id}
-            className="group min-h-32 rounded-[2rem] border border-pink-100 bg-white p-5 transition hover:border-pink-200 hover:shadow-sm hover:shadow-pink-100/70 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-none"
+            className="group min-h-28 rounded-[2rem] border border-pink-100 bg-white p-5 transition hover:border-pink-200 hover:shadow-sm hover:shadow-pink-100/70 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-none lg:min-h-32"
           >
             <div className="grid h-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
               <div
@@ -101,7 +101,7 @@ export function CategoryBalanceCards({
                 <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-500">
                   {cat.label}
                 </p>
-                <p className="truncate text-xl font-black tracking-tight text-gray-900 dark:text-slate-100">
+                <p className="break-words text-lg font-black tracking-tight text-gray-900 dark:text-slate-100 sm:text-xl">
                   {loading ? '...' : currency.format(balance)}
                 </p>
               </div>

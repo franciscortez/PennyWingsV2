@@ -236,7 +236,7 @@ export default function Accounts() {
   return (
     <Layout>
       <div className="space-y-6 pb-20 sm:space-y-8">
-        <header className="flex flex-col gap-5 rounded-[2rem] border border-pink-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 sm:p-6 lg:flex-row lg:items-center lg:justify-between">
+        <header className="flex flex-col gap-5 rounded-[2rem] border border-pink-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 sm:p-6 xl:flex-row xl:items-center xl:justify-between">
           <div className="min-w-0">
             <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-pink-500 dark:text-pink-400">
               Accounts
@@ -250,7 +250,7 @@ export default function Accounts() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:w-auto">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:w-auto">
             <button
               type="button"
               onClick={openWizard}

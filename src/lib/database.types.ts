@@ -264,6 +264,7 @@ export type Database = {
           owner_id: string
           resource_id: string
           resource_type: string
+          role: string
           revoked_at: string | null
         }
         Insert: {
@@ -276,6 +277,7 @@ export type Database = {
           owner_id: string
           resource_id: string
           resource_type: string
+          role?: string
           revoked_at?: string | null
         }
         Update: {
@@ -288,6 +290,7 @@ export type Database = {
           owner_id?: string
           resource_id?: string
           resource_type?: string
+          role?: string
           revoked_at?: string | null
         }
         Relationships: []
@@ -469,7 +472,19 @@ export type Database = {
         Args: { p_code: string }
         Returns: undefined
       }
+      can_transact_account: {
+        Args: { p_resource_id: string; p_resource_type: string }
+        Returns: boolean
+      }
+      can_view_account: {
+        Args: { p_resource_id: string; p_resource_type: string }
+        Returns: boolean
+      }
       delete_transaction: { Args: { p_id: string }; Returns: undefined }
+      get_account_owner: {
+        Args: { p_resource_id: string; p_resource_type: string }
+        Returns: string
+      }
       map_share_user_id: { Args: never; Returns: undefined }
       process_transaction: {
         Args: {
@@ -532,6 +547,10 @@ export type Database = {
         Returns: undefined
       }
       sync_monthly_reports: { Args: never; Returns: undefined }
+      update_account_member_role: {
+        Args: { p_membership_id: string; p_role: string }
+        Returns: undefined
+      }
       update_card_balance: {
         Args: { p_delta: number; p_id: string }
         Returns: undefined

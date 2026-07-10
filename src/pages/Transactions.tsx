@@ -199,6 +199,7 @@ export default function Transactions() {
         </header>
 
         <TransactionsTable
+          currentUserId={user?.id}
           deletingId={deletingId}
           filterType={filterType}
           loading={loading}

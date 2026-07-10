@@ -37,6 +37,11 @@ type WalletRow = Pick<
   | 'wallet_type'
 >
 
+type MembershipRow = Pick<
+  Tables<'account_memberships'>,
+  'resource_id' | 'resource_type' | 'role'
+>
+
 export const emptyAccountsData: AccountsData = {
   accounts: [],
   cardCount: 0,
@@ -48,7 +53,31 @@ export const emptyAccountsData: AccountsData = {
 
 const toNumber = (value: unknown) => Number(value ?? 0)
 
-const mapCardAccount = (card: CardRow): Account => ({
+const getAccess = (
+  ownerId: string,
+  userId: string,
+  membershipRole?: string,
+) => {
+  const accessRole =
+    ownerId === userId
+      ? 'owner'
+      : membershipRole === 'transactor'
+        ? 'transactor'
+        : 'viewer'
+
+  return {
+    accessRole,
+    canManage: accessRole === 'owner',
+    canTransact: accessRole === 'owner' || accessRole === 'transactor',
+  } as const
+}
+
+const mapCardAccount = (
+  card: CardRow,
+  userId: string,
+  membershipRole?: string,
+): Account => ({
+  ...getAccess(card.user_id, userId, membershipRole),
   accountType: card.card_type,
   balance: toNumber(card.balance),
   color: card.color ?? '#ec4899',
@@ -62,7 +91,12 @@ const mapCardAccount = (card: CardRow): Account => ({
   userId: card.user_id,
 })
 
-const mapWalletAccount = (wallet: WalletRow): Account => ({
+const mapWalletAccount = (
+  wallet: WalletRow,
+  userId: string,
+  membershipRole?: string,
+): Account => ({
+  ...getAccess(wallet.user_id, userId, membershipRole),
   accountIdentifier: wallet.account_identifier ?? undefined,
   accountType: wallet.wallet_type,
   balance: toNumber(wallet.balance),
@@ -86,7 +120,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     return emptyAccountsData
   }
   /* RLS returns both owned and member accounts automatically. */
-  const [cardsResult, walletsResult] = await Promise.all([
+  const [cardsResult, walletsResult, membershipsResult] = await Promise.all([
     supabase
       .from('bank_cards')
       .select(
@@ -101,9 +135,14 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
       )
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
+    supabase
+      .from('account_memberships')
+      .select('resource_type, resource_id, role')
+      .eq('user_id', userId),
   ])
 
-  const firstError = cardsResult.error ?? walletsResult.error
+  const firstError =
+    cardsResult.error ?? walletsResult.error ?? membershipsResult.error
 
   if (firstError) {
     throw firstError
@@ -111,9 +150,28 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
 
   const cards: CardRow[] = cardsResult.data ?? []
   const wallets: WalletRow[] = walletsResult.data ?? []
-  const walletAccounts = wallets.map(mapWalletAccount)
+  const memberships: MembershipRow[] = membershipsResult.data ?? []
+  const membershipRoles = new Map(
+    memberships.map((membership) => [
+      `${membership.resource_type}:${membership.resource_id}`,
+      membership.role,
+    ]),
+  )
+  const walletAccounts = wallets.map((wallet) =>
+    mapWalletAccount(
+      wallet,
+      userId,
+      membershipRoles.get(`e_wallet:${wallet.id}`),
+    ),
+  )
   const accounts = [
-    ...cards.map(mapCardAccount),
+    ...cards.map((card) =>
+      mapCardAccount(
+        card,
+        userId,
+        membershipRoles.get(`bank_card:${card.id}`),
+      ),
+    ),
     ...walletAccounts,
   ].sort(
     (first, second) =>
@@ -164,8 +222,13 @@ export const fetchArchivedAccounts = async (
 
   const cards: CardRow[] = cardsResult.data ?? []
   const wallets: WalletRow[] = walletsResult.data ?? []
-  const walletAccounts = wallets.map(mapWalletAccount)
-  const accounts = [...cards.map(mapCardAccount), ...walletAccounts]
+  const walletAccounts = wallets.map((wallet) =>
+    mapWalletAccount(wallet, userId),
+  )
+  const accounts = [
+    ...cards.map((card) => mapCardAccount(card, userId)),
+    ...walletAccounts,
+  ]
 
   return {
     accounts,

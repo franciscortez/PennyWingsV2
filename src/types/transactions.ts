@@ -29,6 +29,7 @@ export type Transaction = {
   category?: TransactionCategory | null
   category_id: string | null
   created_at?: string | null
+  created_by: string | null
   description: string | null
   id: string
   payment_method: PaymentMethod
@@ -38,6 +39,7 @@ export type Transaction = {
   to_wallet_id: string | null
   transaction_date: string
   type: TransactionType
+  user_id: string
   wallet?: TransactionAccountRelation | null
   wallet_id: string | null
 }

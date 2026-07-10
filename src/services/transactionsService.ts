@@ -13,7 +13,8 @@ import type {
 } from '@/types'
 
 const TX_SELECT = `
-  id, type, payment_method, amount, description, transaction_date, created_at,
+  id, user_id, created_by, type, payment_method, amount, description,
+  transaction_date, created_at,
   card_id, wallet_id, category_id, to_card_id, to_wallet_id,
   category:categories(id, name, type, icon, color),
   card:bank_cards!transactions_card_id_fkey(card_name, color),
@@ -36,6 +37,7 @@ type RawTransactionRow = {
   category?: TransactionCategory | TransactionCategory[] | null
   category_id: string | null
   created_at?: string | null
+  created_by: string | null
   description: string | null
   id: string
   payment_method: PaymentMethod
@@ -45,6 +47,7 @@ type RawTransactionRow = {
   to_wallet_id: string | null
   transaction_date: string
   type: TransactionType
+  user_id: string
   wallet?: AccountRelationRow | AccountRelationRow[] | null
   wallet_id: string | null
 }
@@ -87,6 +90,7 @@ const mapTransaction = (transaction: RawTransactionRow): Transaction => ({
   category: mapCategory(transaction.category),
   category_id: transaction.category_id,
   created_at: transaction.created_at,
+  created_by: transaction.created_by,
   description: transaction.description,
   id: transaction.id,
   payment_method: transaction.payment_method,
@@ -96,6 +100,7 @@ const mapTransaction = (transaction: RawTransactionRow): Transaction => ({
   to_wallet_id: transaction.to_wallet_id,
   transaction_date: transaction.transaction_date,
   type: transaction.type,
+  user_id: transaction.user_id,
   wallet: mapAccountRelation(transaction.wallet),
   wallet_id: transaction.wallet_id,
 })
@@ -111,7 +116,6 @@ export const fetchTransactions = async ({
   pageSize,
   search,
   type,
-  userId,
 }: TransactionsListParams): Promise<TransactionsListData> => {
   const from = (page - 1) * pageSize
   const to = from + pageSize - 1
@@ -120,12 +124,10 @@ export const fetchTransactions = async ({
   let countQuery = supabase
     .from('transactions')
     .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
 
   let dataQuery = supabase
     .from('transactions')
     .select(TX_SELECT)
-    .eq('user_id', userId)
     .order('transaction_date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to)

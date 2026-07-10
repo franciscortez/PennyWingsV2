@@ -10,8 +10,9 @@ import {
   fetchActiveInvites,
   removeMember as removeMemberService,
   revokeInvite as revokeInviteService,
+  updateMemberRole as updateMemberRoleService,
 } from '@/services/jointAccountsService'
-import type { ResourceType } from '@/types'
+import type { AccountMemberRole, ResourceType } from '@/types'
 
 type UseJointAccountDataOptions = {
   enabled: boolean
@@ -52,9 +53,9 @@ export function useJointAccountData({
   }, [queryClient, resourceType, resourceId])
 
   const generateInviteMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (role: AccountMemberRole) => {
       if (!userId) throw new Error('No user logged in.')
-      return createInvite(resourceType, resourceId, userId)
+      return createInvite(resourceType, resourceId, userId, role)
     },
     onSuccess: () =>
       queryClient.invalidateQueries({
@@ -75,9 +76,20 @@ export function useJointAccountData({
     onSuccess: refreshAll,
   })
 
-  const generateInviteCode = useCallback(async () => {
+  const updateMemberRoleMutation = useMutation({
+    mutationFn: ({
+      membershipId,
+      role,
+    }: {
+      membershipId: string
+      role: AccountMemberRole
+    }) => updateMemberRoleService(membershipId, role),
+    onSuccess: refreshAll,
+  })
+
+  const generateInviteCode = useCallback(async (role: AccountMemberRole) => {
     try {
-      const code = await generateInviteMutation.mutateAsync()
+      const code = await generateInviteMutation.mutateAsync(role)
       return { code, error: null }
     } catch (error) {
       return { code: null, error: AppError.from(error, 'Unable to generate invite.') }
@@ -108,6 +120,18 @@ export function useJointAccountData({
     [removeMemberMutation],
   )
 
+  const updateMemberRole = useCallback(
+    async (membershipId: string, role: AccountMemberRole) => {
+      try {
+        await updateMemberRoleMutation.mutateAsync({ membershipId, role })
+        return { error: null }
+      } catch (error) {
+        return { error: AppError.from(error, 'Unable to update member access.') }
+      }
+    },
+    [updateMemberRoleMutation],
+  )
+
   return {
     generating: generateInviteMutation.isPending,
     generateInviteCode,
@@ -117,6 +141,10 @@ export function useJointAccountData({
     membersLoading: membersQuery.isLoading,
     removeMember,
     revokeInvite,
+    updateMemberRole,
+    updatingMemberId: updateMemberRoleMutation.isPending
+      ? updateMemberRoleMutation.variables?.membershipId ?? null
+      : null,
   }
 }
 

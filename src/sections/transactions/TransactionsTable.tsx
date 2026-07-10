@@ -12,6 +12,7 @@ import { formatDate } from '@/lib/date'
 import type { Transaction, TransactionFilterType } from '@/types'
 
 type TransactionsTableProps = {
+  currentUserId: string | undefined
   deletingId: string | null
   filterType: TransactionFilterType
   loading: boolean
@@ -119,6 +120,7 @@ const getVisiblePages = (page: number, totalPages: number) => {
 }
 
 export function TransactionsTable({
+  currentUserId,
   deletingId,
   filterType,
   loading,
@@ -202,6 +204,7 @@ export function TransactionsTable({
               <tbody className="divide-y divide-pink-50 dark:divide-slate-800">
                 {transactions.map((transaction) => (
                   <TransactionRow
+                    canManage={transaction.user_id === currentUserId}
                     key={transaction.id}
                     deleting={deletingId === transaction.id}
                     transaction={transaction}
@@ -247,11 +250,13 @@ function TableHead({
 }
 
 function TransactionRow({
+  canManage,
   deleting,
   onDelete,
   onEdit,
   transaction,
 }: {
+  canManage: boolean
   deleting: boolean
   onDelete: (transaction: Transaction) => void
   onEdit: (transaction: Transaction) => void
@@ -302,26 +307,32 @@ function TransactionRow({
         </span>
       </td>
       <td className="px-8 py-6 text-center">
-        <div className="flex items-center justify-center gap-1">
-          <button
-            type="button"
-            onClick={() => onEdit(transaction)}
-            disabled={deleting}
-            className="rounded-xl p-3 text-gray-300 transition hover:bg-sky-50 hover:text-blue-500 dark:text-slate-600 dark:hover:bg-sky-950/40 dark:hover:text-blue-400 disabled:pointer-events-none disabled:opacity-40"
-            aria-label="Edit transaction"
-          >
-            <Edit3 className="h-5 w-5" aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            onClick={() => onDelete(transaction)}
-            disabled={deleting}
-            className="rounded-xl p-3 text-gray-300 transition hover:bg-rose-50 hover:text-rose-500 dark:text-slate-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 disabled:pointer-events-none disabled:opacity-40"
-            aria-label="Delete transaction"
-          >
-            <Trash2 className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
+        {canManage ? (
+          <div className="flex items-center justify-center gap-1">
+            <button
+              type="button"
+              onClick={() => onEdit(transaction)}
+              disabled={deleting}
+              className="rounded-xl p-3 text-gray-300 transition hover:bg-sky-50 hover:text-blue-500 dark:text-slate-600 dark:hover:bg-sky-950/40 dark:hover:text-blue-400 disabled:pointer-events-none disabled:opacity-40"
+              aria-label="Edit transaction"
+            >
+              <Edit3 className="h-5 w-5" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(transaction)}
+              disabled={deleting}
+              className="rounded-xl p-3 text-gray-300 transition hover:bg-rose-50 hover:text-rose-500 dark:text-slate-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 disabled:pointer-events-none disabled:opacity-40"
+              aria-label="Delete transaction"
+            >
+              <Trash2 className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        ) : (
+          <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+            View only
+          </span>
+        )}
       </td>
     </tr>
   )

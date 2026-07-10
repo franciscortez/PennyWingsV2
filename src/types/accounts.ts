@@ -2,6 +2,10 @@ export type AccountKind = 'card' | 'wallet' | 'cash' | 'lent'
 
 export type ResourceType = 'bank_card' | 'e_wallet'
 
+export type AccountMemberRole = 'viewer' | 'transactor'
+
+export type AccountAccessRole = 'owner' | AccountMemberRole
+
 export type AccountColor = {
   background: string
   label: string
@@ -10,9 +14,12 @@ export type AccountColor = {
 }
 
 export type Account = {
+  accessRole: AccountAccessRole
   accountIdentifier?: string
   accountType: string
   balance: number
+  canManage: boolean
+  canTransact: boolean
   color: string
   createdAt: string
   id: string
@@ -53,7 +60,7 @@ export type AccountMember = {
   joinedAt: string
   resourceId: string
   resourceType: ResourceType
-  role: string
+  role: AccountMemberRole
   userId: string
 }
 
@@ -66,6 +73,7 @@ export type AccountInvite = {
   ownerId: string
   resourceId: string
   resourceType: ResourceType
+  role: AccountMemberRole
   revokedAt: string | null
 }
 

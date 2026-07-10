@@ -1,10 +1,12 @@
 export type {
   Account,
+  AccountAccessRole,
   AccountColor,
   AccountCreateValues,
   AccountInvite,
   AccountKind,
   AccountMember,
+  AccountMemberRole,
   AccountUpdateValues,
   AccountsData,
   ResourceType,

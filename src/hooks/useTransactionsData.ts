@@ -128,14 +128,18 @@ export function useTransactionsData({
             ? 'Unable to load transactions.'
             : null
 
-  const ownedAccounts = userId
-    ? accounts.filter((account) => account.userId === userId)
-    : []
-  const cardAccounts = ownedAccounts.filter((account) => account.kind === 'card')
-  const lentAccounts = ownedAccounts.filter((account) => account.kind === 'lent')
-  const walletAccounts = ownedAccounts.filter((account) => account.kind === 'wallet')
+  const transactableAccounts = accounts.filter((account) => account.canTransact)
+  const cardAccounts = transactableAccounts.filter(
+    (account) => account.kind === 'card',
+  )
+  const lentAccounts = transactableAccounts.filter(
+    (account) => account.kind === 'lent',
+  )
+  const walletAccounts = transactableAccounts.filter(
+    (account) => account.kind === 'wallet',
+  )
   const cashAccount =
-    ownedAccounts.find((account) => account.kind === 'cash') ?? null
+    transactableAccounts.find((account) => account.kind === 'cash') ?? null
 
   const buildMutationValues = useCallback(
     (values: TransactionFormValues): TransactionMutationValues => {

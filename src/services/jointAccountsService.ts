@@ -1,6 +1,11 @@
 import { supabase } from '@/lib/supabase'
 import { AppError } from '@/lib/errors'
-import type { AccountInvite, AccountMember, ResourceType } from '@/types'
+import type {
+  AccountInvite,
+  AccountMember,
+  AccountMemberRole,
+  ResourceType,
+} from '@/types'
 
 /* ─── Code generation & hashing ─────────────────────────────────────── */
 
@@ -37,6 +42,7 @@ export const createInvite = async (
   resourceType: ResourceType,
   resourceId: string,
   ownerId: string,
+  role: AccountMemberRole,
   expiresInMinutes = 60,
 ): Promise<string> => {
   const code = generateInviteCode()
@@ -49,6 +55,7 @@ export const createInvite = async (
     owner_id: ownerId,
     resource_id: resourceId,
     resource_type: resourceType,
+    role,
   })
 
   if (error) throw AppError.from(error)
@@ -114,7 +121,7 @@ export const fetchAccountMembers = async (
     joinedAt: member.joined_at,
     resourceId: member.resource_id,
     resourceType: member.resource_type as ResourceType,
-    role: member.role,
+    role: member.role as AccountMemberRole,
     userId: member.user_id,
   }))
 }
@@ -147,6 +154,7 @@ export const fetchActiveInvites = async (
     ownerId: invite.owner_id,
     resourceId: invite.resource_id,
     resourceType: invite.resource_type as ResourceType,
+    role: invite.role as AccountMemberRole,
     revokedAt: invite.revoked_at,
   }))
 }
@@ -159,6 +167,21 @@ export const removeMember = async (membershipId: string) => {
     .from('account_memberships')
     .delete()
     .eq('id', membershipId)
+
+  if (error) throw AppError.from(error)
+}
+
+/**
+ * Changes whether a member may only view or may also create transactions.
+ */
+export const updateMemberRole = async (
+  membershipId: string,
+  role: AccountMemberRole,
+) => {
+  const { error } = await supabase.rpc('update_account_member_role', {
+    p_membership_id: membershipId,
+    p_role: role,
+  })
 
   if (error) throw AppError.from(error)
 }

@@ -5,6 +5,7 @@ import {
   FaPencil,
   FaShareNodes,
   FaTrashCan,
+  FaUser,
   FaUsers,
   FaWallet,
 } from 'react-icons/fa6'
@@ -216,7 +217,7 @@ function AccountCard({
   onShare?: (account: Account) => void
 }) {
   const isDeleting = archivingId === account.id
-  const isOwner = !currentUserId || account.userId === currentUserId
+  const isOwner = account.canManage || !currentUserId
   const isShared = !isOwner
   const primaryColor = account.color || '#F472B6'
   const secondaryColor = adjustColorBrightness(primaryColor, -28)
@@ -244,9 +245,16 @@ function AccountCard({
               {isShared ? (
                 <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
                   <FaUsers className="h-3 w-3" aria-hidden="true" />
-                  Shared
+                  {account.accessRole === 'transactor'
+                    ? 'Shared · Can transact'
+                    : 'Shared · View only'}
                 </span>
-              ) : null}
+              ) : (
+                <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
+                  <FaUser className="h-3 w-3" aria-hidden="true" />
+                  Owner
+                </span>
+              )}
 
               <span className="rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
                 {formatAccountType(account.accountType)}

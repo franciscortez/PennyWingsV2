@@ -109,11 +109,51 @@ export function TransactionForm({
     [categories, form.type],
   )
 
+  const sourceOwnerId = useMemo(() => {
+    if (form.payment_method === 'card') {
+      return cardAccounts.find((account) => account.id === form.card_id)?.userId
+    }
+
+    if (form.payment_method === 'cash') {
+      return cashAccount?.userId
+    }
+
+    return [...walletAccounts, ...lentAccounts].find(
+      (account) => account.id === form.wallet_id,
+    )?.userId
+  }, [
+    cardAccounts,
+    cashAccount?.userId,
+    form.card_id,
+    form.payment_method,
+    form.wallet_id,
+    lentAccounts,
+    walletAccounts,
+  ])
+
+  const destinationCardAccounts = sourceOwnerId
+    ? cardAccounts.filter((account) => account.userId === sourceOwnerId)
+    : cardAccounts
+  const destinationWalletAccounts = sourceOwnerId
+    ? walletAccounts.filter((account) => account.userId === sourceOwnerId)
+    : walletAccounts
+  const destinationLentAccounts = sourceOwnerId
+    ? lentAccounts.filter((account) => account.userId === sourceOwnerId)
+    : lentAccounts
+  const destinationCashAccount =
+    !sourceOwnerId || cashAccount?.userId === sourceOwnerId ? cashAccount : null
+
   const updateField = <TField extends keyof TransactionFormState>(
     field: TField,
     value: TransactionFormState[TField],
   ) => {
-    setForm((current) => ({ ...current, [field]: value }))
+    setForm((current) => ({
+      ...current,
+      [field]: value,
+      ...(field === 'card_id' || field === 'wallet_id'
+        ? { to_card_id: '', to_wallet_id: '' }
+        : {}),
+    }))
   }
 
   const updateType = (type: TransactionType) => {
@@ -243,13 +283,13 @@ export function TransactionForm({
 
             {form.type === 'transfer' ? (
               <DestinationPanel
-                cardAccounts={cardAccounts}
-                cashAccount={cashAccount}
+                cardAccounts={destinationCardAccounts}
+                cashAccount={destinationCashAccount}
                 form={form}
-                lentAccounts={lentAccounts}
+                lentAccounts={destinationLentAccounts}
                 onDestinationMethodChange={updateDestinationMethod}
                 onUpdate={updateField}
-                walletAccounts={walletAccounts}
+                walletAccounts={destinationWalletAccounts}
               />
             ) : null}
 

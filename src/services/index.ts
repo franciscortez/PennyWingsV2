@@ -1,4 +1,5 @@
 export * from '@/services/accountsService'
+export * from '@/services/assistantService'
 export * from '@/services/authService'
 export * from '@/services/categoriesService'
 export * from '@/services/dashboardService'

@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  Bot,
   ChevronRight,
   CreditCard,
   History,
@@ -20,6 +21,7 @@ import { ThemeToggle } from './ThemeToggle'
 type SidebarProps = {
   mobileMenuOpen: boolean
   onCloseMobileMenu: () => void
+  onOpenAssistant: () => void
   onSignOut: () => void
   onToggleMobileMenu: () => void
   onToggleSidebar: () => void
@@ -39,6 +41,7 @@ const navigation = [
 export function Sidebar({
   mobileMenuOpen,
   onCloseMobileMenu,
+  onOpenAssistant,
   onSignOut,
   onToggleMobileMenu,
   onToggleSidebar,
@@ -71,6 +74,7 @@ export function Sidebar({
         items={hiddenMobileItems}
         open={mobileMenuOpen}
         onClose={onCloseMobileMenu}
+        onOpenAssistant={onOpenAssistant}
         onSignOut={onSignOut}
         sidebarInfo={sidebarInfo}
       />
@@ -282,12 +286,14 @@ function MobileNavigation({
 function MobileMenu({
   items,
   onClose,
+  onOpenAssistant,
   onSignOut,
   open,
   sidebarInfo,
 }: {
   items: typeof navigation
   onClose: () => void
+  onOpenAssistant: () => void
   onSignOut: () => void
   open: boolean
   sidebarInfo: SidebarInfo
@@ -331,6 +337,26 @@ function MobileMenu({
         <div className="mb-2 p-2 border border-pink-50 dark:border-slate-800/60 rounded-3xl bg-pink-50/20 dark:bg-slate-800/20">
           <ThemeToggle expanded={true} />
         </div>
+
+        <button
+          type="button"
+          onClick={onOpenAssistant}
+          className="mb-2 flex w-full items-center gap-3 rounded-3xl border border-pink-100 bg-pink-50/40 p-3 text-left transition hover:border-pink-200 hover:bg-pink-50 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+          role="menuitem"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white text-pink-500 dark:bg-slate-900 dark:text-pink-400">
+            <Bot className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-black text-gray-700 dark:text-slate-200">
+              AI Assistant
+            </span>
+            <span className="block truncate text-xs font-bold text-gray-400 dark:text-slate-500">
+              Financial guidance
+            </span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-pink-400" aria-hidden="true" />
+        </button>
 
         <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))' }}>
           {items.map((item) => {

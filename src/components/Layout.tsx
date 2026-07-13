@@ -1,8 +1,10 @@
 import { useState, type ReactNode } from 'react'
 
 import { useAuth } from '@/hooks/useAuth'
+import { useAssistant } from '@/hooks/useAssistant'
 import { useSidebarInfo } from '@/hooks/useSidebarInfo'
 import { alerts } from '@/lib/alert'
+import { AssistantWidget } from '@/sections/assistant'
 import { Sidebar } from '@/components/ui'
 
 type LayoutProps = {
@@ -11,6 +13,7 @@ type LayoutProps = {
 
 export default function Layout({ children }: LayoutProps) {
   const { loading, profile, signOut, user } = useAuth()
+  const { openAssistant } = useAssistant()
   const sidebarInfo = useSidebarInfo(loading, user?.email, profile)
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('sidebarOpen')
@@ -39,6 +42,10 @@ export default function Layout({ children }: LayoutProps) {
       <Sidebar
         mobileMenuOpen={moreOpen}
         onCloseMobileMenu={() => setMoreOpen(false)}
+        onOpenAssistant={() => {
+          setMoreOpen(false)
+          openAssistant()
+        }}
         onSignOut={handleSignOut}
         onToggleMobileMenu={() => setMoreOpen((current) => !current)}
         onToggleSidebar={toggleSidebar}
@@ -55,6 +62,8 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </div>
       </main>
+
+      <AssistantWidget />
 
     </div>
   )

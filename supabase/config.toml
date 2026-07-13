@@ -406,6 +406,11 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 
 # pg-delta is the schema diff engine for db diff / db pull / db remote commit.
 # Set enabled = false to fall back to the legacy migra engine.
+[functions.finance-assistant]
+# Browser preflight requests carry no JWT. The function verifies the bearer
+# token with auth.getUser() before reading any user data.
+verify_jwt = false
+
 [experimental.pgdelta]
 enabled = true
 # Directory under `supabase/` where declarative files are written.

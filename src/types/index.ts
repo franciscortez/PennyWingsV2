@@ -1,4 +1,12 @@
 export type {
+  AssistantContextValue,
+  AssistantMessage,
+  AssistantPromptMessage,
+  AssistantRequest,
+  AssistantResponse,
+  AssistantRole,
+} from '@/types/assistant'
+export type {
   Account,
   AccountAccessRole,
   AccountColor,

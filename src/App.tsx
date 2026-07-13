@@ -3,6 +3,8 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import PublicRoute from '@/components/PublicRoute'
 import { AuthProvider } from '@/context/AuthContext'
+import { AssistantProvider } from '@/context/AssistantContext'
+import { useAuth } from '@/hooks/useAuth'
 import Accounts from '@/pages/Accounts'
 import ArchivedAccounts from '@/pages/ArchivedAccounts'
 import Dashboard from '@/pages/Dashboard'
@@ -22,7 +24,18 @@ export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
+        <AppRoutes />
+      </BrowserRouter>
+    </AuthProvider>
+  )
+}
+
+function AppRoutes() {
+  const { user } = useAuth()
+
+  return (
+    <AssistantProvider key={user?.id ?? 'anonymous'}>
+      <Routes>
           <Route
             path="/"
             element={
@@ -125,8 +138,7 @@ export default function App() {
             element={<TermsAndConditions />}
           />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+      </Routes>
+    </AssistantProvider>
   )
 }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Maintain PennyWings AI workflow"
+  short_description: "Keep repository agent instructions and skills healthy"
+  default_prompt: "Use $maintain-ai-workflow to update and validate the repository AI-development configuration."

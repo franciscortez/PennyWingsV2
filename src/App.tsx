@@ -9,6 +9,7 @@ import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
 import Monitoring from '@/pages/Monitoring'
 import NotFound from '@/pages/NotFound'
+import TermsAndConditions from '@/pages/TermsAndConditions'
 import Reports from '@/pages/Reports'
 import Transactions from '@/pages/Transactions'
 import Profile from '@/pages/Profile'
@@ -119,6 +120,10 @@ export default function App() {
             }
           />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
+            path="/terms-and-conditions"
+            element={<TermsAndConditions />}
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

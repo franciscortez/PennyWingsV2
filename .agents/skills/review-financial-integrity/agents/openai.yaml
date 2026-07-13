@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review financial integrity"
+  short_description: "Audit money flows, authorization, and consistency"
+  default_prompt: "Use $review-financial-integrity to review this change for financial and authorization risks."

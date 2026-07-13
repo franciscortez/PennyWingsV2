@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify a PennyWings change"
+  short_description: "Select and run proportional repository checks"
+  default_prompt: "Use $verify-pennywings-change to validate the current PennyWings changes and report any gaps."

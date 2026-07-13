@@ -1,0 +1,4 @@
+interface:
+  display_name: "PennyWings Supabase schema changes"
+  short_description: "Plan and verify safe Supabase schema changes"
+  default_prompt: "Use $change-supabase-schema to implement this database change with a forward-only migration."

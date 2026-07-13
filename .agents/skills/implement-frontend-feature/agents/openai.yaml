@@ -1,0 +1,4 @@
+interface:
+  display_name: "PennyWings frontend feature delivery"
+  short_description: "Build a PennyWings frontend change safely"
+  default_prompt: "Use $implement-frontend-feature to implement this PennyWings UI change end to end."

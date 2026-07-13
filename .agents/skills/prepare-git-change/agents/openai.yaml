@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prepare a safe Git handoff"
+  short_description: "Review and package only the intended Git changes"
+  default_prompt: "Use $prepare-git-change to inspect and prepare the intended changes without disturbing other work."

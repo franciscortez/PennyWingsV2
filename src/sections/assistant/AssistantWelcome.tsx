@@ -69,7 +69,7 @@ export function AssistantWelcome({
         Choose a popular question or write your own below.
       </p>
 
-      <div className="mt-5 grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-1">
+      <div className="mt-5 grid w-full grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-2">
         {suggestions.map(({ icon: Icon, label, question }) => (
           <button
             key={question}

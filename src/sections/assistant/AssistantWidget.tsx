@@ -28,15 +28,6 @@ export function AssistantWidget() {
   useEffect(() => {
     if (!isOpen) return
 
-    const body = document.body
-    const previousBodyStyles = {
-      overflow: body.style.overflow,
-      position: body.style.position,
-      top: body.style.top,
-      width: body.style.width,
-    }
-    let lockedScrollY: number | null = null
-
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
@@ -53,12 +44,33 @@ export function AssistantWidget() {
       }
     })
 
+    let cleanupScrollLock = () => {}
+
     if (isMobile) {
-      lockedScrollY = window.scrollY
+      const body = document.body
+      const previousBodyStyles = {
+        overflow: body.style.overflow,
+        position: body.style.position,
+        top: body.style.top,
+        width: body.style.width,
+      }
+      const lockedScrollY = window.scrollY
       body.style.overflow = 'hidden'
       body.style.position = 'fixed'
       body.style.top = `-${lockedScrollY}px`
       body.style.width = '100%'
+
+      cleanupScrollLock = () => {
+        body.style.overflow = previousBodyStyles.overflow
+        body.style.position = previousBodyStyles.position
+        body.style.top = previousBodyStyles.top
+        body.style.width = previousBodyStyles.width
+        const root = document.documentElement
+        const previousScrollBehavior = root.style.scrollBehavior
+        root.style.scrollBehavior = 'auto'
+        window.scrollTo(0, lockedScrollY)
+        root.style.scrollBehavior = previousScrollBehavior
+      }
     }
 
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -86,18 +98,8 @@ export function AssistantWidget() {
     return () => {
       window.cancelAnimationFrame(focusFrame)
       window.removeEventListener('keydown', handleKeyDown)
-      body.style.overflow = previousBodyStyles.overflow
-      body.style.position = previousBodyStyles.position
-      body.style.top = previousBodyStyles.top
-      body.style.width = previousBodyStyles.width
-      if (lockedScrollY !== null) {
-        const root = document.documentElement
-        const previousScrollBehavior = root.style.scrollBehavior
-        root.style.scrollBehavior = 'auto'
-        window.scrollTo(0, lockedScrollY)
-        root.style.scrollBehavior = previousScrollBehavior
-      }
-      previousFocusRef.current?.focus()
+      cleanupScrollLock()
+      previousFocusRef.current?.focus({ preventScroll: true })
     }
   }, [closeAssistant, isOpen])
 
@@ -120,7 +122,7 @@ export function AssistantWidget() {
           />
 
           <div
-            className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 py-5 [-webkit-overflow-scrolling:touch]"
+            className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 py-5 [-webkit-overflow-scrolling:touch] md:touch-auto md:overscroll-contain md:[-webkit-overflow-scrolling:auto]"
             aria-live="polite"
             aria-busy={sending}
           >

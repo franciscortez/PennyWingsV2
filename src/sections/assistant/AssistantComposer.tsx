@@ -65,7 +65,7 @@ export function AssistantComposer({
           maxLength={ASSISTANT_QUESTION_MAX_LENGTH}
           rows={1}
           placeholder={sending ? 'You can prepare your next question' : 'Ask about your finances'}
-          className="max-h-32 min-h-12 flex-1 resize-none rounded-2xl border-2 border-pink-100 bg-pink-50/30 px-4 py-3 text-sm font-medium text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100 dark:focus:border-pink-500"
+          className="max-h-32 min-h-12 flex-1 resize-none rounded-2xl border-2 border-pink-100 bg-pink-50/30 px-4 py-3 text-base font-medium text-gray-800 outline-none transition placeholder:text-gray-400 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 md:text-sm dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-100 dark:focus:border-pink-500"
         />
         {sending ? (
           <AppButton

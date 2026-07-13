@@ -7,6 +7,7 @@ export const OPENROUTER_TIMEOUT_MS = 30_000
 export const allowedOrigins = new Set([
   'http://localhost:5173',
   'https://pennywings.vercel.app',
+  'https://stepanie-truceless-absentmindedly.ngrok-free.dev',
 ])
 
 const baseCorsHeaders = {

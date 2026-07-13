@@ -28,15 +28,37 @@ export function AssistantWidget() {
   useEffect(() => {
     if (!isOpen) return
 
+    const body = document.body
+    const previousBodyStyles = {
+      overflow: body.style.overflow,
+      position: body.style.position,
+      top: body.style.top,
+      width: body.style.width,
+    }
+    let lockedScrollY: number | null = null
+
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement
         ? document.activeElement
         : null
-    window.requestAnimationFrame(() => inputRef.current?.focus())
 
     const isMobile = !window.matchMedia('(min-width: 768px)').matches
+    const focusFrame = window.requestAnimationFrame(() => {
+      if (isMobile) {
+        panelRef.current
+          ?.querySelector<HTMLElement>('button:not([disabled])')
+          ?.focus()
+      } else {
+        inputRef.current?.focus()
+      }
+    })
+
     if (isMobile) {
-      document.body.style.overflow = 'hidden'
+      lockedScrollY = window.scrollY
+      body.style.overflow = 'hidden'
+      body.style.position = 'fixed'
+      body.style.top = `-${lockedScrollY}px`
+      body.style.width = '100%'
     }
 
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
@@ -62,8 +84,19 @@ export function AssistantWidget() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => {
+      window.cancelAnimationFrame(focusFrame)
       window.removeEventListener('keydown', handleKeyDown)
-      document.body.style.overflow = ''
+      body.style.overflow = previousBodyStyles.overflow
+      body.style.position = previousBodyStyles.position
+      body.style.top = previousBodyStyles.top
+      body.style.width = previousBodyStyles.width
+      if (lockedScrollY !== null) {
+        const root = document.documentElement
+        const previousScrollBehavior = root.style.scrollBehavior
+        root.style.scrollBehavior = 'auto'
+        window.scrollTo(0, lockedScrollY)
+        root.style.scrollBehavior = previousScrollBehavior
+      }
       previousFocusRef.current?.focus()
     }
   }, [closeAssistant, isOpen])
@@ -87,7 +120,7 @@ export function AssistantWidget() {
           />
 
           <div
-            className="flex-1 overflow-y-auto px-4 py-5"
+            className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain px-4 py-5 [-webkit-overflow-scrolling:touch]"
             aria-live="polite"
             aria-busy={sending}
           >

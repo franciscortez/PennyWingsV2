@@ -60,7 +60,7 @@ export function AssistantWelcome({
   onSelect,
 }: AssistantWelcomeProps) {
   return (
-    <div className="flex min-h-full flex-col items-center justify-center px-1 py-2 text-center">
+    <div className="flex min-h-full flex-col items-center justify-start px-1 py-4 text-center md:justify-center md:py-2">
       <AssistantMark size="lg" className="mb-5" />
       <h3 className="text-base font-black text-gray-800 dark:text-slate-100">
         What would you like to know?

@@ -15,7 +15,7 @@ export function AssistantHeader({
   onClose,
 }: AssistantHeaderProps) {
   return (
-    <header className="flex shrink-0 items-center gap-3 border-b border-pink-100 bg-white/95 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/95">
+    <header className="flex shrink-0 items-center gap-3 border-b border-pink-100 bg-white/95 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))] dark:border-slate-800 dark:bg-slate-900/95 md:py-3">
       <AssistantMark />
       <div className="min-w-0 flex-1">
         <h2

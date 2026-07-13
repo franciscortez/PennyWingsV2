@@ -34,6 +34,11 @@ export function AssistantWidget() {
         : null
     window.requestAnimationFrame(() => inputRef.current?.focus())
 
+    const isMobile = !window.matchMedia('(min-width: 768px)').matches
+    if (isMobile) {
+      document.body.style.overflow = 'hidden'
+    }
+
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') closeAssistant()
 
@@ -58,6 +63,7 @@ export function AssistantWidget() {
     window.addEventListener('keydown', handleKeyDown)
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
       previousFocusRef.current?.focus()
     }
   }, [closeAssistant, isOpen])
@@ -69,7 +75,7 @@ export function AssistantWidget() {
       {isOpen ? (
         <section
           ref={panelRef}
-          className="animate-assistant-panel-in fixed inset-x-0 top-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-60 flex flex-col overflow-hidden border-pink-100 bg-white shadow-2xl md:inset-auto md:bottom-24 md:right-6 md:h-[min(42rem,calc(100vh-8rem))] md:w-[min(26rem,calc(100vw-3rem))] md:rounded-2xl md:border dark:border-slate-800 dark:bg-slate-900"
+          className="animate-assistant-panel-in fixed inset-0 z-60 flex flex-col overflow-hidden border-pink-100 bg-white shadow-2xl md:inset-auto md:bottom-24 md:right-6 md:h-[min(42rem,calc(100vh-8rem))] md:w-[min(26rem,calc(100vw-3rem))] md:rounded-2xl md:border dark:border-slate-800 dark:bg-slate-900"
           role="dialog"
           aria-modal="true"
           aria-labelledby="assistant-title"

@@ -5,6 +5,8 @@ description: Implement or modify PennyWings React features across pages, section
 
 # Implement a Frontend Feature
 
+For cross-domain work or an unfamiliar subsystem, read the relevant `$understand-pennywings` architecture and domain references before tracing the vertical flow.
+
 Deliver the smallest complete vertical slice while preserving the repository's `UI -> hook -> service -> Supabase` boundary.
 
 ## Workflow

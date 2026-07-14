@@ -5,6 +5,8 @@ description: Review PennyWings changes that affect accounts, balances, transacti
 
 # Review Financial Integrity
 
+For repository-wide or cross-domain reviews, use the `$understand-pennywings` domain and database maps to identify affected consumers, then verify every claim against current source and migrations.
+
 Audit the complete data path, not only the visible diff. The database is the authority for balances and access.
 
 ## Build the review model

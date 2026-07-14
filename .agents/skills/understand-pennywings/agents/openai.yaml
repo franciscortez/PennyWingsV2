@@ -1,0 +1,4 @@
+interface:
+  display_name: "PennyWings Project Context"
+  short_description: "Navigate PennyWings architecture and domain contracts"
+  default_prompt: "Use $understand-pennywings to map the relevant PennyWings architecture and domain boundaries."

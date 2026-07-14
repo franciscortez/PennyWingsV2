@@ -5,6 +5,8 @@ description: Design, implement, and verify PennyWings Supabase changes involving
 
 # Change the Supabase Schema
 
+For an unfamiliar object or cross-domain contract, read the `$understand-pennywings` database and domain references before inspecting the complete effective migration history.
+
 Create a forward-only, least-privilege database change whose client contract and operational consequences are explicit.
 
 ## Preflight

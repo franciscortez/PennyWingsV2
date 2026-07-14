@@ -12,6 +12,7 @@ Keep the centralized repository guide and reusable skills accurate, discoverable
 1. Read the root `AGENTS.md`, enumerate `.agents/skills/*/SKILL.md`, and inspect `package.json`, directory structure, CI/config, and relevant operational documentation.
 2. Check claims against current code and commands. Treat stale product documentation as context, not proof.
 3. Identify duplicated, conflicting, obsolete, overly broad, or missing instructions and skills.
+4. Update `$understand-pennywings` references when architecture, commands, migrations, or domain contracts materially change.
 
 ## Place guidance correctly
 

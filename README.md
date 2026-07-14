@@ -1,75 +1,31 @@
-# React + TypeScript + Vite
+# PennyWings V2
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+PennyWings is a personal-finance app for accounts, transactions and transfers, shared access, budgets, goals, monthly reports, and an authenticated finance assistant.
 
-Currently, two official plugins are available:
+## Stack and setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+React 19, TypeScript, Vite, Tailwind CSS, TanStack Query, React Hook Form, Zod, and Supabase Auth/Postgres/RLS/RPCs/Edge Functions.
 
-## React Compiler
+1. Run `npm install`.
+2. Create `.env` with `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`; never commit or print it.
+3. Run `npm run dev`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The finance assistant requires the `OPENROUTER_API_KEY` function secret. `OPENROUTER_MODEL`, `OPENROUTER_SITE_URL`, and `OPENROUTER_SITE_NAME` are optional.
 
-## Expanding the ESLint configuration
+## Architecture
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Dependencies flow from pages/sections through hooks and typed services to Supabase. PostgreSQL is authoritative for authorization, balances, transfers, and reporting. Routes live in `src/App.tsx`; UI in `src/components` and `src/sections`; orchestration in `src/hooks`; database access in `src/services`; validation and application types in their named directories. Migrations under `supabase/migrations` are forward-only.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Commands
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start Vite |
+| `npm run lint` | Run ESLint |
+| `npm run build` | Type-check and build |
+| `npm run db:lint` | Lint the linked database |
+| `npm run db:migrations` | List linked migrations |
+| `npm run db:push:dry-run` | Preview migration application |
+| `npm run db:types` | Regenerate database types |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
-```
+Linked database commands require authenticated Supabase CLI access and appropriate scope. Developer safeguards are in `AGENTS.md`; detailed on-demand maps are in `.agents/skills/understand-pennywings`. Current code, `package.json`, generated types, and migrations take precedence over documentation.

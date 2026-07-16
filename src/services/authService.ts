@@ -1,7 +1,16 @@
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
+import {
+  FunctionsHttpError,
+  type AuthChangeEvent,
+  type Session,
+  type User,
+} from '@supabase/supabase-js'
 
+import {
+  clearPendingGoogleDeletion,
+  storePendingGoogleDeletion,
+} from '@/lib/accountDeletion'
 import { supabase } from '@/lib/supabase'
-import type { Profile, ProfileUpdate } from '@/types'
+import type { DeleteUserResponse, Profile, ProfileUpdate } from '@/types'
 
 type AuthStateChangeCallback = (
   event: AuthChangeEvent,
@@ -36,6 +45,32 @@ export const signInWithGoogle = () =>
       redirectTo: getRedirectUrl('/dashboard'),
     },
   })
+
+export const reauthenticateWithGoogleForDeletion = async (user: User) => {
+  if (!storePendingGoogleDeletion(user)) {
+    return {
+      data: null,
+      error: new Error('Unable to prepare Google verification.'),
+    }
+  }
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      queryParams: {
+        ...(user.email ? { login_hint: user.email } : {}),
+        prompt: 'select_account',
+      },
+      redirectTo: getRedirectUrl('/profile'),
+    },
+  })
+
+  if (error) {
+    clearPendingGoogleDeletion()
+  }
+
+  return { data, error }
+}
 
 export const signOut = () => supabase.auth.signOut()
 
@@ -86,16 +121,35 @@ export const updateProfile = async (userId: string, updates: ProfileUpdate) =>
     .select()
     .single<Profile>()
 
-export const deleteAccount = async (user: User, password?: string) => {
-  if (!user.email) {
-    return { data: null, error: new Error('User email is required.') }
+const getFunctionError = async (error: Error) => {
+  if (error instanceof FunctionsHttpError) {
+    try {
+      const body = (await error.context.json()) as { error?: unknown }
+
+      if (typeof body.error === 'string') {
+        return new Error(body.error)
+      }
+    } catch {
+      // Fall through to the safe generic message.
+    }
   }
 
+  return new Error('Unable to delete your account. Please try again.')
+}
+
+export const deleteAccount = async (
+  user: User,
+  password?: string,
+): Promise<{ data: DeleteUserResponse | null; error: Error | null }> => {
   const isGoogle =
     user.app_metadata?.provider === 'google' ||
     user.identities?.some((id) => id.provider === 'google')
 
   if (!isGoogle) {
+    if (!user.email) {
+      return { data: null, error: new Error('User email is required.') }
+    }
+
     if (!password) {
       return { data: null, error: new Error('Password is required for deletion.') }
     }
@@ -110,13 +164,17 @@ export const deleteAccount = async (user: User, password?: string) => {
     }
   }
 
-  const { data, error } = await supabase.functions.invoke('delete-user')
+  const { data, error } = await supabase.functions.invoke<DeleteUserResponse>(
+    'delete-user',
+    { method: 'POST' },
+  )
 
   if (error) {
-    return { data: null, error }
+    return { data: null, error: await getFunctionError(error) }
   }
 
-  await signOut()
+  clearPendingGoogleDeletion()
+  await supabase.auth.signOut({ scope: 'local' })
 
   return { data, error: null }
 }
@@ -128,6 +186,7 @@ export const authService = {
   getCurrentUser,
   getSession,
   onAuthStateChange,
+  reauthenticateWithGoogleForDeletion,
   resetPassword,
   signIn,
   signInWithGoogle,

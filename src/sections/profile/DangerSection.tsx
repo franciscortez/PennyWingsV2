@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertTriangle, ShieldAlert } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
 
@@ -9,11 +9,21 @@ import { alerts } from '@/lib/alert'
 import type { DeleteAccountFormValues } from '@/types'
 import { deleteAccountFormSchema } from '@/validation/profileSchemas'
 
-export default function DangerSection() {
-  const { user, deleteAccount } = useAuth()
+type DangerSectionProps = {
+  googleReauthenticationComplete: boolean
+  onGoogleReauthenticationHandled: () => void
+}
+
+export default function DangerSection({
+  googleReauthenticationComplete,
+  onGoogleReauthenticationHandled,
+}: DangerSectionProps) {
+  const { user, deleteAccount, reauthenticateWithGoogleForDeletion } = useAuth()
   const navigate = useNavigate()
   const [deletingAccount, setDeletingAccount] = useState(false)
+  const [reauthenticating, setReauthenticating] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const handledGoogleReauthentication = useRef(false)
 
   const isGoogleUser =
     user?.app_metadata?.provider === 'google' ||
@@ -42,28 +52,67 @@ export default function DangerSection() {
   // eslint-disable-next-line react-hooks/incompatible-library
   const isPasswordEntered = !!watchDelete('password')
 
-  const onDeleteAccount = async (values?: DeleteAccountFormValues) => {
+  const onDeleteAccount = useCallback(async (values?: DeleteAccountFormValues) => {
     setDeletingAccount(true)
-    const { error } = await deleteAccount(values?.password)
-    setDeletingAccount(false)
 
-    if (error) {
-      alerts.error(error.message)
-    } else {
-      setShowDeleteModal(false)
-      alerts.success('Your account has been deleted.')
-      navigate('/')
+    try {
+      const { error } = await deleteAccount(values?.password)
+
+      if (error) {
+        await alerts.error(error.message)
+      } else {
+        setShowDeleteModal(false)
+        await alerts.success('Your account has been deleted.')
+        navigate('/login')
+      }
+    } finally {
+      setDeletingAccount(false)
     }
-  }
+  }, [deleteAccount, navigate])
+
+  const confirmGoogleDeletion = useCallback(async () => {
+    const confirmed = await alerts.confirmDelete(
+      'Account',
+      'Delete your account permanently? All bank cards, wallets, transactions, budgets, goals, and reports will be deleted.',
+    )
+
+    if (confirmed) {
+      await onDeleteAccount()
+    }
+  }, [onDeleteAccount])
+
+  useEffect(() => {
+    if (
+      !googleReauthenticationComplete ||
+      handledGoogleReauthentication.current
+    ) {
+      return
+    }
+
+    handledGoogleReauthentication.current = true
+    onGoogleReauthenticationHandled()
+    void confirmGoogleDeletion()
+  }, [
+    confirmGoogleDeletion,
+    googleReauthenticationComplete,
+    onGoogleReauthenticationHandled,
+  ])
 
   const handleDeleteTrigger = async () => {
     if (isGoogleUser) {
       const confirmed = await alerts.confirmDelete(
-        'Account',
-        'Delete your account permanently? All bank cards, wallets, and transactions will be deleted.',
+        'Verify with Google',
+        'Continue to Google to verify your identity before permanently deleting this account.',
       )
+
       if (confirmed) {
-        await onDeleteAccount()
+        setReauthenticating(true)
+        const { error } = await reauthenticateWithGoogleForDeletion()
+
+        if (error) {
+          setReauthenticating(false)
+          await alerts.error(error.message)
+        }
       }
     } else {
       setShowDeleteModal(true)
@@ -89,9 +138,10 @@ export default function DangerSection() {
           <button
             type="button"
             onClick={handleDeleteTrigger}
-            className="rounded-2xl bg-red-600 px-6 py-3 text-sm font-black text-white hover:bg-red-700 active:scale-95 transition-all"
+            disabled={deletingAccount || reauthenticating}
+            className="rounded-2xl bg-red-600 px-6 py-3 text-sm font-black text-white transition-all hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Delete My Account
+            {reauthenticating ? 'Opening Google...' : 'Delete My Account'}
           </button>
         </div>
       </article>
@@ -105,12 +155,22 @@ export default function DangerSection() {
             className="absolute inset-0 animate-fade-in bg-black/40"
             aria-label="Close verify modal"
           />
-          <section className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-red-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900">
+          <section
+            aria-labelledby="delete-account-title"
+            aria-modal="true"
+            role="dialog"
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-red-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900"
+          >
             <div className="flex items-center gap-3 border-b border-red-50 p-6 pb-4 dark:border-slate-800/80">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500 dark:bg-red-950/30 dark:text-red-400">
                 <AlertTriangle className="h-5 w-5" />
               </div>
-              <h2 className="text-xl font-black text-gray-800 dark:text-slate-100">Verify Password</h2>
+              <h2
+                id="delete-account-title"
+                className="text-xl font-black text-gray-800 dark:text-slate-100"
+              >
+                Verify Password
+              </h2>
             </div>
 
             <form

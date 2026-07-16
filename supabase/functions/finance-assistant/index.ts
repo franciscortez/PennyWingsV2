@@ -1,10 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
-
 import {
   MAX_REQUEST_BYTES,
   OPENROUTER_TIMEOUT_MS,
-  allowedOrigins,
-  getCorsHeaders,
   getFreeModel,
   getSafeProviderStatus,
   openRouterResponseSchema,
@@ -13,79 +9,61 @@ import {
 } from './helpers.ts'
 import { generateCurrentUserMessage, systemPrompt } from './prompt.ts'
 import { buildFinancialContext } from './context.ts'
+import {
+  createFunctionHttpContext,
+  guardFunctionRequest,
+} from '../_shared/http.ts'
+import { getEnv, serve } from '../_shared/runtime.ts'
+import {
+  getAuthenticatedCaller,
+  getBearerAuthorization,
+} from '../_shared/supabase.ts'
 
-declare const Deno: {
-  env: { get: (name: string) => string | undefined }
-  serve: (handler: (request: Request) => Response | Promise<Response>) => void
-}
+serve(async (request) => {
+  const http = createFunctionHttpContext(request)
+  const guardResponse = guardFunctionRequest(request, http)
+  if (guardResponse) return guardResponse
 
-Deno.serve(async (request) => {
-  const origin = request.headers.get('Origin')
-  const originAllowed = !origin || allowedOrigins.has(origin)
-  const corsHeaders = getCorsHeaders(origin)
-  const jsonResponse = (body: unknown, status = 200) =>
-    new Response(JSON.stringify(body), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status,
-    })
-
-  if (request.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: corsHeaders,
-      status: originAllowed ? 204 : 403,
-    })
+  const authorization = getBearerAuthorization(request)
+  if (!authorization) {
+    return http.jsonResponse({ error: 'Authentication is required.' }, 401)
   }
 
-  if (!originAllowed) {
-    return jsonResponse({ error: 'Origin not allowed.' }, 403)
-  }
-
-  if (request.method !== 'POST') {
-    return jsonResponse({ error: 'Method not allowed.' }, 405)
-  }
-
-  const authorization = request.headers.get('Authorization')
-  if (!authorization?.startsWith('Bearer ')) {
-    return jsonResponse({ error: 'Authentication is required.' }, 401)
-  }
-
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')
-  const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY')
+  const supabaseUrl = getEnv('SUPABASE_URL')
+  const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY')
+  const openRouterKey = getEnv('OPENROUTER_API_KEY')
 
   if (!supabaseUrl || !supabaseAnonKey || !openRouterKey) {
-    return jsonResponse({ error: 'The AI assistant is not configured.' }, 503)
+    return http.jsonResponse({ error: 'The AI assistant is not configured.' }, 503)
   }
 
   const rawBody = await request.text()
   if (new TextEncoder().encode(rawBody).byteLength > MAX_REQUEST_BYTES) {
-    return jsonResponse({ error: 'The conversation is too long.' }, 413)
+    return http.jsonResponse({ error: 'The conversation is too long.' }, 413)
   }
 
   let parsedBody: unknown
   try {
     parsedBody = JSON.parse(rawBody)
   } catch {
-    return jsonResponse({ error: 'Invalid request.' }, 400)
+    return http.jsonResponse({ error: 'Invalid request.' }, 400)
   }
 
   const input = requestSchema.safeParse(parsedBody)
   if (!input.success) {
-    return jsonResponse({ error: 'Invalid assistant request.' }, 400)
+    return http.jsonResponse({ error: 'Invalid assistant request.' }, 400)
   }
 
-  const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: authorization } },
-    auth: { persistSession: false },
-  })
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser()
+  const caller = await getAuthenticatedCaller(
+    supabaseUrl,
+    supabaseAnonKey,
+    authorization,
+  )
 
-  if (userError || !user) {
-    return jsonResponse({ error: 'Your session has expired.' }, 401)
+  if (!caller.user || !caller.client) {
+    return http.jsonResponse({ error: 'Your session has expired.' }, 401)
   }
+  const { client: supabase, user } = caller
 
   const now = new Date()
   const today = toDateValue(now)
@@ -190,7 +168,7 @@ Deno.serve(async (request) => {
     reportsResult.error
 
   if (dataError) {
-    return jsonResponse({ error: 'Unable to prepare your financial context.' }, 500)
+    return http.jsonResponse({ error: 'Unable to prepare your financial context.' }, 500)
   }
 
   const context = buildFinancialContext({
@@ -216,8 +194,8 @@ Deno.serve(async (request) => {
     Authorization: `Bearer ${openRouterKey}`,
     'Content-Type': 'application/json',
   }
-  const siteUrl = Deno.env.get('OPENROUTER_SITE_URL')
-  const siteName = Deno.env.get('OPENROUTER_SITE_NAME')
+  const siteUrl = getEnv('OPENROUTER_SITE_URL')
+  const siteName = getEnv('OPENROUTER_SITE_NAME')
   if (siteUrl) openRouterHeaders['HTTP-Referer'] = siteUrl
   if (siteName) openRouterHeaders['X-OpenRouter-Title'] = siteName
 
@@ -234,7 +212,7 @@ Deno.serve(async (request) => {
             ...input.data.messages,
             { role: 'user', content: currentUserMessage },
           ],
-          model: getFreeModel(Deno.env.get('OPENROUTER_MODEL')),
+          model: getFreeModel(getEnv('OPENROUTER_MODEL')),
           temperature: 0.4,
         }),
         headers: openRouterHeaders,
@@ -244,7 +222,7 @@ Deno.serve(async (request) => {
     )
 
     if (!providerResponse.ok) {
-      return jsonResponse(
+      return http.jsonResponse(
         { error: 'The AI provider could not complete the request.' },
         getSafeProviderStatus(providerResponse.status),
       )
@@ -254,16 +232,16 @@ Deno.serve(async (request) => {
       await providerResponse.json(),
     )
     if (!providerData.success) {
-      return jsonResponse({ error: 'The AI provider returned an invalid response.' }, 502)
+      return http.jsonResponse({ error: 'The AI provider returned an invalid response.' }, 502)
     }
 
-    return jsonResponse({
+    return http.jsonResponse({
       message: providerData.data.choices[0].message.content,
       model: providerData.data.model,
     })
   } catch (error) {
     const timedOut = error instanceof DOMException && error.name === 'AbortError'
-    return jsonResponse(
+    return http.jsonResponse(
       { error: timedOut ? 'The AI provider timed out.' : 'The AI provider is unavailable.' },
       503,
     )

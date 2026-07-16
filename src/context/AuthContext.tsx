@@ -14,6 +14,7 @@ import {
   getCurrentUser,
   getSession,
   onAuthStateChange,
+  reauthenticateWithGoogleForDeletion as reauthenticateWithGoogleForDeletionService,
   resetPassword as resetPasswordService,
   signIn as signInService,
   signInWithGoogle as signInWithGoogleService,
@@ -177,12 +178,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     [user],
   )
 
+  const reauthenticateWithGoogleForDeletion = useCallback(async () => {
+    if (!user) {
+      return { data: null, error: new Error('No user logged in.') }
+    }
+
+    return reauthenticateWithGoogleForDeletionService(user)
+  }, [user])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       profile,
       loading,
       deleteAccount,
+      reauthenticateWithGoogleForDeletion,
       refreshProfile,
       resetPassword: resetPasswordService,
       signIn: signInService,
@@ -192,7 +202,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
       updatePassword: updatePasswordService,
       updateProfile,
     }),
-    [deleteAccount, loading, profile, refreshProfile, updateProfile, user],
+    [
+      deleteAccount,
+      loading,
+      profile,
+      reauthenticateWithGoogleForDeletion,
+      refreshProfile,
+      updateProfile,
+      user,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

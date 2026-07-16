@@ -411,6 +411,11 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 # token with auth.getUser() before reading any user data.
 verify_jwt = false
 
+[functions.delete-user]
+# Browser preflight requests carry no JWT. The function validates the caller's
+# bearer token before using the service role to delete that same user.
+verify_jwt = false
+
 [experimental.pgdelta]
 enabled = true
 # Directory under `supabase/` where declarative files are written.

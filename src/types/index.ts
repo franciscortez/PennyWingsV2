@@ -22,6 +22,7 @@ export type {
 export type {
   AuthContextValue,
   AuthResult,
+  DeleteUserResponse,
   Profile,
   ProfileUpdate,
 } from '@/types/auth'

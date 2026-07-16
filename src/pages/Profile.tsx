@@ -1,13 +1,44 @@
 import { KeyRound, ShieldAlert, User } from 'lucide-react'
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 
 import Layout from '@/components/Layout'
+import { useAuth } from '@/hooks/useAuth'
+import { consumePendingGoogleDeletion } from '@/lib/accountDeletion'
+import { alerts } from '@/lib/alert'
 import { DangerSection, GeneralSection, SecuritySection } from '@/sections/profile'
 
 type TabType = 'general' | 'security' | 'danger'
 
 export default function ProfilePage() {
-  const [activeTab, setActiveTab] = useState<TabType>('general')
+  const { user } = useAuth()
+  const [googleReauthenticationStatus] = useState(() =>
+    user ? consumePendingGoogleDeletion(user) : 'none',
+  )
+  const [activeTab, setActiveTab] = useState<TabType>(() =>
+    googleReauthenticationStatus === 'valid' ? 'danger' : 'general',
+  )
+  const [googleReauthenticationComplete, setGoogleReauthenticationComplete] =
+    useState(googleReauthenticationStatus === 'valid')
+
+  useEffect(() => {
+    if (googleReauthenticationStatus === 'expired') {
+      void alerts.warning(
+        'Google verification expired. Start account deletion again.',
+      )
+    } else if (googleReauthenticationStatus === 'user-mismatch') {
+      void alerts.error(
+        'Google account did not match. Account deletion was canceled.',
+      )
+    } else if (googleReauthenticationStatus === 'not-completed') {
+      void alerts.warning(
+        'Google verification was not completed. Account deletion was canceled.',
+      )
+    }
+  }, [googleReauthenticationStatus])
+
+  const handleGoogleReauthenticationHandled = useCallback(() => {
+    setGoogleReauthenticationComplete(false)
+  }, [])
 
   const tabs = [
     { id: 'general', label: 'General', icon: User },
@@ -57,7 +88,14 @@ export default function ProfilePage() {
       <div className="max-w-3xl">
         {activeTab === 'general' && <GeneralSection />}
         {activeTab === 'security' && <SecuritySection />}
-        {activeTab === 'danger' && <DangerSection />}
+        {activeTab === 'danger' && (
+          <DangerSection
+            googleReauthenticationComplete={googleReauthenticationComplete}
+            onGoogleReauthenticationHandled={
+              handleGoogleReauthenticationHandled
+            }
+          />
+        )}
       </div>
     </Layout>
   )

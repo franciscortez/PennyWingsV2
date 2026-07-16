@@ -4,24 +4,6 @@ export const HISTORY_LIMIT = 12
 export const MAX_REQUEST_BYTES = 50_000
 export const OPENROUTER_TIMEOUT_MS = 30_000
 
-export const allowedOrigins = new Set([
-  'http://localhost:5173',
-  'https://pennywings.vercel.app',
-  'https://stepanie-truceless-absentmindedly.ngrok-free.dev',
-])
-
-const baseCorsHeaders = {
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-  Vary: 'Origin',
-}
-
-export const getCorsHeaders = (origin: string | null) =>
-  origin && allowedOrigins.has(origin)
-    ? { ...baseCorsHeaders, 'Access-Control-Allow-Origin': origin }
-    : baseCorsHeaders
-
 export const requestSchema = z.object({
   messages: z
     .array(

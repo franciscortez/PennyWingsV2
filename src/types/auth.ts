@@ -14,6 +14,10 @@ export type Profile = Tables<'profiles'>
 
 export type ProfileUpdate = Partial<Pick<Profile, 'full_name' | 'avatar_url'>>
 
+export type DeleteUserResponse = {
+  deleted: true
+}
+
 export type AuthResult<TData = unknown> = Promise<{
   data: TData | null
   error: Error | null
@@ -23,7 +27,8 @@ export type AuthContextValue = {
   user: User | null
   profile: Profile | null
   loading: boolean
-  deleteAccount: (password?: string) => AuthResult
+  deleteAccount: (password?: string) => AuthResult<DeleteUserResponse>
+  reauthenticateWithGoogleForDeletion: () => AuthResult
   refreshProfile: () => Promise<void>
   resetPassword: typeof resetPassword
   signIn: typeof signIn

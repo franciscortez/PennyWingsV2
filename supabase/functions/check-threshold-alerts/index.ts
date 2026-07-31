@@ -39,7 +39,7 @@ const buildEmailHtml = (alerts: AlertItem[]) => {
       return `
         <tr style="border-bottom: 1px solid #334155;">
           <td style="padding: 12px; color: #f8fafc; font-weight: 600;">${item.name}</td>
-          <td style="padding: 12px; color: #cbd5e1;">$${item.current.toLocaleString()} / $${item.target.toLocaleString()}</td>
+          <td style="padding: 12px; color: #cbd5e1;">₱${item.current.toLocaleString()} / ₱${item.target.toLocaleString()}</td>
           <td style="padding: 12px; color: #cbd5e1;">${item.percent}%</td>
           <td style="padding: 12px;">
             <span style="background-color: ${badgeColor}; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold;">

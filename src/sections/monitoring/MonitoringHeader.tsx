@@ -26,14 +26,17 @@ export function MonitoringHeader({
           Keep spending limits and savings targets visible before they drift.
         </p>
       </div>
-      <button
-        type="button"
-        onClick={activeTab === 'budgets' ? onCreateBudget : onCreateGoal}
-        className="flex items-center justify-center gap-2 rounded-[2rem] bg-pink-500 px-7 py-4 font-black text-white transition hover:bg-pink-600"
-      >
-        <Plus className="h-5 w-5" aria-hidden="true" />
-        {activeTab === 'budgets' ? 'New Budget' : 'New Goal'}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={activeTab === 'budgets' ? onCreateBudget : onCreateGoal}
+          className="flex items-center justify-center gap-2 rounded-[2rem] bg-pink-500 px-7 py-4 font-black text-white transition hover:bg-pink-600"
+        >
+          <Plus className="h-5 w-5" aria-hidden="true" />
+          {activeTab === 'budgets' ? 'New Budget' : 'New Goal'}
+        </button>
+      </div>
     </header>
   )
 }
+

@@ -14,20 +14,12 @@ import {
   guardFunctionRequest,
 } from '../_shared/http.ts'
 import { getEnv, serve } from '../_shared/runtime.ts'
-import {
-  getAuthenticatedCaller,
-  getBearerAuthorization,
-} from '../_shared/supabase.ts'
+import { authenticateRequest } from '../_shared/supabase.ts'
 
 serve(async (request) => {
   const http = createFunctionHttpContext(request)
   const guardResponse = guardFunctionRequest(request, http)
   if (guardResponse) return guardResponse
-
-  const authorization = getBearerAuthorization(request)
-  if (!authorization) {
-    return http.jsonResponse({ error: 'Authentication is required.' }, 401)
-  }
 
   const supabaseUrl = getEnv('SUPABASE_URL')
   const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY')
@@ -54,16 +46,9 @@ serve(async (request) => {
     return http.jsonResponse({ error: 'Invalid assistant request.' }, 400)
   }
 
-  const caller = await getAuthenticatedCaller(
-    supabaseUrl,
-    supabaseAnonKey,
-    authorization,
-  )
-
-  if (!caller.user || !caller.client) {
-    return http.jsonResponse({ error: 'Your session has expired.' }, 401)
-  }
-  const { client: supabase, user } = caller
+  const auth = await authenticateRequest(request, http, supabaseUrl, supabaseAnonKey)
+  if ('errorResponse' in auth) return auth.errorResponse
+  const { client: supabase, user } = auth
 
   const now = new Date()
   const today = toDateValue(now)

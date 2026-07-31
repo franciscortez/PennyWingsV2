@@ -416,11 +416,6 @@ verify_jwt = false
 # bearer token before using the service role to delete that same user.
 verify_jwt = false
 
-[functions.send-alert-email]
-# Browser preflight requests carry no JWT. The function verifies the bearer
-# token with auth.getUser() before reading any user data.
-verify_jwt = false
-
 [functions.check-threshold-alerts]
 # Invoked by pg_cron via pg_net, not by browser clients. Authenticated with a
 # shared x-cron-secret header instead of a user JWT.

@@ -185,3 +185,19 @@ export const updateMemberRole = async (
 
   if (error) throw AppError.from(error)
 }
+
+/**
+ * Hides or unhides a shared account from the calling member's own view.
+ * Only the member themself may toggle their own membership row.
+ */
+export const setMembershipHidden = async (
+  membershipId: string,
+  hidden: boolean,
+) => {
+  const { error } = await supabase.rpc('set_account_membership_hidden', {
+    p_hidden: hidden,
+    p_membership_id: membershipId,
+  })
+
+  if (error) throw AppError.from(error)
+}

@@ -6,7 +6,6 @@ import { AuthProvider } from '@/context/AuthContext'
 import { AssistantProvider } from '@/context/AssistantContext'
 import { useAuth } from '@/hooks/useAuth'
 import Accounts from '@/pages/Accounts'
-import ArchivedAccounts from '@/pages/ArchivedAccounts'
 import Dashboard from '@/pages/Dashboard'
 import Home from '@/pages/Home'
 import Monitoring from '@/pages/Monitoring'
@@ -57,14 +56,6 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <Accounts />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/accounts/archive"
-            element={
-              <ProtectedRoute>
-                <ArchivedAccounts />
               </ProtectedRoute>
             }
           />

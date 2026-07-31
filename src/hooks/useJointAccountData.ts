@@ -10,6 +10,7 @@ import {
   fetchActiveInvites,
   removeMember as removeMemberService,
   revokeInvite as revokeInviteService,
+  setMembershipHidden as setMembershipHiddenService,
   updateMemberRole as updateMemberRoleService,
 } from '@/services/jointAccountsService'
 import type { AccountMemberRole, ResourceType } from '@/types'
@@ -145,6 +146,72 @@ export function useJointAccountData({
     updatingMemberId: updateMemberRoleMutation.isPending
       ? updateMemberRoleMutation.variables?.membershipId ?? null
       : null,
+  }
+}
+
+/**
+ * Standalone hook for a member's own actions on a shared account — leaving it
+ * or hiding it from their own accounts view. Lighter than useJointAccountData,
+ * which fetches the full member/invite lists needed only by the owner's modal.
+ */
+export function useAccountMembership(userId: string | undefined) {
+  const queryClient = useQueryClient()
+
+  const invalidateAccounts = useCallback(async () => {
+    if (!userId) return
+    await queryClient.invalidateQueries({ queryKey: queryKeys.accounts(userId) })
+  }, [queryClient, userId])
+
+  const leaveMutation = useMutation({
+    mutationFn: (membershipId: string) => removeMemberService(membershipId),
+    onSuccess: invalidateAccounts,
+  })
+
+  const toggleHiddenMutation = useMutation({
+    mutationFn: ({
+      membershipId,
+      hidden,
+    }: {
+      hidden: boolean
+      membershipId: string
+    }) => setMembershipHiddenService(membershipId, hidden),
+    onSuccess: invalidateAccounts,
+  })
+
+  const leaveAccount = useCallback(
+    async (membershipId: string) => {
+      try {
+        await leaveMutation.mutateAsync(membershipId)
+        return { error: null }
+      } catch (error) {
+        return { error: AppError.from(error, 'Unable to leave account.') }
+      }
+    },
+    [leaveMutation],
+  )
+
+  const toggleHidden = useCallback(
+    async (membershipId: string, hidden: boolean) => {
+      try {
+        await toggleHiddenMutation.mutateAsync({ hidden, membershipId })
+        return { error: null }
+      } catch (error) {
+        return {
+          error: AppError.from(
+            error,
+            hidden ? 'Unable to hide account.' : 'Unable to unhide account.',
+          ),
+        }
+      }
+    },
+    [toggleHiddenMutation],
+  )
+
+  return {
+    leaveAccount,
+    leaving: leaveMutation.isPending,
+    toggleHidden,
+    togglingHidden: toggleHiddenMutation.isPending,
   }
 }
 

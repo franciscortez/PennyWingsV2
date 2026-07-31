@@ -39,7 +39,7 @@ type WalletRow = Pick<
 
 type MembershipRow = Pick<
   Tables<'account_memberships'>,
-  'resource_id' | 'resource_type' | 'role'
+  'id' | 'resource_id' | 'resource_type' | 'role' | 'is_hidden'
 >
 
 export const emptyAccountsData: AccountsData = {
@@ -72,20 +72,28 @@ const getAccess = (
   } as const
 }
 
+type MembershipInfo = {
+  id: string
+  isHidden: boolean
+  role: string
+}
+
 const mapCardAccount = (
   card: CardRow,
   userId: string,
-  membershipRole?: string,
+  membership?: MembershipInfo,
 ): Account => ({
-  ...getAccess(card.user_id, userId, membershipRole),
+  ...getAccess(card.user_id, userId, membership?.role),
   accountType: card.card_type,
   balance: toNumber(card.balance),
   color: card.color ?? '#ec4899',
   createdAt: card.created_at,
   id: card.id,
   isActive: card.is_active !== false,
+  isHidden: membership?.isHidden ?? false,
   kind: 'card',
   lastFour: card.last_four ?? undefined,
+  membershipId: membership?.id,
   name: card.card_name,
   textColor: card.text_color ?? '#ffffff',
   userId: card.user_id,
@@ -94,9 +102,9 @@ const mapCardAccount = (
 const mapWalletAccount = (
   wallet: WalletRow,
   userId: string,
-  membershipRole?: string,
+  membership?: MembershipInfo,
 ): Account => ({
-  ...getAccess(wallet.user_id, userId, membershipRole),
+  ...getAccess(wallet.user_id, userId, membership?.role),
   accountIdentifier: wallet.account_identifier ?? undefined,
   accountType: wallet.wallet_type,
   balance: toNumber(wallet.balance),
@@ -104,12 +112,14 @@ const mapWalletAccount = (
   createdAt: wallet.created_at,
   id: wallet.id,
   isActive: wallet.is_active !== false,
+  isHidden: membership?.isHidden ?? false,
   kind:
     wallet.wallet_type === 'cash'
       ? 'cash'
       : wallet.wallet_type === 'lent'
         ? 'lent'
         : 'wallet',
+  membershipId: membership?.id,
   name: wallet.wallet_name,
   textColor: wallet.text_color ?? '#ffffff',
   userId: wallet.user_id,
@@ -137,7 +147,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
       .order('created_at', { ascending: false }),
     supabase
       .from('account_memberships')
-      .select('resource_type, resource_id, role')
+      .select('id, resource_type, resource_id, role, is_hidden')
       .eq('user_id', userId),
   ])
 
@@ -151,17 +161,21 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
   const cards: CardRow[] = cardsResult.data ?? []
   const wallets: WalletRow[] = walletsResult.data ?? []
   const memberships: MembershipRow[] = membershipsResult.data ?? []
-  const membershipRoles = new Map(
+  const membershipsByResource = new Map<string, MembershipInfo>(
     memberships.map((membership) => [
       `${membership.resource_type}:${membership.resource_id}`,
-      membership.role,
+      {
+        id: membership.id,
+        isHidden: membership.is_hidden === true,
+        role: membership.role,
+      },
     ]),
   )
   const walletAccounts = wallets.map((wallet) =>
     mapWalletAccount(
       wallet,
       userId,
-      membershipRoles.get(`e_wallet:${wallet.id}`),
+      membershipsByResource.get(`e_wallet:${wallet.id}`),
     ),
   )
   const accounts = [
@@ -169,7 +183,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
       mapCardAccount(
         card,
         userId,
-        membershipRoles.get(`bank_card:${card.id}`),
+        membershipsByResource.get(`bank_card:${card.id}`),
       ),
     ),
     ...walletAccounts,
@@ -177,14 +191,18 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     (first, second) =>
       new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime(),
   )
+  const visibleAccounts = accounts.filter((account) => !account.isHidden)
+  const visibleWalletAccounts = walletAccounts.filter(
+    (account) => !account.isHidden,
+  )
 
   return {
     accounts,
-    cardCount: cards.length,
-    cashCount: walletAccounts.filter((account) => account.kind === 'cash').length,
-    lentCount: walletAccounts.filter((account) => account.kind === 'lent').length,
-    totalBalance: accounts.reduce((sum, account) => sum + account.balance, 0),
-    walletCount: walletAccounts.filter((account) => account.kind === 'wallet').length,
+    cardCount: visibleAccounts.filter((account) => account.kind === 'card').length,
+    cashCount: visibleWalletAccounts.filter((account) => account.kind === 'cash').length,
+    lentCount: visibleWalletAccounts.filter((account) => account.kind === 'lent').length,
+    totalBalance: visibleAccounts.reduce((sum, account) => sum + account.balance, 0),
+    walletCount: visibleWalletAccounts.filter((account) => account.kind === 'wallet').length,
   }
 }
 

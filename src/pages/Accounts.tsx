@@ -5,12 +5,14 @@ import {
   FaMoneyBillWave,
   FaWallet,
 } from 'react-icons/fa6'
-import { Archive, Plus, Search, UsersRound } from 'lucide-react'
+import { ChevronDown, Plus, Search, UsersRound } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { useSearchParams } from 'react-router'
 
 import Layout from '@/components/Layout'
 import { useAccountsData } from '@/hooks/useAccountsData'
+import { useArchivedAccountsData } from '@/hooks/useArchivedAccountsData'
+import { useAccountMembership } from '@/hooks/useJointAccountData'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { alerts } from '@/lib/alert'
@@ -77,55 +79,74 @@ export default function Accounts() {
     reload,
   } = useAccountsData(user?.id)
   useErrorAlert(error)
+  const { leaveAccount, toggleHidden } = useAccountMembership(user?.id)
+  const {
+    accounts: archivedAccounts,
+    deleteArchivedAccount,
+    deletingId: archiveDeletingId,
+    restoreAccount,
+    restoringId: archiveRestoringId,
+  } = useArchivedAccountsData(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
   const [sharingAccount, setSharingAccount] = useState<Account | null>(null)
   const [joinModalOpen, setJoinModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [showHidden, setShowHidden] = useState(false)
+  const [showArchived, setShowArchived] = useState(false)
   const activeTab = getTabFromUrl(searchParams.get('tab'))
+
+  const visibleAccounts = useMemo(
+    () => accounts.filter((account) => !account.isHidden),
+    [accounts],
+  )
+  const hiddenAccounts = useMemo(
+    () => accounts.filter((account) => account.isHidden),
+    [accounts],
+  )
 
   const cardAccounts = useMemo(
     () =>
-      accounts.filter(
+      visibleAccounts.filter(
         (account) => account.kind === 'card' && matchesSearch(account, searchQuery),
       ),
-    [accounts, searchQuery],
+    [visibleAccounts, searchQuery],
   )
   const walletAccounts = useMemo(
     () =>
-      accounts.filter(
+      visibleAccounts.filter(
         (account) =>
           account.kind === 'wallet' && matchesSearch(account, searchQuery),
       ),
-    [accounts, searchQuery],
+    [visibleAccounts, searchQuery],
   )
   const cashAccounts = useMemo(
     () =>
-      accounts.filter(
+      visibleAccounts.filter(
         (account) => account.kind === 'cash' && matchesSearch(account, searchQuery),
       ),
-    [accounts, searchQuery],
+    [visibleAccounts, searchQuery],
   )
   const lentAccounts = useMemo(
     () =>
-      accounts.filter(
+      visibleAccounts.filter(
         (account) => account.kind === 'lent' && matchesSearch(account, searchQuery),
       ),
-    [accounts, searchQuery],
+    [visibleAccounts, searchQuery],
   )
   const allFilteredAccounts = useMemo(
-    () => accounts.filter((account) => matchesSearch(account, searchQuery)),
-    [accounts, searchQuery],
+    () => visibleAccounts.filter((account) => matchesSearch(account, searchQuery)),
+    [visibleAccounts, searchQuery],
   )
   const accountCounts = useMemo(
     () => ({
-      cards: accounts.filter((account) => account.kind === 'card').length,
-      cash: accounts.filter((account) => account.kind === 'cash').length,
-      lent: accounts.filter((account) => account.kind === 'lent').length,
-      wallets: accounts.filter((account) => account.kind === 'wallet').length,
+      cards: visibleAccounts.filter((account) => account.kind === 'card').length,
+      cash: visibleAccounts.filter((account) => account.kind === 'cash').length,
+      lent: visibleAccounts.filter((account) => account.kind === 'lent').length,
+      wallets: visibleAccounts.filter((account) => account.kind === 'wallet').length,
     }),
-    [accounts],
+    [visibleAccounts],
   )
   const tabCounts: Record<AccountTab, number> = {
     all: allFilteredAccounts.length,
@@ -136,20 +157,20 @@ export default function Accounts() {
   }
 
   const bankBalance = useMemo(
-    () => accounts.filter((a) => a.kind === 'card').reduce((sum, a) => sum + a.balance, 0),
-    [accounts],
+    () => visibleAccounts.filter((a) => a.kind === 'card').reduce((sum, a) => sum + a.balance, 0),
+    [visibleAccounts],
   )
   const walletBalance = useMemo(
-    () => accounts.filter((a) => a.kind === 'wallet').reduce((sum, a) => sum + a.balance, 0),
-    [accounts],
+    () => visibleAccounts.filter((a) => a.kind === 'wallet').reduce((sum, a) => sum + a.balance, 0),
+    [visibleAccounts],
   )
   const cashBalance = useMemo(
-    () => accounts.filter((a) => a.kind === 'cash').reduce((sum, a) => sum + a.balance, 0),
-    [accounts],
+    () => visibleAccounts.filter((a) => a.kind === 'cash').reduce((sum, a) => sum + a.balance, 0),
+    [visibleAccounts],
   )
   const lentBalance = useMemo(
-    () => accounts.filter((a) => a.kind === 'lent').reduce((sum, a) => sum + a.balance, 0),
-    [accounts],
+    () => visibleAccounts.filter((a) => a.kind === 'lent').reduce((sum, a) => sum + a.balance, 0),
+    [visibleAccounts],
   )
 
   if (loading) {
@@ -233,6 +254,86 @@ export default function Accounts() {
     }
   }
 
+  const handleToggleHidden = async (account: Account) => {
+    if (!account.membershipId) return
+
+    const { error: toggleError } = await toggleHidden(
+      account.membershipId,
+      !account.isHidden,
+    )
+
+    if (toggleError) {
+      alerts.error(toggleError.message)
+    } else {
+      alerts.success(account.isHidden ? 'Account unhidden.' : 'Account hidden.')
+    }
+  }
+
+  const handleLeaveAccount = async (account: Account) => {
+    if (!account.membershipId) return
+
+    const confirmed = await alerts.confirmDelete(
+      'Shared Account',
+      `Leave "${account.name}"? You'll lose access until re-invited.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    const { error: leaveError } = await leaveAccount(account.membershipId)
+
+    if (leaveError) {
+      alerts.error(leaveError.message)
+    } else {
+      alerts.success('You left the shared account.')
+    }
+  }
+
+  const handleRestoreArchived = async (account: Account) => {
+    const confirmed = await alerts.confirm({
+      cancelButtonText: 'Cancel',
+      confirmButtonText: 'Restore Account',
+      icon: 'question',
+      text: `${account.name} will appear in your active accounts again.`,
+      title: 'Restore archived account?',
+    })
+
+    if (!confirmed) {
+      return
+    }
+
+    const { error: restoreError } = await restoreAccount(account.id, account.kind)
+
+    if (restoreError) {
+      alerts.error(restoreError.message)
+    } else {
+      alerts.success('Account restored.')
+    }
+  }
+
+  const handleDeleteArchived = async (account: Account) => {
+    const confirmed = await alerts.confirmDelete(
+      'Archived Account',
+      `Permanently delete "${account.name}"? This removes the account record and cannot be undone.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    const { error: deleteError } = await deleteArchivedAccount(
+      account.id,
+      account.kind,
+    )
+
+    if (deleteError) {
+      alerts.error(deleteError.message)
+    } else {
+      alerts.success('Account permanently deleted.')
+    }
+  }
+
   return (
     <Layout>
       <div className="space-y-6 pb-20 sm:space-y-8">
@@ -250,7 +351,7 @@ export default function Accounts() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:w-auto">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:w-auto">
             <button
               type="button"
               onClick={openWizard}
@@ -267,13 +368,6 @@ export default function Accounts() {
               <UsersRound className="h-4 w-4" aria-hidden="true" />
               Join
             </button>
-            <Link
-              to="/accounts/archive"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-pink-100 bg-white px-5 py-3 text-sm font-black text-gray-500 transition hover:border-pink-200 hover:bg-pink-50 hover:text-pink-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-pink-400"
-            >
-              <Archive className="h-4 w-4" aria-hidden="true" />
-              Archive
-            </Link>
           </div>
         </header>
 
@@ -346,6 +440,70 @@ export default function Accounts() {
           </div>
         </section>
 
+        {hiddenAccounts.length > 0 ? (
+          <section className="rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+            <button
+              type="button"
+              onClick={() => setShowHidden((value) => !value)}
+              className="flex min-h-12 w-full items-center justify-between gap-2 rounded-2xl px-3 text-sm font-black text-gray-500 transition hover:text-pink-600 dark:text-slate-400 dark:hover:text-pink-400"
+            >
+              <span>Hidden shared accounts ({hiddenAccounts.length})</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showHidden ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {showHidden ? (
+              <div className="px-1 pb-1 pt-3">
+                <AccountsListSection
+                  accounts={hiddenAccounts}
+                  currentUserId={user?.id}
+                  emptyDescription=""
+                  emptyTitle=""
+                  loading={false}
+                  onToggleHidden={handleToggleHidden}
+                  variant="all"
+                />
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
+        {archivedAccounts.length > 0 ? (
+          <section className="rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+            <button
+              type="button"
+              onClick={() => setShowArchived((value) => !value)}
+              className="flex min-h-12 w-full items-center justify-between gap-2 rounded-2xl px-3 text-sm font-black text-gray-500 transition hover:text-pink-600 dark:text-slate-400 dark:hover:text-pink-400"
+            >
+              <span>Archived accounts ({archivedAccounts.length})</span>
+              <ChevronDown
+                className={`h-4 w-4 transition-transform ${showArchived ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              />
+            </button>
+
+            {showArchived ? (
+              <div className="px-1 pb-1 pt-3">
+                <AccountsListSection
+                  accounts={archivedAccounts}
+                  archivedView
+                  archivingId={archiveDeletingId}
+                  currentUserId={user?.id}
+                  emptyDescription=""
+                  emptyTitle=""
+                  loading={false}
+                  onArchive={handleDeleteArchived}
+                  onRestore={handleRestoreArchived}
+                  restoringId={archiveRestoringId}
+                  variant="all"
+                />
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
         <div key={activeTab} className="animate-fade-in">
           {activeTab === 'all' ? (
             <AccountsListSection
@@ -357,7 +515,9 @@ export default function Accounts() {
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onLeave={handleLeaveAccount}
               onShare={(account) => setSharingAccount(account)}
+              onToggleHidden={handleToggleHidden}
               variant="all"
             />
           ) : activeTab === 'cards' ? (
@@ -370,7 +530,9 @@ export default function Accounts() {
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onLeave={handleLeaveAccount}
               onShare={(account) => setSharingAccount(account)}
+              onToggleHidden={handleToggleHidden}
               variant="card"
             />
           ) : activeTab === 'wallets' ? (
@@ -383,7 +545,9 @@ export default function Accounts() {
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onLeave={handleLeaveAccount}
               onShare={(account) => setSharingAccount(account)}
+              onToggleHidden={handleToggleHidden}
               variant="wallet"
             />
           ) : activeTab === 'cash' ? (
@@ -396,6 +560,8 @@ export default function Accounts() {
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onLeave={handleLeaveAccount}
+              onToggleHidden={handleToggleHidden}
               variant="cash"
             />
           ) : (
@@ -408,6 +574,8 @@ export default function Accounts() {
               loading={loading}
               onArchive={handleArchiveAccount}
               onEdit={openEditModal}
+              onLeave={handleLeaveAccount}
+              onToggleHidden={handleToggleHidden}
               variant="lent"
             />
           )}

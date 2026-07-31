@@ -24,8 +24,10 @@ export type Account = {
   createdAt: string
   id: string
   isActive: boolean
+  isHidden: boolean
   kind: AccountKind
   lastFour?: string
+  membershipId?: string
   name: string
   textColor: string
   userId: string

@@ -1,8 +1,12 @@
 import {
   FaBuildingColumns,
+  FaEye,
+  FaEyeSlash,
   FaHandHoldingDollar,
   FaMoneyBillWave,
   FaPencil,
+  FaRightFromBracket,
+  FaRotateLeft,
   FaShareNodes,
   FaTrashCan,
   FaUser,
@@ -15,6 +19,7 @@ import type { Account, AccountKind } from '@/types'
 
 type AccountsListSectionProps = {
   accounts: Account[]
+  archivedView?: boolean
   archivingId?: string | null
   currentUserId?: string
   emptyDescription: string
@@ -22,7 +27,11 @@ type AccountsListSectionProps = {
   loading: boolean
   onArchive?: (account: Account) => void
   onEdit?: (account: Account) => void
+  onLeave?: (account: Account) => void
+  onRestore?: (account: Account) => void
   onShare?: (account: Account) => void
+  onToggleHidden?: (account: Account) => void
+  restoringId?: string | null
   variant: AccountKind | 'all'
 }
 
@@ -125,6 +134,7 @@ function KindPattern({ kind }: { kind: AccountKind }) {
 
 export function AccountsListSection({
   accounts,
+  archivedView,
   archivingId,
   currentUserId,
   emptyDescription,
@@ -132,7 +142,11 @@ export function AccountsListSection({
   loading,
   onArchive,
   onEdit,
+  onLeave,
+  onRestore,
   onShare,
+  onToggleHidden,
+  restoringId,
   variant,
 }: AccountsListSectionProps) {
   if (loading) {
@@ -187,12 +201,17 @@ export function AccountsListSection({
         <AccountCard
           key={`${account.kind}-${account.id}`}
           account={account}
+          archivedView={archivedView}
           archivingId={archivingId}
           currentUserId={currentUserId}
           index={index}
           onArchive={onArchive}
           onEdit={onEdit}
+          onLeave={onLeave}
+          onRestore={onRestore}
           onShare={onShare}
+          onToggleHidden={onToggleHidden}
+          restoringId={restoringId}
         />
       ))}
     </div>
@@ -201,22 +220,33 @@ export function AccountsListSection({
 
 function AccountCard({
   account,
+  archivedView,
   archivingId,
   currentUserId,
   index,
   onArchive,
   onEdit,
+  onLeave,
+  onRestore,
   onShare,
+  onToggleHidden,
+  restoringId,
 }: {
   account: Account
+  archivedView?: boolean
   archivingId?: string | null
   currentUserId?: string
   index: number
   onArchive?: (account: Account) => void
   onEdit?: (account: Account) => void
+  onLeave?: (account: Account) => void
+  onRestore?: (account: Account) => void
   onShare?: (account: Account) => void
+  onToggleHidden?: (account: Account) => void
+  restoringId?: string | null
 }) {
   const isDeleting = archivingId === account.id
+  const isRestoring = restoringId === account.id
   const isOwner = account.canManage || !currentUserId
   const isShared = !isOwner
   const primaryColor = account.color || '#F472B6'
@@ -224,7 +254,7 @@ function AccountCard({
 
   return (
     <article
-      className="group relative flex min-h-72 flex-col overflow-hidden rounded-[2rem] border border-pink-100 bg-white transition hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-lg hover:shadow-pink-100/60 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-none"
+      className={`group relative flex min-h-72 flex-col overflow-hidden rounded-[2rem] border border-pink-100 bg-white transition hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-lg hover:shadow-pink-100/60 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-none ${account.isHidden ? 'opacity-60' : ''}`}
       style={{ animationDelay: `${index * 60}ms` }}
     >
       <div
@@ -313,7 +343,29 @@ function AccountCard({
           </div>
 
           <div className="grid grid-cols-3 gap-2 sm:flex sm:items-center">
-            {isOwner && onShare && account.kind !== 'cash' && account.kind !== 'lent' ? (
+            {archivedView && onRestore ? (
+              <IconButton
+                disabled={isDeleting || isRestoring}
+                label={`Restore ${account.name}`}
+                title="Restore account"
+                tone="blue"
+                onClick={() => onRestore(account)}
+              >
+                <FaRotateLeft className="h-4 w-4" aria-hidden="true" />
+              </IconButton>
+            ) : null}
+            {archivedView && onArchive ? (
+              <IconButton
+                disabled={isDeleting || isRestoring}
+                label={`Permanently delete ${account.name}`}
+                title="Permanently delete account"
+                tone="red"
+                onClick={() => onArchive(account)}
+              >
+                <FaTrashCan className="h-4 w-4" aria-hidden="true" />
+              </IconButton>
+            ) : null}
+            {!archivedView && isOwner && onShare && account.kind !== 'cash' && account.kind !== 'lent' ? (
               <IconButton
                 disabled={isDeleting}
                 label={`Share ${account.name}`}
@@ -324,7 +376,7 @@ function AccountCard({
                 <FaShareNodes className="h-4 w-4" aria-hidden="true" />
               </IconButton>
             ) : null}
-            {isOwner && onEdit ? (
+            {!archivedView && isOwner && onEdit ? (
               <IconButton
                 disabled={isDeleting}
                 label={`Edit ${account.name}`}
@@ -335,7 +387,7 @@ function AccountCard({
                 <FaPencil className="h-4 w-4" aria-hidden="true" />
               </IconButton>
             ) : null}
-            {isOwner && onArchive ? (
+            {!archivedView && isOwner && onArchive ? (
               <IconButton
                 disabled={isDeleting}
                 label={`Delete ${account.name}`}
@@ -344,6 +396,36 @@ function AccountCard({
                 onClick={() => onArchive(account)}
               >
                 <FaTrashCan className="h-4 w-4" aria-hidden="true" />
+              </IconButton>
+            ) : null}
+            {!archivedView && isShared && onToggleHidden ? (
+              <IconButton
+                disabled={false}
+                label={
+                  account.isHidden
+                    ? `Unhide ${account.name}`
+                    : `Hide ${account.name}`
+                }
+                title={account.isHidden ? 'Unhide account' : 'Hide account'}
+                tone="blue"
+                onClick={() => onToggleHidden(account)}
+              >
+                {account.isHidden ? (
+                  <FaEye className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  <FaEyeSlash className="h-4 w-4" aria-hidden="true" />
+                )}
+              </IconButton>
+            ) : null}
+            {!archivedView && isShared && onLeave ? (
+              <IconButton
+                disabled={false}
+                label={`Leave ${account.name}`}
+                title="Leave shared account"
+                tone="red"
+                onClick={() => onLeave(account)}
+              >
+                <FaRightFromBracket className="h-4 w-4" aria-hidden="true" />
               </IconButton>
             ) : null}
           </div>

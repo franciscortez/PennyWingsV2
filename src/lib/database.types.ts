@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           id: string
           invited_by: string
+          is_hidden: boolean
           joined_at: string
           resource_id: string
           resource_type: string
@@ -27,6 +28,7 @@ export type Database = {
         Insert: {
           id?: string
           invited_by: string
+          is_hidden?: boolean
           joined_at?: string
           resource_id: string
           resource_type: string
@@ -36,6 +38,7 @@ export type Database = {
         Update: {
           id?: string
           invited_by?: string
+          is_hidden?: boolean
           joined_at?: string
           resource_id?: string
           resource_type?: string
@@ -547,6 +550,10 @@ export type Database = {
         Returns: undefined
       }
       sync_monthly_reports: { Args: never; Returns: undefined }
+      set_account_membership_hidden: {
+        Args: { p_hidden: boolean; p_membership_id: string }
+        Returns: undefined
+      }
       update_account_member_role: {
         Args: { p_membership_id: string; p_role: string }
         Returns: undefined

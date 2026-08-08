@@ -31,6 +31,7 @@ export type Transaction = {
   created_at?: string | null
   created_by: string | null
   description: string | null
+  fee_amount?: number
   id: string
   payment_method: PaymentMethod
   to_card?: TransactionAccountRelation | null
@@ -63,6 +64,7 @@ export type TransactionFormValues = {
   card_id?: string
   category_id: string
   description?: string
+  fee_amount?: number
   payment_method: FormPaymentMethod
   to_card_id?: string
   to_payment_method?: DestinationPaymentMethod
@@ -77,6 +79,7 @@ export type TransactionMutationValues = {
   card_id: string | null
   category_id: string
   description: string | null
+  fee_amount?: number
   payment_method: PaymentMethod
   to_card_id: string | null
   to_wallet_id: string | null

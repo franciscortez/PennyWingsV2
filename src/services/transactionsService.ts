@@ -13,7 +13,7 @@ import type {
 } from '@/types'
 
 const TX_SELECT = `
-  id, user_id, created_by, type, payment_method, amount, description,
+  id, user_id, created_by, type, payment_method, amount, fee_amount, description,
   transaction_date, created_at,
   card_id, wallet_id, category_id, to_card_id, to_wallet_id,
   category:categories(id, name, type, icon, color),
@@ -39,6 +39,7 @@ type RawTransactionRow = {
   created_at?: string | null
   created_by: string | null
   description: string | null
+  fee_amount?: number | null
   id: string
   payment_method: PaymentMethod
   to_card?: AccountRelationRow | AccountRelationRow[] | null
@@ -92,6 +93,7 @@ const mapTransaction = (transaction: RawTransactionRow): Transaction => ({
   created_at: transaction.created_at,
   created_by: transaction.created_by,
   description: transaction.description,
+  fee_amount: Number(transaction.fee_amount ?? 0),
   id: transaction.id,
   payment_method: transaction.payment_method,
   to_card: mapAccountRelation(transaction.to_card),
@@ -206,6 +208,7 @@ export const processTransaction = async (values: TransactionMutationValues) => {
     p_card_id: values.card_id,
     p_category_id: values.category_id,
     p_description: values.description,
+    p_fee_amount: values.fee_amount ?? 0,
     p_payment_method: values.payment_method,
     p_to_card_id: values.to_card_id,
     p_to_wallet_id: values.to_wallet_id,
@@ -227,6 +230,7 @@ export const updateTransaction = async (
     p_card_id: values.card_id,
     p_category_id: values.category_id,
     p_description: values.description,
+    p_fee_amount: values.fee_amount ?? 0,
     p_id: id,
     p_payment_method: values.payment_method,
     p_to_card_id: values.to_card_id,

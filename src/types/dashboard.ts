@@ -25,6 +25,7 @@ export type DashboardTransaction = {
   type: 'income' | 'expense' | 'withdrawal' | 'transfer'
   amount: number
   description: string | null
+  fee_amount?: number
   transaction_date: string | null
   category?: {
     color?: string | null

@@ -1,4 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -11,7 +13,11 @@ import {
   TextInput,
 } from '@/sections/auth'
 import { loginSchema } from '@/validation/authSchemas'
-import { getZodErrorMessage } from '@/validation/zodError'
+
+type LoginFormValues = {
+  email: string
+  password: string
+}
 
 const loginFeatures = [
   {
@@ -42,25 +48,20 @@ export default function Login() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+  } = useForm<LoginFormValues>({
+    defaultValues: { email: '', password: '' },
+    resolver: zodResolver(loginSchema),
+  })
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-    const result = loginSchema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-    })
-
-    if (!result.success) {
-      alerts.warning(getZodErrorMessage(result.error, 'Invalid sign in details.'))
-      return
-    }
-
+  const submitLogin = handleSubmit(async (values) => {
     setLoading(true)
     const { error: signInError } = await signIn(
-      result.data.email,
-      result.data.password,
+      values.email,
+      values.password,
     )
 
     if (signInError) {
@@ -70,7 +71,7 @@ export default function Login() {
     }
 
     setLoading(false)
-  }
+  })
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)
@@ -91,12 +92,13 @@ export default function Login() {
       heroDescription="Continue tracking your expenses, managing your budgets, and achieving your financial goals with ease."
       features={loginFeatures}
     >
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-5" onSubmit={submitLogin} noValidate>
         <TextInput
           id="login-email"
           label="Email Address"
           type="email"
-          name="email"
+          error={errors.email?.message}
+          {...register('email')}
           placeholder="you@example.com"
           autoComplete="email"
           required
@@ -104,7 +106,8 @@ export default function Login() {
         <PasswordInput
           id="login-password"
           label="Password"
-          name="password"
+          error={errors.password?.message}
+          {...register('password')}
           placeholder="Password"
           autoComplete="current-password"
           forgotPassword

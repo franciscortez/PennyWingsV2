@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabase'
 import { getCurrentMonthRange } from '@/lib/date'
 import type { Tables } from '@/lib/database.types'
+import { AppError } from '@/lib/errors'
 import type {
   DashboardAccount,
   DashboardData,
@@ -245,7 +246,7 @@ export const fetchDashboardData = async (
     goalsResult.error
 
   if (firstError) {
-    throw firstError
+    throw AppError.from(firstError)
   }
 
   const cards: CardRow[] = cardsResult.data ?? []

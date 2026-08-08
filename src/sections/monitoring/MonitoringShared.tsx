@@ -1,5 +1,5 @@
 import { Pencil, Plus, Trash2, X, type LucideIcon } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 
 export type ModalMode = 'create' | 'edit'
 
@@ -123,6 +123,15 @@ export function ModalShell({
   saving: boolean
   title: string
 }) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       <button
@@ -131,9 +140,14 @@ export function ModalShell({
         className="absolute inset-0 bg-black/40"
         aria-label="Close monitoring form"
       />
-      <section className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] border border-pink-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+      <section
+        aria-labelledby="monitoring-modal-title"
+        aria-modal="true"
+        role="dialog"
+        className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] border border-pink-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:p-8"
+      >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
+          <h2 id="monitoring-modal-title" className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
             {title}
           </h2>
           <button

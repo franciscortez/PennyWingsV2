@@ -1,5 +1,5 @@
 import { FaXmark } from 'react-icons/fa6'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useAuth } from '@/hooks/useAuth'
 import { useJoinAccount } from '@/hooks/useJointAccountData'
@@ -17,6 +17,15 @@ export function JoinAccountModal({ onClose, onJoined }: JoinAccountModalProps) {
   const { user } = useAuth()
   const { joinAccount, joining } = useJoinAccount(user?.id)
   const [code, setCode] = useState('')
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   const handleSubmit = async () => {
     const trimmed = code.trim().toUpperCase()
@@ -47,9 +56,14 @@ export function JoinAccountModal({ onClose, onJoined }: JoinAccountModalProps) {
         className="absolute inset-0 animate-fade-in bg-black/40"
         aria-label="Close join modal"
       />
-      <section className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900">
+      <section
+        aria-labelledby="join-account-title"
+        aria-modal="true"
+        role="dialog"
+        className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900"
+      >
         <div className="flex items-center justify-between border-b border-pink-50 p-6 pb-4 dark:border-slate-800">
-          <h2 className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
+          <h2 id="join-account-title" className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
             Join Shared Account
           </h2>
           <button

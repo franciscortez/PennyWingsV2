@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Tables } from '@/lib/database.types'
+import { AppError } from '@/lib/errors'
 import type { TransactionCategory } from '@/types'
 
 type CategoryRow = Pick<
@@ -14,7 +15,7 @@ const parseCategoryType = (
     return value
   }
 
-  throw new Error(`Unsupported category type: ${value}`)
+  throw new AppError(`Unsupported category type: ${value}`)
 }
 
 export const fetchCategories = async (
@@ -27,7 +28,7 @@ export const fetchCategories = async (
     .order('name', { ascending: true })
 
   if (error) {
-    throw error
+    throw AppError.from(error)
   }
 
   const categories: CategoryRow[] = data ?? []

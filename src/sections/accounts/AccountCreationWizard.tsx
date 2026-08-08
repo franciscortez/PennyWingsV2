@@ -1,3 +1,4 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import {
   FaArrowLeft,
   FaBuilding,
@@ -8,9 +9,15 @@ import {
   FaXmark,
 } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback, useEffect, useState } from 'react'
+import {
+  useForm,
+  type FieldErrors,
+  type FieldPath,
+  type FieldPathValue,
+} from 'react-hook-form'
+import { z } from 'zod'
 
-import { alerts } from '@/lib/alert'
 import type { AccountColor, AccountCreateValues } from '@/types'
 import {
   accountColors,
@@ -19,7 +26,6 @@ import {
   traditionalBankOptions,
 } from '@/sections/accounts/accountOptions'
 import { accountSchema } from '@/validation/accountSchemas'
-import { getZodErrorMessage } from '@/validation/zodError'
 
 type AccountCreationWizardProps = {
   hasCashAccount: boolean
@@ -46,6 +52,53 @@ const initialForm: WizardForm = {
   provider: '',
   setupType: '',
 }
+
+const wizardSchema = z
+  .object({
+    accountName: z.string(),
+    balance: z.string(),
+    color: z.custom<AccountColor>(),
+    provider: z.string(),
+    setupType: z.enum(['', 'traditional', 'digital', 'ewallet', 'cash', 'lent']),
+  })
+  .superRefine((form, context) => {
+    if (!form.setupType) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Choose an account type.',
+        path: ['setupType'],
+      })
+      return
+    }
+
+    if (!isDirectSetupType(form.setupType) && !form.provider) {
+      context.addIssue({
+        code: 'custom',
+        message: 'Choose a bank or wallet provider.',
+        path: ['provider'],
+      })
+      return
+    }
+
+    const result = buildCreateValues(form)
+    if (result.success) return
+
+    for (const issue of result.error.issues) {
+      const field = issue.path[0]
+      const path =
+        field === 'name'
+          ? ['accountName']
+          : field === 'balance'
+            ? ['balance']
+            : field === 'color' || field === 'textColor'
+              ? ['color']
+              : field === 'accountType' || field === 'kind'
+                ? ['provider']
+                : ['accountName']
+
+      context.addIssue({ code: 'custom', message: issue.message, path })
+    }
+  })
 
 const accountTypes: Array<{
   icon: IconType
@@ -75,6 +128,42 @@ const providerOptions: Record<Exclude<SetupType, 'cash' | 'lent'>, string[]> = {
 const formatProviderValue = (value: string) =>
   value.toLowerCase().replace(/\s+/g, '')
 
+function buildCreateValues(form: WizardForm) {
+  const name =
+    form.setupType === 'cash'
+      ? 'Cash on Hand'
+      : form.setupType === 'lent'
+        ? form.accountName.trim()
+        : form.accountName.trim() || form.provider
+  const accountType =
+    form.setupType === 'cash'
+      ? 'cash'
+      : form.setupType === 'lent'
+        ? 'lent'
+        : form.setupType === 'ewallet'
+          ? formatProviderValue(form.provider)
+          : form.setupType === 'traditional'
+            ? 'savings'
+            : 'debit'
+  const kind =
+    form.setupType === 'cash'
+      ? 'cash'
+      : form.setupType === 'lent'
+        ? 'lent'
+        : form.setupType === 'ewallet'
+          ? 'wallet'
+          : 'card'
+
+  return accountSchema.safeParse({
+    accountType,
+    balance: form.balance,
+    color: form.color.value,
+    kind,
+    name,
+    textColor: form.color.text,
+  })
+}
+
 export function AccountCreationWizard({
   hasCashAccount,
   onClose,
@@ -82,46 +171,67 @@ export function AccountCreationWizard({
   saving,
 }: AccountCreationWizardProps) {
   const [step, setStep] = useState<Step>(1)
-  const [form, setForm] = useState<WizardForm>(initialForm)
+  const {
+    clearErrors,
+    formState: { errors },
+    handleSubmit: handleWizardSubmit,
+    setValue,
+    trigger,
+    watch,
+  } = useForm<WizardForm>({
+    defaultValues: initialForm,
+    resolver: zodResolver(wizardSchema),
+  })
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const form = watch()
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   const handleFieldChange = useCallback(
-    <TField extends keyof WizardForm>(field: TField, value: WizardForm[TField]) => {
-      setForm((current) => ({ ...current, [field]: value }))
+    <TField extends FieldPath<WizardForm>>(
+      field: TField,
+      value: FieldPathValue<WizardForm, TField>,
+    ) => {
+      setValue(field, value, { shouldDirty: true })
+      clearErrors(field)
     },
-    [],
+    [clearErrors, setValue],
   )
 
   const handleSelectType = useCallback(
     (setupType: SetupType) => {
-      setForm((current) => ({
-        ...current,
-        accountName:
-          setupType === 'cash'
-            ? 'Cash on Hand'
-            : setupType === 'lent'
-              ? ''
-              : current.accountName,
-        provider: '',
-        setupType,
-      }))
+      setValue(
+        'accountName',
+        setupType === 'cash'
+          ? 'Cash on Hand'
+          : setupType === 'lent'
+            ? ''
+            : form.accountName,
+        { shouldDirty: true },
+      )
+      setValue('provider', '', { shouldDirty: true })
+      setValue('setupType', setupType, { shouldDirty: true })
+      clearErrors(['accountName', 'provider', 'setupType'])
     },
-    [],
+    [clearErrors, form.accountName, setValue],
   )
 
-  const handleStep1Next = () => {
-    if (!form.setupType) {
-      alerts.warning('Choose an account type.')
-      return
-    }
+  const handleStep1Next = async () => {
+    if (!(await trigger('setupType'))) return
 
     setStep(isDirectSetupType(form.setupType) ? 3 : 2)
   }
 
-  const handleStep2Next = () => {
-    if (!form.provider) {
-      alerts.warning('Choose a bank or wallet provider.')
-      return
-    }
+  const handleStep2Next = async () => {
+    if (!(await trigger('provider'))) return
 
     setStep(3)
   }
@@ -136,57 +246,16 @@ export function AccountCreationWizard({
     })
   }
 
-  const buildCreateValues = () => {
-    const name =
-      form.setupType === 'cash'
-        ? 'Cash on Hand'
-        : form.setupType === 'lent'
-          ? form.accountName.trim()
-          : form.accountName.trim() || form.provider
-    const accountType =
-      form.setupType === 'cash'
-        ? 'cash'
-        : form.setupType === 'lent'
-          ? 'lent'
-        : form.setupType === 'ewallet'
-          ? formatProviderValue(form.provider)
-          : form.setupType === 'traditional'
-            ? 'savings'
-            : 'debit'
-    const kind =
-      form.setupType === 'cash'
-        ? 'cash'
-        : form.setupType === 'lent'
-          ? 'lent'
-        : form.setupType === 'ewallet'
-          ? 'wallet'
-          : 'card'
-
-    return accountSchema.safeParse({
-      accountType,
-      balance: form.balance,
-      color: form.color.value,
-      kind,
-      name,
-      textColor: form.color.text,
-    })
-  }
-
-  const handleSubmit = async () => {
-    const result = buildCreateValues()
-
-    if (!result.success) {
-      const message = getZodErrorMessage(result.error, 'Invalid account details.')
-      alerts.warning(message)
-      return
-    }
+  const handleSubmit = handleWizardSubmit(async (values) => {
+    const result = buildCreateValues(values)
+    if (!result.success) return
 
     const created = await onCreate(result.data as AccountCreateValues)
 
     if (created) {
       onClose()
     }
-  }
+  })
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
@@ -196,7 +265,12 @@ export function AccountCreationWizard({
         className="absolute inset-0 animate-fade-in bg-black/40"
         aria-label="Close account setup"
       />
-      <section className="relative z-10 flex max-h-[95vh] w-full max-w-md flex-col overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900">
+      <section
+        aria-labelledby="account-creation-title"
+        aria-modal="true"
+        role="dialog"
+        className="relative z-10 flex max-h-[95vh] w-full max-w-md flex-col overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900"
+      >
         <div className="flex items-center justify-between border-b border-pink-50 p-6 pb-4 sm:p-8 sm:pb-4 dark:border-slate-800">
           <div className="flex items-center gap-2">
             {step > 1 ? (
@@ -209,7 +283,7 @@ export function AccountCreationWizard({
                 <FaArrowLeft className="h-5 w-5" aria-hidden="true" />
               </button>
             ) : null}
-            <h2 className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
+            <h2 id="account-creation-title" className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
               {isDirectSetupType(form.setupType)
                 ? form.setupType === 'cash'
                   ? 'Cash on Hand'
@@ -250,6 +324,7 @@ export function AccountCreationWizard({
           <div key={step} className="animate-fade-in">
             {step === 1 ? (
               <StepOne
+                errors={errors}
                 form={form}
                 hasCashAccount={hasCashAccount}
                 onNext={handleStep1Next}
@@ -259,6 +334,7 @@ export function AccountCreationWizard({
 
             {step === 2 && form.setupType && !isDirectSetupType(form.setupType) ? (
               <StepTwo
+                errors={errors}
                 form={form}
                 providers={providerOptions[form.setupType]}
                 onChange={handleFieldChange}
@@ -268,10 +344,11 @@ export function AccountCreationWizard({
 
             {step === 3 ? (
               <StepThree
+                errors={errors}
                 form={form}
                 saving={saving}
                 onChange={handleFieldChange}
-                onSubmit={handleSubmit}
+                onSubmit={() => void handleSubmit()}
               />
             ) : null}
           </div>
@@ -282,14 +359,16 @@ export function AccountCreationWizard({
 }
 
 const StepOne = memo(function StepOne({
+  errors,
   form,
   hasCashAccount,
   onNext,
   onSelectType,
 }: {
+  errors: FieldErrors<WizardForm>
   form: WizardForm
   hasCashAccount: boolean
-  onNext: () => void
+  onNext: () => void | Promise<void>
   onSelectType: (type: SetupType) => void
 }) {
   return (
@@ -336,11 +415,13 @@ const StepOne = memo(function StepOne({
             )
           })}
       </div>
+      {errors.setupType ? (
+        <p className="text-xs font-bold text-red-500">{errors.setupType.message}</p>
+      ) : null}
       <button
         type="button"
-        onClick={onNext}
-        disabled={!form.setupType}
-        className="mt-2 w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-30"
+        onClick={() => void onNext()}
+        className="mt-2 w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5"
       >
         Continue
       </button>
@@ -349,18 +430,20 @@ const StepOne = memo(function StepOne({
 })
 
 const StepTwo = memo(function StepTwo({
+  errors,
   form,
   onChange,
   onNext,
   providers,
 }: {
+  errors: FieldErrors<WizardForm>
   form: WizardForm
   providers: string[]
-  onChange: <TField extends keyof WizardForm>(
+  onChange: <TField extends FieldPath<WizardForm>>(
     field: TField,
-    value: WizardForm[TField],
+    value: FieldPathValue<WizardForm, TField>,
   ) => void
-  onNext: () => void
+  onNext: () => void | Promise<void>
 }) {
   return (
     <div className="space-y-6">
@@ -369,7 +452,8 @@ const StepTwo = memo(function StepTwo({
           Select Provider
         </label>
         <select
-          required
+          aria-describedby={errors.provider ? 'account-provider-error' : undefined}
+          aria-invalid={Boolean(errors.provider)}
           value={form.provider}
           onChange={(event) => onChange('provider', event.target.value)}
           className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
@@ -381,6 +465,11 @@ const StepTwo = memo(function StepTwo({
             </option>
           ))}
         </select>
+        {errors.provider ? (
+          <p id="account-provider-error" className="mt-2 text-xs font-bold text-red-500">
+            {errors.provider.message}
+          </p>
+        ) : null}
       </div>
 
       <div>
@@ -398,9 +487,8 @@ const StepTwo = memo(function StepTwo({
 
       <button
         type="button"
-        onClick={onNext}
-        disabled={!form.provider}
-        className="w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-30"
+        onClick={() => void onNext()}
+        className="w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5"
       >
         Continue
       </button>
@@ -409,16 +497,18 @@ const StepTwo = memo(function StepTwo({
 })
 
 const StepThree = memo(function StepThree({
+  errors,
   form,
   onChange,
   onSubmit,
   saving,
 }: {
+  errors: FieldErrors<WizardForm>
   form: WizardForm
   saving: boolean
-  onChange: <TField extends keyof WizardForm>(
+  onChange: <TField extends FieldPath<WizardForm>>(
     field: TField,
-    value: WizardForm[TField],
+    value: FieldPathValue<WizardForm, TField>,
   ) => void
   onSubmit: () => void
 }) {
@@ -438,15 +528,21 @@ const StepThree = memo(function StepThree({
             Person or Lending Label
           </label>
           <input
+            aria-describedby={errors.accountName ? 'lent-account-name-error' : undefined}
+            aria-invalid={Boolean(errors.accountName)}
             id="lent-account-name"
             autoFocus
-            required
             type="text"
             placeholder="e.g. Juan's utang"
             value={form.accountName}
             onChange={(event) => onChange('accountName', event.target.value)}
             className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
           />
+          {errors.accountName ? (
+            <p id="lent-account-name-error" className="mt-2 text-xs font-bold text-red-500">
+              {errors.accountName.message}
+            </p>
+          ) : null}
           <p className="mt-2 text-xs font-medium text-gray-400 dark:text-slate-500">
             Use a name that identifies who owes you this money.
           </p>
@@ -462,8 +558,9 @@ const StepThree = memo(function StepThree({
             PHP
           </span>
           <input
+            aria-describedby={errors.balance ? 'account-balance-error' : undefined}
+            aria-invalid={Boolean(errors.balance)}
             autoFocus={form.setupType !== 'lent'}
-            required
             type="number"
             step="0.01"
             placeholder="0.00"
@@ -472,6 +569,11 @@ const StepThree = memo(function StepThree({
             className="w-full rounded-[2.5rem] border-2 border-pink-100 bg-pink-50/50 py-6 pl-24 pr-6 text-center text-3xl font-black text-gray-800 outline-none transition-all placeholder:text-pink-300 focus:border-pink-500 sm:py-8 sm:text-4xl dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
           />
         </div>
+        {errors.balance ? (
+          <p id="account-balance-error" className="mt-2 text-left text-xs font-bold text-red-500">
+            {errors.balance.message}
+          </p>
+        ) : null}
       </div>
 
       <div className="space-y-2">
@@ -494,6 +596,9 @@ const StepThree = memo(function StepThree({
             />
           ))}
         </div>
+        {errors.color ? (
+          <p className="text-xs font-bold text-red-500">{errors.color.message}</p>
+        ) : null}
       </div>
 
       <div

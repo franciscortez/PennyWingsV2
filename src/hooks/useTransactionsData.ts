@@ -8,6 +8,7 @@ import {
 
 import { AppError } from '@/lib/errors'
 import { queryKeys } from '@/lib/queryClient'
+import { invalidateTransactionCaches } from '@/lib/queryInvalidation'
 import { fetchAccounts } from '@/services/accountsService'
 import { fetchCategories } from '@/services/categoriesService'
 import {
@@ -98,20 +99,7 @@ export function useTransactionsData({
       return
     }
 
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.transactions(userId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.accounts(userId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.dashboard(userId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.reports(userId),
-      }),
-    ])
+    await invalidateTransactionCaches(queryClient, userId)
   }, [queryClient, userId])
 
   const listData = transactionsQuery.data ?? emptyTransactionsListData

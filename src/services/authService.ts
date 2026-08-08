@@ -9,6 +9,7 @@ import {
   clearPendingGoogleDeletion,
   storePendingGoogleDeletion,
 } from '@/lib/accountDeletion'
+import { AppError } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
 import type { DeleteUserResponse, Profile, ProfileUpdate } from '@/types'
 
@@ -25,33 +26,51 @@ const getRedirectUrl = (path: string) => {
   return `${window.location.origin}${path}`
 }
 
-export const getSession = () => supabase.auth.getSession()
+export const getSession = async () => {
+  const { data, error } = await supabase.auth.getSession()
+  if (error) throw AppError.from(error)
+  return data.session
+}
 
-export const getCurrentUser = () => supabase.auth.getUser()
+export const getCurrentUser = async () => {
+  const { data, error } = await supabase.auth.getUser()
+  if (error) throw AppError.from(error)
+  return data.user
+}
 
 export const onAuthStateChange = (callback: AuthStateChangeCallback) =>
   supabase.auth.onAuthStateChange(callback)
 
-export const signUp = (email: string, password: string) =>
-  supabase.auth.signUp({ email, password })
+export const signUp = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error) throw AppError.from(error)
+  return data
+}
 
-export const signIn = (email: string, password: string) =>
-  supabase.auth.signInWithPassword({ email, password })
+export const signIn = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  })
+  if (error) throw AppError.from(error)
+  return data
+}
 
-export const signInWithGoogle = () =>
-  supabase.auth.signInWithOAuth({
+export const signInWithGoogle = async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
       redirectTo: getRedirectUrl('/dashboard'),
     },
   })
 
+  if (error) throw AppError.from(error)
+  return data
+}
+
 export const reauthenticateWithGoogleForDeletion = async (user: User) => {
   if (!storePendingGoogleDeletion(user)) {
-    return {
-      data: null,
-      error: new Error('Unable to prepare Google verification.'),
-    }
+    throw new AppError('Unable to prepare Google verification.')
   }
 
   const { data, error } = await supabase.auth.signInWithOAuth({
@@ -67,20 +86,30 @@ export const reauthenticateWithGoogleForDeletion = async (user: User) => {
 
   if (error) {
     clearPendingGoogleDeletion()
+    throw AppError.from(error)
   }
 
-  return { data, error }
+  return data
 }
 
-export const signOut = () => supabase.auth.signOut()
+export const signOut = async () => {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw AppError.from(error)
+}
 
-export const resetPassword = (email: string) =>
-  supabase.auth.resetPasswordForEmail(email, {
+export const resetPassword = async (email: string) => {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: getRedirectUrl('/reset-password'),
   })
 
-export const updatePassword = (password: string) =>
-  supabase.auth.updateUser({ password })
+  if (error) throw AppError.from(error)
+}
+
+export const updatePassword = async (password: string) => {
+  const { data, error } = await supabase.auth.updateUser({ password })
+  if (error) throw AppError.from(error)
+  return data
+}
 
 export const fetchProfile = async (userId: string) => {
   const { data, error } = await supabase
@@ -90,10 +119,11 @@ export const fetchProfile = async (userId: string) => {
     .single<Profile>()
 
   if (error?.code === 'PGRST116') {
-    return { data: null, error: null }
+    return null
   }
 
-  return { data, error }
+  if (error) throw AppError.from(error)
+  return data
 }
 
 export const createProfile = async (user: User) => {
@@ -110,16 +140,24 @@ export const createProfile = async (user: User) => {
     .select()
     .single<Profile>()
 
-  return { data, error }
+  if (error) throw AppError.from(error)
+  return data
 }
 
-export const updateProfile = async (userId: string, updates: ProfileUpdate) =>
-  supabase
+export const updateProfile = async (
+  userId: string,
+  updates: ProfileUpdate,
+) => {
+  const { data, error } = await supabase
     .from('profiles')
     .update(updates)
     .eq('id', userId)
     .select()
     .single<Profile>()
+
+  if (error) throw AppError.from(error)
+  return data
+}
 
 const getFunctionError = async (error: Error) => {
   if (error instanceof FunctionsHttpError) {
@@ -127,40 +165,37 @@ const getFunctionError = async (error: Error) => {
       const body = (await error.context.json()) as { error?: unknown }
 
       if (typeof body.error === 'string') {
-        return new Error(body.error)
+        return new AppError(body.error)
       }
     } catch {
       // Fall through to the safe generic message.
     }
   }
 
-  return new Error('Unable to delete your account. Please try again.')
+  return new AppError('Unable to delete your account. Please try again.')
 }
 
 export const deleteAccount = async (
   user: User,
   password?: string,
-): Promise<{ data: DeleteUserResponse | null; error: Error | null }> => {
+): Promise<DeleteUserResponse> => {
   const isGoogle =
     user.app_metadata?.provider === 'google' ||
     user.identities?.some((id) => id.provider === 'google')
 
   if (!isGoogle) {
     if (!user.email) {
-      return { data: null, error: new Error('User email is required.') }
+      throw new AppError('User email is required.')
     }
 
     if (!password) {
-      return { data: null, error: new Error('Password is required for deletion.') }
+      throw new AppError('Password is required for deletion.')
     }
 
-    const { error: reauthError } = await signIn(user.email, password)
-
-    if (reauthError) {
-      return {
-        data: null,
-        error: new Error('Incorrect password. Please try again.'),
-      }
+    try {
+      await signIn(user.email, password)
+    } catch {
+      throw new AppError('Incorrect password. Please try again.')
     }
   }
 
@@ -170,13 +205,15 @@ export const deleteAccount = async (
   )
 
   if (error) {
-    return { data: null, error: await getFunctionError(error) }
+    throw await getFunctionError(error)
   }
+
+  if (!data) throw new AppError('Unable to delete your account. Please try again.')
 
   clearPendingGoogleDeletion()
   await supabase.auth.signOut({ scope: 'local' })
 
-  return { data, error: null }
+  return data
 }
 
 export const authService = {

@@ -1,5 +1,5 @@
 import { FaCheck, FaXmark } from 'react-icons/fa6'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 
 import { accountColors, cardTypeOptions, walletTypeOptions } from '@/sections/accounts/accountOptions'
@@ -33,6 +33,15 @@ export function EditAccountModal({
   )
   const [color, setColor] = useState(account.color || '#F472B6')
   const [textColor, setTextColor] = useState(account.textColor || '#ffffff')
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   const isCard = account.kind === 'card'
@@ -73,10 +82,15 @@ export function EditAccountModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/60 p-4 backdrop-blur-sm">
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] bg-white p-6 shadow-2xl sm:p-8 dark:border dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
+      <div
+        aria-labelledby="edit-account-title"
+        aria-modal="true"
+        role="dialog"
+        className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] bg-white p-6 shadow-2xl sm:p-8 dark:border dark:border-slate-800 dark:bg-slate-900 dark:shadow-none"
+      >
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
+            <h2 id="edit-account-title" className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
               Edit Account
             </h2>
             <p className="text-xs font-bold text-gray-400 dark:text-slate-550">

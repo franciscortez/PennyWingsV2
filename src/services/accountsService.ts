@@ -155,7 +155,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     cardsResult.error ?? walletsResult.error ?? membershipsResult.error
 
   if (firstError) {
-    throw firstError
+    throw AppError.from(firstError)
   }
 
   const cards: CardRow[] = cardsResult.data ?? []
@@ -235,7 +235,7 @@ export const fetchArchivedAccounts = async (
   const firstError = cardsResult.error ?? walletsResult.error
 
   if (firstError) {
-    throw firstError
+    throw AppError.from(firstError)
   }
 
   const cards: CardRow[] = cardsResult.data ?? []

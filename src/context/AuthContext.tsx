@@ -24,7 +24,13 @@ import {
   updateProfile as updateProfileService,
 } from '@/services/authService'
 import { AuthContext } from '@/context/authContextValue'
-import type { AuthContextValue, Profile, ProfileUpdate } from '@/types'
+import { AppError } from '@/lib/errors'
+import type {
+  AuthContextValue,
+  AuthResult,
+  Profile,
+  ProfileUpdate,
+} from '@/types'
 
 type AuthProviderProps = {
   children: ReactNode
@@ -37,28 +43,32 @@ const wait = (duration: number) =>
     window.setTimeout(resolve, duration)
   })
 
+const runAuthOperation = async <T,>(
+  operation: () => Promise<T>,
+): AuthResult<T> => {
+  try {
+    return { data: await operation(), error: null }
+  } catch (error) {
+    return { data: null, error: AppError.from(error) }
+  }
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
 
   const loadProfile = useCallback(async (authUser: User) => {
-    const { data, error } = await fetchProfile(authUser.id)
-    if (error) {
-      console.error(error)
-      return
-    }
+    try {
+      const existingProfile = await fetchProfile(authUser.id)
 
-    if (data) {
-      setProfile(data)
-    } else {
-      const { data: newProfile, error: createError } = await createProfile(authUser)
-
-      if (!createError && newProfile) {
-        setProfile(newProfile)
+      if (existingProfile) {
+        setProfile(existingProfile)
       } else {
-        console.error('Failed to auto-create profile:', createError)
+        setProfile(await createProfile(authUser))
       }
+    } catch {
+      console.error('Failed to load profile.')
     }
   }, [])
 
@@ -80,28 +90,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       try {
         if (window.location.hash.includes('access_token')) {
-          const {
-            data: { session },
-          } = await getSession()
+          const session = await getSession()
 
           if (session) {
             window.history.replaceState(null, '', window.location.pathname)
           }
         }
 
-        const {
-          data: { session },
-        } = await getSession()
+        const session = await getSession()
 
         let currentUser: User | null = null
 
         if (session) {
-          const {
-            data: { user: verifiedUser },
-            error,
-          } = await getCurrentUser()
-
-          currentUser = error ? null : verifiedUser
+          currentUser = await getCurrentUser()
         }
 
         if (!mounted) {
@@ -113,6 +114,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         if (currentUser) {
           await loadProfile(currentUser)
         } else {
+          setProfile(null)
+        }
+      } catch {
+        console.error('Failed to initialize authentication.')
+
+        if (mounted) {
+          setUser(null)
           setProfile(null)
         }
       } finally {
@@ -153,16 +161,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const updateProfile = useCallback(
     async (updates: ProfileUpdate) => {
       if (!user) {
-        return { data: null, error: new Error('No user logged in.') }
+        return { data: null, error: new AppError('No user logged in.') }
       }
 
-      const { data, error } = await updateProfileService(user.id, updates)
-
-      if (!error) {
-        setProfile(data)
-      }
-
-      return { data, error }
+      return runAuthOperation(async () => {
+        const updatedProfile = await updateProfileService(user.id, updates)
+        setProfile(updatedProfile)
+        return updatedProfile
+      })
     },
     [user],
   )
@@ -170,21 +176,56 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const deleteAccount = useCallback(
     async (password?: string) => {
       if (!user) {
-        return { data: null, error: new Error('No user logged in.') }
+        return { data: null, error: new AppError('No user logged in.') }
       }
 
-      return deleteAccountService(user, password)
+      return runAuthOperation(() => deleteAccountService(user, password))
     },
     [user],
   )
 
   const reauthenticateWithGoogleForDeletion = useCallback(async () => {
     if (!user) {
-      return { data: null, error: new Error('No user logged in.') }
+      return { data: null, error: new AppError('No user logged in.') }
     }
 
-    return reauthenticateWithGoogleForDeletionService(user)
+    return runAuthOperation(() =>
+      reauthenticateWithGoogleForDeletionService(user),
+    )
   }, [user])
+
+  const resetPassword = useCallback(
+    (email: string) => runAuthOperation(() => resetPasswordService(email)),
+    [],
+  )
+
+  const signIn = useCallback(
+    (email: string, password: string) =>
+      runAuthOperation(() => signInService(email, password)),
+    [],
+  )
+
+  const signInWithGoogle = useCallback(
+    () => runAuthOperation(() => signInWithGoogleService()),
+    [],
+  )
+
+  const signOut = useCallback(
+    () => runAuthOperation(() => signOutService()),
+    [],
+  )
+
+  const signUp = useCallback(
+    (email: string, password: string) =>
+      runAuthOperation(() => signUpService(email, password)),
+    [],
+  )
+
+  const updatePassword = useCallback(
+    (password: string) =>
+      runAuthOperation(() => updatePasswordService(password)),
+    [],
+  )
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -194,12 +235,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       deleteAccount,
       reauthenticateWithGoogleForDeletion,
       refreshProfile,
-      resetPassword: resetPasswordService,
-      signIn: signInService,
-      signInWithGoogle: signInWithGoogleService,
-      signOut: signOutService,
-      signUp: signUpService,
-      updatePassword: updatePasswordService,
+      resetPassword,
+      signIn,
+      signInWithGoogle,
+      signOut,
+      signUp,
+      updatePassword,
       updateProfile,
     }),
     [
@@ -208,6 +249,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       profile,
       reauthenticateWithGoogleForDeletion,
       refreshProfile,
+      resetPassword,
+      signIn,
+      signInWithGoogle,
+      signOut,
+      signUp,
+      updatePassword,
       updateProfile,
       user,
     ],

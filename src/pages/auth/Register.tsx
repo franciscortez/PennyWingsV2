@@ -1,4 +1,6 @@
-import { useState, type FormEvent } from 'react'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 
 import { useAuth } from '@/hooks/useAuth'
@@ -11,7 +13,13 @@ import {
   TextInput,
 } from '@/sections/auth'
 import { registerSchema } from '@/validation/authSchemas'
-import { getZodErrorMessage } from '@/validation/zodError'
+
+type RegisterFormValues = {
+  acceptedTerms: boolean
+  confirm: string
+  email: string
+  password: string
+}
 
 const signupFeatures = [
   {
@@ -40,38 +48,37 @@ export default function Register() {
   const { loading: authLoading, signInWithGoogle, signUp } = useAuth()
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const {
+    formState: { errors },
+    handleSubmit,
+    register,
+    reset,
+  } = useForm<RegisterFormValues>({
+    defaultValues: {
+      acceptedTerms: false,
+      confirm: '',
+      email: '',
+      password: '',
+    },
+    resolver: zodResolver(registerSchema),
+  })
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const formData = new FormData(event.currentTarget)
-    const result = registerSchema.safeParse({
-      email: formData.get('email'),
-      password: formData.get('password'),
-      confirm: formData.get('confirm'),
-      acceptedTerms: formData.get('acceptedTerms') === 'on',
-    })
-
-    if (!result.success) {
-      alerts.warning(getZodErrorMessage(result.error, 'Invalid account details.'))
-      return
-    }
-
+  const submitRegistration = handleSubmit(async (values) => {
     setLoading(true)
     const { error: signUpError } = await signUp(
-      result.data.email,
-      result.data.password,
+      values.email,
+      values.password,
     )
 
     if (signUpError) {
       alerts.error(signUpError.message)
     } else {
       alerts.success('Account created! Please check your email to confirm your account.')
-      event.currentTarget.reset()
+      reset()
     }
 
     setLoading(false)
-  }
+  })
 
   const handleGoogleLogin = async () => {
     setGoogleLoading(true)
@@ -92,12 +99,13 @@ export default function Register() {
       heroDescription="Join thousands of users who are taking control of their finances. Track expenses, set budgets, and achieve your goals."
       features={signupFeatures}
     >
-      <form className="space-y-5" onSubmit={handleSubmit}>
+      <form className="space-y-5" onSubmit={submitRegistration} noValidate>
         <TextInput
           id="register-email"
           label="Email Address"
           type="email"
-          name="email"
+          error={errors.email?.message}
+          {...register('email')}
           placeholder="you@example.com"
           autoComplete="email"
           required
@@ -105,23 +113,27 @@ export default function Register() {
         <PasswordInput
           id="register-password"
           label="Password"
-          name="password"
+          error={errors.password?.message}
+          {...register('password')}
           placeholder="Min. 6 characters"
           autoComplete="new-password"
         />
         <PasswordInput
           id="register-confirm-password"
           label="Confirm Password"
-          name="confirm"
+          error={errors.confirm?.message}
+          {...register('confirm')}
           placeholder="Password"
           autoComplete="new-password"
         />
 
         <div className="flex items-start gap-3">
           <input
+            aria-describedby={errors.acceptedTerms ? 'accepted-terms-error' : undefined}
+            aria-invalid={Boolean(errors.acceptedTerms)}
             type="checkbox"
             id="terms"
-            name="acceptedTerms"
+            {...register('acceptedTerms')}
             className="mt-1.5 h-4 w-4 cursor-pointer rounded border-2 border-pink-200 text-pink-600 accent-pink-600 transition focus:ring-pink-500"
           />
           <label
@@ -138,6 +150,11 @@ export default function Register() {
             and understand how my data is handled.
           </label>
         </div>
+        {errors.acceptedTerms ? (
+          <p id="accepted-terms-error" className="text-xs font-bold text-red-500">
+            {errors.acceptedTerms.message}
+          </p>
+        ) : null}
 
         <button
           type="submit"

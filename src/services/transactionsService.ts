@@ -149,7 +149,7 @@ export const fetchTransactions = async ({
   const firstError = countResult.error ?? dataResult.error
 
   if (firstError) {
-    throw firstError
+    throw AppError.from(firstError)
   }
 
   const totalCount = countResult.count ?? 0
@@ -172,7 +172,7 @@ export const fetchAccountBalance = async (
       .single<BalanceRow>()
 
     if (error) {
-      throw error
+      throw AppError.from(error)
     }
 
     return Number(data?.balance ?? 0)
@@ -186,7 +186,7 @@ export const fetchAccountBalance = async (
       .single<BalanceRow>()
 
     if (error) {
-      throw error
+      throw AppError.from(error)
     }
 
     return Number(data?.balance ?? 0)

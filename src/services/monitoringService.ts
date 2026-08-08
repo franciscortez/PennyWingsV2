@@ -255,7 +255,7 @@ export const fetchMonitoringData = async (
     expensesResult.error
 
   if (firstError) {
-    throw firstError
+    throw AppError.from(firstError)
   }
 
   const expenses = (expensesResult.data ?? []) as ExpenseTransactionRow[]

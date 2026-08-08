@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { AppError } from '@/lib/errors'
 import { queryKeys } from '@/lib/queryClient'
+import { invalidateMonitoringCaches } from '@/lib/queryInvalidation'
 import { emptyAccountsData, fetchAccounts } from '@/services/accountsService'
 import {
   createBudget,
@@ -55,14 +56,7 @@ export function useMonitoringData(
       return
     }
 
-    await Promise.all([
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.monitoring(userId),
-      }),
-      queryClient.invalidateQueries({
-        queryKey: queryKeys.dashboard(userId),
-      }),
-    ])
+    await invalidateMonitoringCaches(queryClient, userId)
   }, [queryClient, userId])
 
   const addBudgetMutation = useMutation({

@@ -1,14 +1,6 @@
 import type { User } from '@supabase/supabase-js'
 
 import type { Tables } from '@/lib/database.types'
-import type {
-  resetPassword,
-  signIn,
-  signInWithGoogle,
-  signOut,
-  signUp,
-  updatePassword,
-} from '@/services/authService'
 
 export type Profile = Tables<'profiles'>
 
@@ -30,11 +22,11 @@ export type AuthContextValue = {
   deleteAccount: (password?: string) => AuthResult<DeleteUserResponse>
   reauthenticateWithGoogleForDeletion: () => AuthResult
   refreshProfile: () => Promise<void>
-  resetPassword: typeof resetPassword
-  signIn: typeof signIn
-  signInWithGoogle: typeof signInWithGoogle
-  signOut: typeof signOut
-  signUp: typeof signUp
-  updatePassword: typeof updatePassword
+  resetPassword: (email: string) => AuthResult<void>
+  signIn: (email: string, password: string) => AuthResult
+  signInWithGoogle: () => AuthResult
+  signOut: () => AuthResult<void>
+  signUp: (email: string, password: string) => AuthResult
+  updatePassword: (password: string) => AuthResult
   updateProfile: (updates: ProfileUpdate) => AuthResult<Profile>
 }

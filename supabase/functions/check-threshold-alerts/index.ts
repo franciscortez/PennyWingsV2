@@ -18,7 +18,37 @@ type RowUpdate = {
   percent: number
 }
 
+type BudgetPeriod = 'weekly' | 'monthly' | 'yearly'
+
+type ExpenseRow = {
+  amount: number | string | null
+  category_id: string | null
+  transaction_date: string
+  user_id: string
+}
+
 const tierFor = (percent: number) => (percent >= 100 ? 100 : percent >= 80 ? 80 : 0)
+
+const toDateValue = (date: Date) => date.toISOString().slice(0, 10)
+
+const parseBudgetPeriod = (period: string | null): BudgetPeriod =>
+  period === 'weekly' || period === 'yearly' ? period : 'monthly'
+
+const getPeriodStart = (period: BudgetPeriod, now: Date) => {
+  if (period === 'weekly') {
+    const start = new Date(now)
+    start.setUTCDate(now.getUTCDate() - now.getUTCDay())
+    return toDateValue(start)
+  }
+
+  if (period === 'yearly') {
+    return toDateValue(new Date(Date.UTC(now.getUTCFullYear(), 0, 1)))
+  }
+
+  return toDateValue(
+    new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)),
+  )
+}
 
 const buildEmailHtml = (alerts: AlertItem[]) => {
   const rows = alerts
@@ -127,31 +157,58 @@ serve(async (request) => {
 
   const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-  const [budgetsResult, goalsResult, expensesResult] = await Promise.all([
+  const now = new Date()
+  const today = toDateValue(now)
+  const [budgetsResult, goalsResult] = await Promise.all([
     supabase
       .from('budgets')
-      .select('id, user_id, category_id, limit_amount, last_alert_percent, category:categories(name)'),
+      .select('id, user_id, category_id, limit_amount, period, last_alert_percent, category:categories(name)'),
     supabase
       .from('goals')
       .select('id, user_id, name, target_amount, current_amount, last_alert_percent'),
-    supabase.from('transactions').select('user_id, amount, category_id').eq('type', 'expense'),
   ])
 
-  const expenseTotals: Record<string, number> = {}
-  for (const exp of expensesResult.data ?? []) {
-    if (exp.category_id) {
-      const key = `${exp.user_id}:${exp.category_id}`
-      expenseTotals[key] = (expenseTotals[key] || 0) + Number(exp.amount || 0)
-    }
+  const budgets = budgetsResult.data ?? []
+  const earliestPeriodStart = budgets.reduce<string | null>((earliest, budget) => {
+    const start = getPeriodStart(parseBudgetPeriod(budget.period), now)
+    return !earliest || start < earliest ? start : earliest
+  }, null)
+  const expensesResult = earliestPeriodStart
+    ? await supabase
+      .from('transactions')
+      .select('user_id, amount, category_id, transaction_date')
+      .eq('type', 'expense')
+      .gte('transaction_date', earliestPeriodStart)
+      .lte('transaction_date', today)
+    : { data: [] as ExpenseRow[], error: null }
+
+  const expenses = (expensesResult.data ?? []) as ExpenseRow[]
+  const expensesByUserCategory = new Map<string, ExpenseRow[]>()
+  for (const expense of expenses) {
+    if (!expense.category_id) continue
+
+    const key = `${expense.user_id}:${expense.category_id}`
+    const matchingExpenses = expensesByUserCategory.get(key) ?? []
+    matchingExpenses.push(expense)
+    expensesByUserCategory.set(key, matchingExpenses)
   }
 
   const alertsByUser = new Map<string, AlertItem[]>()
   const rowUpdates: RowUpdate[] = []
 
-  for (const b of budgetsResult.data ?? []) {
+  for (const b of budgets) {
     const limit = Number(b.limit_amount || 0)
     if (limit <= 0) continue
-    const spent = expenseTotals[`${b.user_id}:${b.category_id}`] || 0
+    const periodStart = getPeriodStart(parseBudgetPeriod(b.period), now)
+    const matchingExpenses =
+      expensesByUserCategory.get(`${b.user_id}:${b.category_id}`) ?? []
+    const spent = matchingExpenses.reduce((total, expense) => {
+      if (expense.transaction_date < periodStart) {
+        return total
+      }
+
+      return total + Number(expense.amount || 0)
+    }, 0)
     const percent = Math.round((spent / limit) * 100)
     const tier = tierFor(percent)
     const previousTier = Number(b.last_alert_percent || 0)

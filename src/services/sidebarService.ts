@@ -1,7 +1,10 @@
 import { supabase } from '@/lib/supabase'
+import { AppError } from '@/lib/errors'
 import type { SidebarProfile } from '@/types'
 
-export const fetchSidebarProfile = async (userId: string) => {
+export const fetchSidebarProfile = async (
+  userId: string,
+): Promise<SidebarProfile | null> => {
   const { data, error } = await supabase
     .from('profiles')
     .select('id, full_name, avatar_url')
@@ -9,8 +12,9 @@ export const fetchSidebarProfile = async (userId: string) => {
     .single<SidebarProfile>()
 
   if (error?.code === 'PGRST116') {
-    return { data: null, error: null }
+    return null
   }
 
-  return { data, error }
+  if (error) throw AppError.from(error)
+  return data
 }

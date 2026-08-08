@@ -236,10 +236,13 @@ export default function Accounts() {
   }
 
   const handleArchiveAccount = async (account: Account) => {
-    const confirmed = await alerts.confirmDelete(
-      'Account',
-      `Delete "${account.name}"? This account will be removed from your active list.`,
-    )
+    const confirmed = await alerts.confirm({
+      cancelButtonText: 'Cancel',
+      confirmButtonText: 'Archive Account',
+      icon: 'question',
+      text: `Archive "${account.name}"? You can restore it later from Archived Accounts.`,
+      title: 'Archive account?',
+    })
 
     if (!confirmed) {
       return
@@ -250,7 +253,7 @@ export default function Accounts() {
     if (archiveError) {
       alerts.error(archiveError.message)
     } else {
-      alerts.success('Account deleted.')
+      alerts.success('Account archived.')
     }
   }
 

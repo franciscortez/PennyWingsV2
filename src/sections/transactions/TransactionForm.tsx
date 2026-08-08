@@ -1,7 +1,14 @@
+import { zodResolver } from '@hookform/resolvers/zod'
 import { X } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo } from 'react'
+import {
+  useForm,
+  type FieldErrors,
+  type FieldPath,
+  type FieldPathValue,
+  type Resolver,
+} from 'react-hook-form'
 
-import { alerts } from '@/lib/alert'
 import { toDateInputValue } from '@/lib/date'
 import type {
   Account,
@@ -13,7 +20,6 @@ import type {
   TransactionType,
 } from '@/types'
 import { transactionSchema } from '@/validation/transactionSchemas'
-import { getZodErrorMessage } from '@/validation/zodError'
 
 type TransactionFormProps = {
   cardAccounts: Account[]
@@ -95,9 +101,34 @@ export function TransactionForm({
   transaction,
   walletAccounts,
 }: TransactionFormProps) {
-  const [form, setForm] = useState<TransactionFormState>(() =>
-    toFormState(transaction),
-  )
+  const {
+    clearErrors,
+    formState: { errors },
+    getValues,
+    handleSubmit,
+    reset,
+    setValue,
+    watch,
+  } = useForm<TransactionFormState, unknown, TransactionFormValues>({
+    defaultValues: toFormState(transaction),
+    resolver: zodResolver(transactionSchema) as Resolver<
+      TransactionFormState,
+      unknown,
+      TransactionFormValues
+    >,
+  })
+
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const form = watch()
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose()
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose])
 
   const filteredCategories = useMemo(
     () =>
@@ -143,88 +174,91 @@ export function TransactionForm({
   const destinationCashAccount =
     !sourceOwnerId || cashAccount?.userId === sourceOwnerId ? cashAccount : null
 
-  const updateField = <TField extends keyof TransactionFormState>(
+  const updateField = <TField extends FieldPath<TransactionFormState>>(
     field: TField,
-    value: TransactionFormState[TField],
+    value: FieldPathValue<TransactionFormState, TField>,
   ) => {
-    setForm((current) => ({
-      ...current,
-      [field]: value,
-      ...(field === 'card_id' || field === 'wallet_id'
-        ? { to_card_id: '', to_wallet_id: '' }
-        : {}),
-    }))
+    setValue(field, value, { shouldDirty: true })
+    clearErrors(field)
+
+    if (field === 'card_id' || field === 'wallet_id') {
+      setValue('to_card_id', '', { shouldDirty: true })
+      setValue('to_wallet_id', '', { shouldDirty: true })
+      clearErrors(['to_card_id', 'to_wallet_id'])
+    }
   }
 
   const updateType = (type: TransactionType) => {
-    setForm((current) => ({
-      ...current,
-      card_id: current.payment_method === 'card' ? current.card_id : '',
-      category_id: '',
-      payment_method:
-        type === 'withdrawal' && current.payment_method === 'cash'
-          ? 'card'
-          : type !== 'transfer' &&
-              type !== 'withdrawal' &&
-              current.payment_method === 'lent'
-            ? 'ewallet'
-            : current.payment_method,
-      to_card_id: type === 'transfer' ? current.to_card_id : '',
-      to_wallet_id: type === 'transfer' ? current.to_wallet_id : '',
-      type,
-      wallet_id:
-        (current.payment_method === 'ewallet' ||
-          current.payment_method === 'lent') &&
-        (type === 'transfer' ||
-          type === 'withdrawal' ||
-          (current.payment_method === 'ewallet' &&
-            !lentAccounts.some((account) => account.id === current.wallet_id)))
-          ? current.wallet_id
-          : '',
-    }))
+    const current = getValues()
+    reset(
+      {
+        ...current,
+        card_id: current.payment_method === 'card' ? current.card_id : '',
+        category_id: '',
+        payment_method:
+          type === 'withdrawal' && current.payment_method === 'cash'
+            ? 'card'
+            : type !== 'transfer' &&
+                type !== 'withdrawal' &&
+                current.payment_method === 'lent'
+              ? 'ewallet'
+              : current.payment_method,
+        to_card_id: type === 'transfer' ? current.to_card_id : '',
+        to_wallet_id: type === 'transfer' ? current.to_wallet_id : '',
+        type,
+        wallet_id:
+          (current.payment_method === 'ewallet' ||
+            current.payment_method === 'lent') &&
+          (type === 'transfer' ||
+            type === 'withdrawal' ||
+            (current.payment_method === 'ewallet' &&
+              !lentAccounts.some((account) => account.id === current.wallet_id)))
+            ? current.wallet_id
+            : '',
+      },
+      { keepDirty: true },
+    )
   }
 
   const updatePaymentMethod = (paymentMethod: FormPaymentMethod) => {
-    setForm((current) => ({
-      ...current,
-      card_id: '',
-      payment_method: paymentMethod,
-      to_payment_method:
-        paymentMethod === 'cash' && current.to_payment_method === 'cash'
-          ? 'card'
-          : current.to_payment_method,
-      wallet_id: '',
-    }))
+    const current = getValues()
+    reset(
+      {
+        ...current,
+        card_id: '',
+        payment_method: paymentMethod,
+        to_payment_method:
+          paymentMethod === 'cash' && current.to_payment_method === 'cash'
+            ? 'card'
+            : current.to_payment_method,
+        wallet_id: '',
+      },
+      { keepDirty: true },
+    )
   }
 
   const updateDestinationMethod = (
     paymentMethod: DestinationPaymentMethod,
   ) => {
-    setForm((current) => ({
-      ...current,
-      to_card_id: '',
-      to_payment_method: paymentMethod,
-      to_wallet_id: '',
-    }))
+    const current = getValues()
+    reset(
+      {
+        ...current,
+        to_card_id: '',
+        to_payment_method: paymentMethod,
+        to_wallet_id: '',
+      },
+      { keepDirty: true },
+    )
   }
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-
-    const result = transactionSchema.safeParse(form)
-
-    if (!result.success) {
-      const message = getZodErrorMessage(result.error, 'Invalid transaction.')
-      alerts.warning(message)
-      return
-    }
-
-    const saved = await onSubmit(result.data)
+  const submitForm = handleSubmit(async (values) => {
+    const saved = await onSubmit(values)
 
     if (saved) {
       onClose()
     }
-  }
+  })
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
@@ -234,10 +268,15 @@ export function TransactionForm({
         className="absolute inset-0 bg-black/40"
         aria-label="Close transaction form"
       />
-      <section className="relative z-10 flex max-h-[95vh] w-full flex-col overflow-hidden rounded-[2rem] border border-pink-100 bg-white dark:border-slate-800 dark:bg-slate-900 md:max-h-[90vh] md:max-w-lg md:rounded-[2.5rem]">
+      <section
+        aria-labelledby="transaction-form-title"
+        aria-modal="true"
+        role="dialog"
+        className="relative z-10 flex max-h-[95vh] w-full flex-col overflow-hidden rounded-[2rem] border border-pink-100 bg-white dark:border-slate-800 dark:bg-slate-900 md:max-h-[90vh] md:max-w-lg md:rounded-[2.5rem]"
+      >
         <div className="overflow-y-auto p-6 md:p-8">
           <div className="mb-6 flex items-center justify-between md:mb-8">
-            <h2 className="text-xl font-black tracking-tight text-gray-800 dark:text-slate-100 md:text-2xl">
+            <h2 id="transaction-form-title" className="text-xl font-black tracking-tight text-gray-800 dark:text-slate-100 md:text-2xl">
               {transaction ? 'Edit Transaction' : 'New Transaction'}
             </h2>
             <button
@@ -251,7 +290,7 @@ export function TransactionForm({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6">
+          <form onSubmit={submitForm} noValidate className="space-y-4 md:space-y-6">
             <TransactionTypePicker value={form.type} onChange={updateType} />
 
             <div className="text-center">
@@ -260,7 +299,8 @@ export function TransactionForm({
                   PHP
                 </span>
                 <input
-                  required
+                  aria-describedby={errors.amount ? 'transaction-amount-error' : undefined}
+                  aria-invalid={Boolean(errors.amount)}
                   type="number"
                   step="0.01"
                   placeholder="0.00"
@@ -269,11 +309,17 @@ export function TransactionForm({
                   className="w-full rounded-xl border-2 border-pink-100 bg-pink-50/50 py-3 pl-20 pr-4 text-xl font-black text-gray-800 outline-none transition placeholder:text-pink-300 focus:border-pink-500 md:rounded-2xl md:py-4 md:pl-24 md:pr-6 md:text-2xl dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
                 />
               </div>
+              {errors.amount ? (
+                <p id="transaction-amount-error" className="mt-2 text-left text-xs font-bold text-red-500">
+                  {errors.amount.message}
+                </p>
+              ) : null}
             </div>
 
             <AccountSourcePanel
               cardAccounts={cardAccounts}
               cashAccount={cashAccount}
+              errors={errors}
               form={form}
               lentAccounts={lentAccounts}
               onPaymentMethodChange={updatePaymentMethod}
@@ -285,6 +331,7 @@ export function TransactionForm({
               <DestinationPanel
                 cardAccounts={destinationCardAccounts}
                 cashAccount={destinationCashAccount}
+                errors={errors}
                 form={form}
                 lentAccounts={destinationLentAccounts}
                 onDestinationMethodChange={updateDestinationMethod}
@@ -302,21 +349,27 @@ export function TransactionForm({
                   Category
                 </label>
                 <select
+                  aria-describedby={errors.category_id ? 'transaction-category-error' : undefined}
+                  aria-invalid={Boolean(errors.category_id)}
                   id="transaction-category"
-                  required
                   value={form.category_id}
                   onChange={(event) =>
                     updateField('category_id', event.target.value)
                   }
                   className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
                 >
-                  <option value="" className="dark:bg-slate-900">Choose Box...</option>
+                  <option value="" className="dark:bg-slate-900">Choose a category</option>
                   {filteredCategories.map((category) => (
                     <option key={category.id} value={category.id} className="dark:bg-slate-900">
                       {category.name}
                     </option>
                   ))}
                 </select>
+                {errors.category_id ? (
+                  <p id="transaction-category-error" className="text-xs font-bold text-red-500">
+                    {errors.category_id.message}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-1 md:space-y-2">
@@ -327,15 +380,21 @@ export function TransactionForm({
                   Date
                 </label>
                 <input
+                  aria-describedby={errors.transaction_date ? 'transaction-date-error' : undefined}
+                  aria-invalid={Boolean(errors.transaction_date)}
                   id="transaction-date"
                   type="date"
-                  required
                   value={form.transaction_date}
                   onChange={(event) =>
                     updateField('transaction_date', event.target.value)
                   }
                   className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
                 />
+                {errors.transaction_date ? (
+                  <p id="transaction-date-error" className="text-xs font-bold text-red-500">
+                    {errors.transaction_date.message}
+                  </p>
+                ) : null}
               </div>
             </div>
 
@@ -372,7 +431,7 @@ export function TransactionForm({
 function TransactionTypePicker({
   onChange,
   value,
-  }: {
+}: {
   onChange: (type: TransactionType) => void
   value: TransactionType
 }) {
@@ -408,6 +467,7 @@ function TransactionTypePicker({
 function AccountSourcePanel({
   cardAccounts,
   cashAccount,
+  errors,
   form,
   lentAccounts,
   onPaymentMethodChange,
@@ -416,16 +476,21 @@ function AccountSourcePanel({
 }: {
   cardAccounts: Account[]
   cashAccount: Account | null
+  errors: FieldErrors<TransactionFormState>
   form: TransactionFormState
   lentAccounts: Account[]
   onPaymentMethodChange: (paymentMethod: FormPaymentMethod) => void
-  onUpdate: <TField extends keyof TransactionFormState>(
+  onUpdate: <TField extends FieldPath<TransactionFormState>>(
     field: TField,
-    value: TransactionFormState[TField],
+    value: FieldPathValue<TransactionFormState, TField>,
   ) => void
   walletAccounts: Account[]
 }) {
   const showLentOption = form.type === 'transfer' || form.type === 'withdrawal'
+  const sourceError =
+    errors.payment_method?.message ??
+    errors.card_id?.message ??
+    errors.wallet_id?.message
 
   return (
     <div className="space-y-4 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
@@ -434,6 +499,8 @@ function AccountSourcePanel({
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
         <select
+          aria-describedby={sourceError ? 'transaction-source-error' : undefined}
+          aria-invalid={Boolean(errors.payment_method)}
           value={form.payment_method}
           onChange={(event) =>
             onPaymentMethodChange(event.target.value as FormPaymentMethod)
@@ -448,7 +515,8 @@ function AccountSourcePanel({
 
         {form.payment_method === 'card' ? (
           <select
-            required
+            aria-describedby={sourceError ? 'transaction-source-error' : undefined}
+            aria-invalid={Boolean(errors.card_id)}
             value={form.card_id}
             onChange={(event) => onUpdate('card_id', event.target.value)}
             className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
@@ -462,7 +530,8 @@ function AccountSourcePanel({
           </select>
         ) : form.payment_method === 'ewallet' || form.payment_method === 'lent' ? (
           <select
-            required
+            aria-describedby={sourceError ? 'transaction-source-error' : undefined}
+            aria-invalid={Boolean(errors.wallet_id)}
             value={form.wallet_id}
             onChange={(event) => onUpdate('wallet_id', event.target.value)}
             className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
@@ -484,6 +553,11 @@ function AccountSourcePanel({
           </div>
         )}
       </div>
+      {sourceError ? (
+        <p id="transaction-source-error" className="text-xs font-bold text-red-500">
+          {sourceError}
+        </p>
+      ) : null}
     </div>
   )
 }
@@ -491,6 +565,7 @@ function AccountSourcePanel({
 function DestinationPanel({
   cardAccounts,
   cashAccount,
+  errors,
   form,
   lentAccounts,
   onDestinationMethodChange,
@@ -499,16 +574,21 @@ function DestinationPanel({
 }: {
   cardAccounts: Account[]
   cashAccount: Account | null
+  errors: FieldErrors<TransactionFormState>
   form: TransactionFormState
   lentAccounts: Account[]
   onDestinationMethodChange: (paymentMethod: DestinationPaymentMethod) => void
-  onUpdate: <TField extends keyof TransactionFormState>(
+  onUpdate: <TField extends FieldPath<TransactionFormState>>(
     field: TField,
-    value: TransactionFormState[TField],
+    value: FieldPathValue<TransactionFormState, TField>,
   ) => void
   walletAccounts: Account[]
 }) {
   const canTransferToCash = form.payment_method !== 'cash' && Boolean(cashAccount)
+  const destinationError =
+    errors.to_payment_method?.message ??
+    errors.to_card_id?.message ??
+    errors.to_wallet_id?.message
 
   return (
     <div className="space-y-4 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
@@ -517,6 +597,8 @@ function DestinationPanel({
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
         <select
+          aria-describedby={destinationError ? 'transaction-destination-error' : undefined}
+          aria-invalid={Boolean(errors.to_payment_method)}
           value={form.to_payment_method}
           onChange={(event) =>
             onDestinationMethodChange(
@@ -533,7 +615,8 @@ function DestinationPanel({
 
         {form.to_payment_method === 'card' ? (
           <select
-            required
+            aria-describedby={destinationError ? 'transaction-destination-error' : undefined}
+            aria-invalid={Boolean(errors.to_card_id)}
             value={form.to_card_id}
             onChange={(event) => onUpdate('to_card_id', event.target.value)}
             className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
@@ -555,7 +638,8 @@ function DestinationPanel({
           </div>
         ) : form.to_payment_method === 'ewallet' || form.to_payment_method === 'lent' ? (
           <select
-            required
+            aria-describedby={destinationError ? 'transaction-destination-error' : undefined}
+            aria-invalid={Boolean(errors.to_wallet_id)}
             value={form.to_wallet_id}
             onChange={(event) => onUpdate('to_wallet_id', event.target.value)}
             className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
@@ -573,6 +657,11 @@ function DestinationPanel({
           </select>
         ) : null}
       </div>
+      {destinationError ? (
+        <p id="transaction-destination-error" className="text-xs font-bold text-red-500">
+          {destinationError}
+        </p>
+      ) : null}
     </div>
   )
 }

@@ -33,8 +33,9 @@ type TransactionFormProps = {
   walletAccounts: Account[]
 }
 
-type TransactionFormState = Omit<TransactionFormValues, 'amount'> & {
+type TransactionFormState = Omit<TransactionFormValues, 'amount' | 'fee_amount'> & {
   amount: string
+  fee_amount: string
 }
 
 const accountBalanceFormatter = new Intl.NumberFormat('en-PH', {
@@ -51,6 +52,7 @@ const defaultFormState = (): TransactionFormState => ({
   card_id: '',
   category_id: '',
   description: '',
+  fee_amount: '0',
   payment_method: 'cash',
   to_card_id: '',
   to_payment_method: 'card',
@@ -70,6 +72,7 @@ const toFormState = (transaction: Transaction | null): TransactionFormState => {
     card_id: transaction.card_id ?? '',
     category_id: transaction.category_id ?? '',
     description: transaction.description ?? '',
+    fee_amount: String(transaction.fee_amount ?? 0),
     payment_method:
       transaction.payment_method === 'ewallet' &&
       transaction.wallet?.walletType === 'lent'
@@ -328,16 +331,23 @@ export function TransactionForm({
             />
 
             {form.type === 'transfer' ? (
-              <DestinationPanel
-                cardAccounts={destinationCardAccounts}
-                cashAccount={destinationCashAccount}
-                errors={errors}
-                form={form}
-                lentAccounts={destinationLentAccounts}
-                onDestinationMethodChange={updateDestinationMethod}
-                onUpdate={updateField}
-                walletAccounts={destinationWalletAccounts}
-              />
+              <>
+                <DestinationPanel
+                  cardAccounts={destinationCardAccounts}
+                  cashAccount={destinationCashAccount}
+                  errors={errors}
+                  form={form}
+                  lentAccounts={destinationLentAccounts}
+                  onDestinationMethodChange={updateDestinationMethod}
+                  onUpdate={updateField}
+                  walletAccounts={destinationWalletAccounts}
+                />
+                <TransferFeePanel
+                  errors={errors}
+                  form={form}
+                  onUpdate={updateField}
+                />
+              </>
             ) : null}
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -660,6 +670,68 @@ function DestinationPanel({
       {destinationError ? (
         <p id="transaction-destination-error" className="text-xs font-bold text-red-500">
           {destinationError}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function TransferFeePanel({
+  errors,
+  form,
+  onUpdate,
+}: {
+  errors: FieldErrors<TransactionFormState>
+  form: TransactionFormState
+  onUpdate: <TField extends FieldPath<TransactionFormState>>(
+    field: TField,
+    value: FieldPathValue<TransactionFormState, TField>,
+  ) => void
+}) {
+  const presets = [0, 15, 25]
+  const currentFee = Number(form.fee_amount || '0')
+
+  return (
+    <div className="space-y-3 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
+      <div className="flex items-center justify-between">
+        <label
+          htmlFor="transaction-fee"
+          className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+        >
+          Transfer Fee (PHP)
+        </label>
+        <div className="flex gap-1.5">
+          {presets.map((preset) => (
+            <button
+              key={preset}
+              type="button"
+              onClick={() => onUpdate('fee_amount', String(preset))}
+              className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition ${
+                currentFee === preset
+                  ? 'bg-pink-500 text-white dark:bg-pink-600'
+                  : 'bg-white text-gray-600 hover:bg-pink-100 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+              }`}
+            >
+              ₱{preset}
+            </button>
+          ))}
+        </div>
+      </div>
+      <input
+        aria-describedby={errors.fee_amount ? 'transaction-fee-error' : undefined}
+        aria-invalid={Boolean(errors.fee_amount)}
+        id="transaction-fee"
+        type="number"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        value={form.fee_amount}
+        onChange={(event) => onUpdate('fee_amount', event.target.value)}
+        className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+      />
+      {errors.fee_amount ? (
+        <p id="transaction-fee-error" className="text-xs font-bold text-red-500">
+          {errors.fee_amount.message}
         </p>
       ) : null}
     </div>

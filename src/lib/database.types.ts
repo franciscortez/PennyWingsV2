@@ -381,6 +381,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          fee_amount: number
           id: string
           payment_method: string
           receipt_url: string | null
@@ -399,6 +400,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          fee_amount?: number
           id?: string
           payment_method: string
           receipt_url?: string | null
@@ -417,6 +419,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          fee_amount?: number
           id?: string
           payment_method?: string
           receipt_url?: string | null
@@ -495,6 +498,7 @@ export type Database = {
           p_card_id?: string
           p_category_id: string
           p_description: string
+          p_fee_amount?: number
           p_payment_method: string
           p_to_card_id?: string
           p_to_wallet_id?: string
@@ -511,6 +515,7 @@ export type Database = {
           p_card_id: string
           p_category_id: string
           p_description: string
+          p_fee_amount?: number
           p_payment_method: string
           p_to_card_id: string
           p_to_wallet_id: string
@@ -584,6 +589,7 @@ export type Database = {
           p_card_id: string
           p_category_id: string
           p_description: string
+          p_fee_amount?: number
           p_id: string
           p_payment_method: string
           p_to_card_id: string

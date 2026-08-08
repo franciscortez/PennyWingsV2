@@ -13,12 +13,21 @@ const moneyValue = z.preprocess(
     .positive('Amount must be greater than zero.'),
 )
 
+const feeValue = z.preprocess(
+  (value) => (value === '' || value === undefined || value === null ? 0 : value),
+  z.coerce
+    .number({ message: 'Fee must be a valid number.' })
+    .min(0, 'Fee cannot be negative.')
+    .default(0),
+)
+
 export const transactionSchema = z
   .object({
     amount: moneyValue,
     card_id: optionalId,
     category_id: z.string().trim().min(1, 'Choose a category.'),
     description: z.string().trim().optional(),
+    fee_amount: feeValue,
     payment_method: z.enum(paymentMethods),
     to_card_id: optionalId,
     to_payment_method: z.enum(destinationPaymentMethods).optional(),

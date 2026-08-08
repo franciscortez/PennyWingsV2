@@ -21,7 +21,7 @@ type WalletRow = Pick<
 
 type MonthTransactionRow = Pick<
   Tables<'transactions'>,
-  'amount' | 'category_id' | 'type'
+  'amount' | 'category_id' | 'fee_amount' | 'type'
 >
 
 type BudgetRow = Pick<Tables<'budgets'>, 'category_id' | 'limit_amount'>
@@ -63,6 +63,7 @@ const getMonthlyStats = (
   transactions.reduce(
     (stats, transaction) => {
       const amount = toNumber(transaction.amount)
+      const fee = toNumber(transaction.fee_amount)
 
       if (transaction.type === 'income') {
         stats.income += amount
@@ -70,6 +71,10 @@ const getMonthlyStats = (
 
       if (transaction.type === 'expense') {
         stats.expenses += amount
+      }
+
+      if (fee > 0) {
+        stats.expenses += fee
       }
 
       return stats
@@ -210,7 +215,7 @@ export const fetchDashboardData = async (
     supabase
       .from('transactions')
       .select(`
-        id, type, amount, description, transaction_date,
+        id, type, amount, fee_amount, description, transaction_date,
         to_card_id, to_wallet_id,
         category:categories(name, icon, color),
         card:bank_cards!transactions_card_id_fkey(card_name, color),
@@ -224,7 +229,7 @@ export const fetchDashboardData = async (
       .overrideTypes<RawDashboardTransaction[]>(),
     supabase
       .from('transactions')
-      .select('type, amount, category_id')
+      .select('type, amount, fee_amount, category_id')
       .gte('transaction_date', start)
       .lte('transaction_date', end),
     supabase

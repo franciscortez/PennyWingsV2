@@ -300,6 +300,11 @@ function TransactionRow({
           {prefix}
           {currency.format(transaction.amount)}
         </p>
+        {transaction.fee_amount && transaction.fee_amount > 0 ? (
+          <p className="text-[10px] font-bold text-gray-400 dark:text-slate-500">
+            + {currency.format(transaction.fee_amount)} fee
+          </p>
+        ) : null}
         <span
           className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[8px] font-black uppercase tracking-widest ${badgeClass}`}
         >

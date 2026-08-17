@@ -178,23 +178,23 @@ export default function Transactions() {
 
   return (
     <Layout>
-      <div className="space-y-8 pb-20">
-        <header className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+      <div className="space-y-6 sm:space-y-8 pb-20">
+        <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <h1 className="mb-2 text-4xl font-black tracking-tight text-gray-900 dark:text-white">
+            <h1 className="mb-1 text-3xl font-black tracking-tight text-gray-900 sm:mb-2 sm:text-4xl dark:text-white">
               Transaction History
             </h1>
-            <p className="font-bold text-gray-500 dark:text-slate-400">
+            <p className="text-sm font-bold text-gray-500 sm:text-base dark:text-slate-400">
               Manage your cashflow with precision.
             </p>
           </div>
           <button
             type="button"
             onClick={openCreateForm}
-            className="flex items-center justify-center gap-2 rounded-4xl bg-pink-500 px-8 py-4 font-black text-white transition hover:bg-pink-600"
+            className="flex items-center justify-center gap-2 rounded-2xl bg-pink-500 px-5 py-3 text-sm font-black text-white transition hover:bg-pink-600 active:scale-[0.99] shrink-0 sm:rounded-4xl sm:px-8 sm:py-4 sm:text-base"
           >
-            <Plus className="h-5 w-5" aria-hidden="true" />
-            New Transaction
+            <Plus className="h-5 w-5 shrink-0" aria-hidden="true" />
+            <span>New Transaction</span>
           </button>
         </header>
 

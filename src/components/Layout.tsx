@@ -38,7 +38,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100 md:flex">
+    <div className="min-h-screen bg-pink-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100 md:flex overflow-x-hidden">
       <Sidebar
         mobileMenuOpen={moreOpen}
         onCloseMobileMenu={() => setMoreOpen(false)}
@@ -54,7 +54,7 @@ export default function Layout({ children }: LayoutProps) {
       />
 
       <main
-        className={`w-full flex-1 transition-[margin] duration-300 ${
+        className={`min-w-0 flex-1 transition-[margin] duration-300 ${
           sidebarOpen ? 'md:ml-72 xl:ml-80' : 'md:ml-24'
         }`}
       >
@@ -64,7 +64,6 @@ export default function Layout({ children }: LayoutProps) {
       </main>
 
       <AssistantWidget />
-
     </div>
   )
 }

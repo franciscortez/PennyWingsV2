@@ -1,5 +1,14 @@
 export { AccountCardChip } from '@/sections/accounts/AccountCardChip'
 export { AccountCreationWizard } from '@/sections/accounts/AccountCreationWizard'
+export { BankCardFace } from '@/sections/accounts/BankCardFace'
+export { MoneyNoteFace } from '@/sections/accounts/MoneyNoteFace'
+export {
+  bankCardDesigns,
+  buildCustomCardDesign,
+  getAccountCardDesign,
+  getDesignForProvider,
+  getNoteSerial,
+} from '@/sections/accounts/bankCardDesigns'
 export { AccountsHeader } from '@/sections/accounts/AccountsHeader'
 export { AccountsListSection } from '@/sections/accounts/AccountsListSection'
 export { AccountsSkeleton } from '@/sections/accounts/AccountsSkeleton'

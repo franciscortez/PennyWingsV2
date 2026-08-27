@@ -19,6 +19,13 @@ import {
 import { z } from 'zod'
 
 import type { AccountColor, AccountCreateValues } from '@/types'
+import { BankCardFace } from '@/sections/accounts/BankCardFace'
+import { MoneyNoteFace } from '@/sections/accounts/MoneyNoteFace'
+import {
+  buildCustomCardDesign,
+  getDesignForProvider,
+  noteColors,
+} from '@/sections/accounts/bankCardDesigns'
 import {
   accountColors,
   digitalBankOptions,
@@ -128,7 +135,13 @@ const providerOptions: Record<Exclude<SetupType, 'cash' | 'lent'>, string[]> = {
 const formatProviderValue = (value: string) =>
   value.toLowerCase().replace(/\s+/g, '')
 
+const getWizardDesign = (form: Pick<WizardForm, 'provider' | 'setupType'>) =>
+  form.setupType && !isDirectSetupType(form.setupType)
+    ? getDesignForProvider(form.provider)
+    : null
+
 function buildCreateValues(form: WizardForm) {
+  const design = getWizardDesign(form)
   const name =
     form.setupType === 'cash'
       ? 'Cash on Hand'
@@ -154,13 +167,22 @@ function buildCreateValues(form: WizardForm) {
           ? 'wallet'
           : 'card'
 
+  const noteKind =
+    form.setupType === 'cash' || form.setupType === 'lent'
+      ? form.setupType
+      : null
+
   return accountSchema.safeParse({
     accountType,
     balance: form.balance,
-    color: form.color.value,
+    color: design
+      ? design.primary
+      : noteKind
+        ? noteColors[noteKind]
+        : form.color.value,
     kind,
     name,
-    textColor: form.color.text,
+    textColor: design ? design.text : noteKind ? '#ffffff' : form.color.text,
   })
 }
 
@@ -517,6 +539,16 @@ const StepThree = memo(function StepThree({
     [onChange],
   )
 
+  const design = getWizardDesign(form)
+  const isCardAccount =
+    Boolean(form.setupType) && !isDirectSetupType(form.setupType)
+  const previewTypeLabel =
+    form.setupType === 'traditional'
+      ? 'Savings'
+      : form.setupType === 'digital'
+        ? 'Debit'
+        : 'Wallet'
+
   return (
     <div className="space-y-8">
       {form.setupType === 'lent' ? (
@@ -576,40 +608,76 @@ const StepThree = memo(function StepThree({
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-          Card Color
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {accountColors.map((color) => (
-            <button
-              key={color.value}
-              type="button"
-              onClick={() => handleColorClick(color)}
-              className={`h-8 w-8 rounded-xl transition-transform ${
-                form.color.value === color.value
-                  ? 'scale-110 ring-2 ring-pink-500 ring-offset-2 dark:ring-offset-slate-900'
-                  : 'border border-gray-200 hover:scale-105 dark:border-slate-700'
-              }`}
-              style={{ backgroundColor: color.value }}
-              aria-label={color.label}
-            />
-          ))}
+      {isCardAccount && !design ? (
+        <div className="space-y-2">
+          <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            Card Color
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {accountColors.map((color) => (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() => handleColorClick(color)}
+                className={`h-8 w-8 rounded-xl transition-transform ${
+                  form.color.value === color.value
+                    ? 'scale-110 ring-2 ring-pink-500 ring-offset-2 dark:ring-offset-slate-900'
+                    : 'border border-gray-200 hover:scale-105 dark:border-slate-700'
+                }`}
+                style={{ backgroundColor: color.value }}
+                aria-label={color.label}
+              />
+            ))}
+          </div>
+          {errors.color ? (
+            <p className="text-xs font-bold text-red-500">{errors.color.message}</p>
+          ) : null}
         </div>
-        {errors.color ? (
-          <p className="text-xs font-bold text-red-500">{errors.color.message}</p>
-        ) : null}
-      </div>
+      ) : null}
 
-      <div
-        className="flex h-16 items-center justify-center rounded-3xl border border-pink-100 text-lg font-bold dark:border-slate-850"
-        style={{
-          background: `linear-gradient(135deg, ${form.color.value}, ${form.color.value}DD)`,
-          color: form.color.text,
-        }}
-      >
-        Preview Card
-      </div>
+      {isCardAccount ? (
+        <div className="space-y-3">
+          <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            {design ? 'Official Card Design' : 'Card Preview'}
+          </label>
+          <BankCardFace
+            className="aspect-[8/5] w-full"
+            design={design ?? buildCustomCardDesign(form.color.value, form.color.text)}
+            holderName={form.accountName.trim() || form.provider}
+            numberLine="••••  ••••  ••••  ••••"
+            typeLabel={previewTypeLabel}
+          />
+          {design ? (
+            <p className="ml-1 text-xs font-medium text-gray-400 dark:text-slate-500">
+              {design.wordmark}&rsquo;s official card design is applied
+              automatically.
+            </p>
+          ) : null}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            Note Preview
+          </label>
+          <MoneyNoteFace
+            className="aspect-[8/5] w-full"
+            serial={form.setupType === 'lent' ? 'IOU 00000000' : 'PW 00000000'}
+            subtitle={
+              form.setupType === 'lent' ? 'Money lent out' : 'Cash on hand'
+            }
+            title={
+              form.setupType === 'lent'
+                ? form.accountName.trim() || 'Lent Money'
+                : 'Cash on Hand'
+            }
+            variant={form.setupType === 'lent' ? 'lent' : 'cash'}
+          />
+          <p className="ml-1 text-xs font-medium text-gray-400 dark:text-slate-500">
+            {form.setupType === 'lent' ? 'Lent money' : 'Cash'} accounts use
+            this fixed banknote design.
+          </p>
+        </div>
+      )}
 
       <button
         type="button"

@@ -15,6 +15,14 @@ import {
 } from 'react-icons/fa6'
 import type { ReactNode } from 'react'
 
+import { BankCardFace } from '@/sections/accounts/BankCardFace'
+import { MoneyNoteFace } from '@/sections/accounts/MoneyNoteFace'
+import {
+  buildCustomCardDesign,
+  getAccountCardDesign,
+  getNoteSerial,
+  noteColors,
+} from '@/sections/accounts/bankCardDesigns'
 import type { Account, AccountKind } from '@/types'
 
 type AccountsListSectionProps = {
@@ -62,74 +70,6 @@ const getAccountSubtitle = (account: Account) => {
   }
 
   return account.accountIdentifier ?? formatAccountType(account.accountType)
-}
-
-function KindIconDisplay({
-  className,
-  kind,
-}: {
-  className?: string
-  kind: AccountKind
-}) {
-  if (kind === 'card') {
-    return <FaBuildingColumns className={className} aria-hidden="true" />
-  }
-
-  if (kind === 'cash') {
-    return <FaMoneyBillWave className={className} aria-hidden="true" />
-  }
-
-  if (kind === 'lent') {
-    return <FaHandHoldingDollar className={className} aria-hidden="true" />
-  }
-
-  return <FaWallet className={className} aria-hidden="true" />
-}
-
-function KindPattern({ kind }: { kind: AccountKind }) {
-  if (kind === 'card') {
-    return (
-      <svg
-        className="absolute inset-0 h-full w-full opacity-[0.08]"
-        viewBox="0 0 200 120"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path d="M0 34H200M0 72H200M55 0V120M132 0V120" stroke="white" strokeWidth="0.7" />
-        <rect x="24" y="18" width="28" height="18" rx="4" stroke="white" strokeWidth="0.8" />
-        <rect x="142" y="78" width="30" height="18" rx="4" stroke="white" strokeWidth="0.8" />
-      </svg>
-    )
-  }
-
-  if (kind === 'wallet') {
-    return (
-      <svg
-        className="absolute inset-0 h-full w-full opacity-[0.08]"
-        viewBox="0 0 200 120"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        <path d="M0 42C25 20 46 20 70 42C94 64 116 64 140 42C164 20 182 20 200 42" stroke="white" strokeWidth="1" />
-        <path d="M0 78C25 56 46 56 70 78C94 100 116 100 140 78C164 56 182 56 200 78" stroke="white" strokeWidth="0.8" />
-      </svg>
-    )
-  }
-
-  return (
-    <svg
-      className="absolute inset-0 h-full w-full opacity-[0.08]"
-      viewBox="0 0 200 120"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path d="M20 90C54 44 88 44 122 90C144 120 172 120 198 84" stroke="white" strokeWidth="1" />
-      <path d="M34 100C66 62 98 62 130 100" stroke="white" strokeWidth="0.7" />
-    </svg>
-  )
 }
 
 export function AccountsListSection({
@@ -249,58 +189,64 @@ function AccountCard({
   const isRestoring = restoringId === account.id
   const isOwner = account.canManage || !currentUserId
   const isShared = !isOwner
-  const primaryColor = account.color || '#F472B6'
-  const secondaryColor = adjustColorBrightness(primaryColor, -28)
+  const isBankCard = account.kind === 'card' || account.kind === 'wallet'
+  const design = getAccountCardDesign(account)
+  const primaryColor = isBankCard
+    ? (design?.primary ?? (account.color || '#F472B6'))
+    : noteColors[account.kind === 'lent' ? 'lent' : 'cash']
+  const faceDesign =
+    design ?? buildCustomCardDesign(primaryColor, account.textColor || '#ffffff')
+  const numberLine =
+    account.kind === 'card'
+      ? `••••  ••••  ••••  ${account.lastFour || '••••'}`
+      : account.accountIdentifier || '••••  ••••  ••••  ••••'
+
+  const accessBadge = isShared ? (
+    <span className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest opacity-95 backdrop-blur-sm">
+      <FaUsers className="h-3 w-3" aria-hidden="true" />
+      {account.accessRole === 'transactor'
+        ? 'Shared · Can transact'
+        : 'Shared · View only'}
+    </span>
+  ) : (
+    <span className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest opacity-95 backdrop-blur-sm">
+      <FaUser className="h-3 w-3" aria-hidden="true" />
+      Owner
+    </span>
+  )
 
   return (
     <article
       className={`group relative flex min-h-72 flex-col overflow-hidden rounded-[2rem] border border-pink-100 bg-white transition hover:-translate-y-0.5 hover:border-pink-200 hover:shadow-lg hover:shadow-pink-100/60 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-none ${account.isHidden ? 'opacity-60' : ''}`}
       style={{ animationDelay: `${index * 60}ms` }}
     >
-      <div
-        className="relative min-h-36 overflow-hidden p-5"
-        style={{
-          background: `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor} 100%)`,
-        }}
-      >
-        <KindPattern kind={account.kind} />
-
-        <div className="relative z-10 flex min-h-26 flex-col justify-between gap-8">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-md transition group-hover:scale-105">
-              <KindIconDisplay kind={account.kind} className="h-5 w-5 text-white" />
-            </div>
-
-            <div className="flex min-w-0 flex-wrap items-center justify-end gap-2">
-              {isShared ? (
-                <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
-                  <FaUsers className="h-3 w-3" aria-hidden="true" />
-                  {account.accessRole === 'transactor'
-                    ? 'Shared · Can transact'
-                    : 'Shared · View only'}
-                </span>
-              ) : (
-                <span className="flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
-                  <FaUser className="h-3 w-3" aria-hidden="true" />
-                  Owner
-                </span>
-              )}
-
-              <span className="rounded-full bg-white/15 px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white/90 backdrop-blur-sm">
-                {formatAccountType(account.accountType)}
-              </span>
-            </div>
-          </div>
-
-          <div className="min-w-0">
-            <h3 className="truncate text-xl font-black tracking-tight text-white drop-shadow-sm">
-              {account.name}
-            </h3>
-            <p className="mt-1 truncate text-xs font-semibold text-white/70">
-              {getAccountSubtitle(account)}
-            </p>
-          </div>
-        </div>
+      <div className="p-4 pb-0">
+        {isBankCard ? (
+          <BankCardFace
+            className="aspect-[8/5] w-full transition group-hover:-translate-y-0.5"
+            design={faceDesign}
+            holderName={account.name}
+            numberLine={numberLine}
+            topRight={accessBadge}
+            typeLabel={
+              account.kind === 'wallet'
+                ? 'Wallet'
+                : formatAccountType(account.accountType)
+            }
+          />
+        ) : (
+          <MoneyNoteFace
+            className="aspect-[8/5] w-full transition group-hover:-translate-y-0.5"
+            serial={getNoteSerial(
+              account.kind === 'lent' ? 'lent' : 'cash',
+              account.id,
+            )}
+            subtitle={getAccountSubtitle(account)}
+            title={account.name}
+            topRight={accessBadge}
+            variant={account.kind === 'lent' ? 'lent' : 'cash'}
+          />
+        )}
       </div>
 
       <div className="flex flex-1 flex-col gap-5 p-5">
@@ -469,13 +415,4 @@ function IconButton({
       {children}
     </button>
   )
-}
-
-function adjustColorBrightness(hex: string, amount: number): string {
-  const clean = hex.replace('#', '')
-  const num = parseInt(clean, 16)
-  const r = Math.min(255, Math.max(0, ((num >> 16) & 0xff) + amount))
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount))
-  const b = Math.min(255, Math.max(0, (num & 0xff) + amount))
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`
 }

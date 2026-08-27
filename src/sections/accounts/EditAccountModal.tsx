@@ -2,6 +2,14 @@ import { FaCheck, FaXmark } from 'react-icons/fa6'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 
+import { BankCardFace } from '@/sections/accounts/BankCardFace'
+import { MoneyNoteFace } from '@/sections/accounts/MoneyNoteFace'
+import {
+  buildCustomCardDesign,
+  getAccountCardDesign,
+  getNoteSerial,
+  noteColors,
+} from '@/sections/accounts/bankCardDesigns'
 import { accountColors, cardTypeOptions, walletTypeOptions } from '@/sections/accounts/accountOptions'
 import type { Account, AccountUpdateValues } from '@/types'
 import { accountUpdateSchema } from '@/validation/accountSchemas'
@@ -46,6 +54,10 @@ export function EditAccountModal({
 
   const isCard = account.kind === 'card'
   const isDirectAccount = account.kind === 'cash' || account.kind === 'lent'
+  const isBankCard = !isDirectAccount
+  const detectedDesign = isBankCard
+    ? getAccountCardDesign({ accountType, color, kind: account.kind, name })
+    : null
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -53,11 +65,19 @@ export function EditAccountModal({
     const rawValues: AccountUpdateValues = {
       accountIdentifier: isCard ? undefined : accountIdentifier,
       accountType: isDirectAccount ? account.kind : accountType,
-      color,
+      color: isDirectAccount
+        ? noteColors[account.kind === 'lent' ? 'lent' : 'cash']
+        : detectedDesign
+          ? detectedDesign.primary
+          : color,
       kind: account.kind,
       lastFour: isCard ? lastFour : undefined,
       name,
-      textColor,
+      textColor: isDirectAccount
+        ? '#ffffff'
+        : detectedDesign
+          ? detectedDesign.text
+          : textColor,
     }
 
     const validationResult = accountUpdateSchema.safeParse(rawValues)
@@ -206,7 +226,60 @@ export function EditAccountModal({
             </div>
           ) : null}
 
+          {/* Live card preview */}
+          {isBankCard ? (
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500">
+                {detectedDesign ? 'Official Card Design' : 'Card Preview'}
+              </label>
+              <BankCardFace
+                className="aspect-[8/5] w-full"
+                design={detectedDesign ?? buildCustomCardDesign(color, textColor)}
+                holderName={name}
+                numberLine={
+                  isCard
+                    ? `••••  ••••  ••••  ${lastFour || '••••'}`
+                    : accountIdentifier || '••••  ••••  ••••  ••••'
+                }
+                typeLabel={
+                  isCard
+                    ? accountType.charAt(0).toUpperCase() + accountType.slice(1)
+                    : 'Wallet'
+                }
+              />
+              {detectedDesign ? (
+                <p className="mt-2 text-xs font-medium text-gray-400 dark:text-slate-500">
+                  This account uses {detectedDesign.wordmark}&rsquo;s official
+                  card design, so no color selection is needed.
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <div>
+              <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500">
+                Note Preview
+              </label>
+              <MoneyNoteFace
+                className="aspect-[8/5] w-full"
+                serial={getNoteSerial(
+                  account.kind === 'lent' ? 'lent' : 'cash',
+                  account.id,
+                )}
+                subtitle={
+                  account.kind === 'lent' ? 'Money lent out' : 'Cash on hand'
+                }
+                title={name}
+                variant={account.kind === 'lent' ? 'lent' : 'cash'}
+              />
+              <p className="mt-2 text-xs font-medium text-gray-400 dark:text-slate-500">
+                {account.kind === 'lent' ? 'Lent money' : 'Cash'} accounts use
+                this fixed banknote design, so no color selection is needed.
+              </p>
+            </div>
+          )}
+
           {/* Card Color Palette */}
+          {!detectedDesign && !isDirectAccount ? (
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500">
               Account Card Theme
@@ -237,8 +310,10 @@ export function EditAccountModal({
               ))}
             </div>
           </div>
+          ) : null}
 
           {/* Text Color Selection */}
+          {!detectedDesign && !isDirectAccount ? (
           <div>
             <label className="mb-2 block text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-slate-500">
               Card Text Color
@@ -264,6 +339,7 @@ export function EditAccountModal({
               ))}
             </div>
           </div>
+          ) : null}
 
           {/* Actions */}
           <div className="mt-8 flex items-center justify-end gap-3">

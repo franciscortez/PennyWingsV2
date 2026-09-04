@@ -1,6 +1,7 @@
 export { AccountSnapshotSection } from '@/sections/reports/AccountSnapshotSection'
 export { CashFlowOverviewSection } from '@/sections/reports/CashFlowOverviewSection'
 export { CategoryAllocationSection } from '@/sections/reports/CategoryAllocationSection'
+export { DailySpendingCalendarSection } from '@/sections/reports/DailySpendingCalendarSection'
 export { ReportMonthPicker } from '@/sections/reports/ReportMonthPicker'
 export { ReportsHeader } from '@/sections/reports/ReportsHeader'
 export { ReportsSkeleton } from '@/sections/reports/ReportsSkeleton'

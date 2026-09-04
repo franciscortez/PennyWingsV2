@@ -1,7 +1,8 @@
-import { CalendarDays, Receipt, X } from 'lucide-react'
+import { AlertTriangle, CalendarDays, CalendarOff, Receipt, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-import { formatLongDate, toDateInputValue } from '@/lib/date'
+import { formatLongDate, formatShortDate, toDateInputValue } from '@/lib/date'
+import { useErrorAlert } from '@/hooks/useErrorAlert'
 import {
   categoryBarColors,
   compactReportCurrency,
@@ -11,6 +12,8 @@ import type { DailySpendingCalendar, DailySpendingTransaction } from '@/types'
 
 type DailySpendingCalendarSectionProps = {
   calendar: DailySpendingCalendar
+  error: string | null
+  loading: boolean
   month: string
 }
 
@@ -123,6 +126,93 @@ const getCategorySplit = (transactions: DailySpendingTransaction[]) => {
   return [...totals.entries()]
     .map(([name, total]) => ({ name, total }))
     .sort((first, second) => second.total - first.total)
+}
+
+// Only elapsed days count. A future day in the current month has not had the
+// chance to be a no-spend day, and including it would drag the average down.
+const getStats = (cells: (CalendarCell | null)[], today: string) => {
+  const elapsed = cells.filter(
+    (cell): cell is CalendarCell => cell !== null && cell.date <= today,
+  )
+  const spent = elapsed.reduce((total, day) => total + day.total, 0)
+  const highest = elapsed.reduce<CalendarCell | null>(
+    (best, day) => (day.total > (best?.total ?? 0) ? day : best),
+    null,
+  )
+
+  return {
+    // Guarded: a month whose days are all in the future divides by zero.
+    averageDaily: elapsed.length > 0 ? spent / elapsed.length : 0,
+    elapsedDays: elapsed.length,
+    highest,
+    noSpendDays: elapsed.filter((day) => day.total <= 0).length,
+    spent,
+  }
+}
+
+function CalendarStat({
+  hint,
+  label,
+  value,
+}: {
+  hint?: string
+  label: string
+  value: string
+}) {
+  return (
+    <div className="rounded-2xl border border-pink-50 bg-pink-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
+      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-base font-black text-gray-900 dark:text-slate-200">
+        {value}
+      </p>
+      {hint ? (
+        <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-slate-500">
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function CalendarGridSkeleton() {
+  return (
+    <div
+      className="animate-pulse grid grid-cols-7 gap-1.5 sm:gap-2"
+      aria-busy="true"
+      aria-label="Loading daily spending"
+    >
+      {Array.from({ length: 42 }, (_, cell) => (
+        <div
+          key={cell}
+          className="min-h-12 rounded-xl bg-pink-50 sm:min-h-16 sm:rounded-2xl dark:bg-slate-950"
+        />
+      ))}
+    </div>
+  )
+}
+
+function CalendarNotice({
+  description,
+  icon: Icon,
+  title,
+}: {
+  description: string
+  icon: typeof CalendarDays
+  title: string
+}) {
+  return (
+    <div className="flex min-h-56 flex-col items-center justify-center text-center">
+      <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pink-50 text-pink-200 dark:bg-slate-950 dark:text-slate-800">
+        <Icon className="h-8 w-8" aria-hidden="true" />
+      </span>
+      <p className="font-black text-gray-700 dark:text-slate-300">{title}</p>
+      <p className="mt-1 max-w-xs text-sm font-medium text-gray-400 dark:text-slate-500">
+        {description}
+      </p>
+    </div>
+  )
 }
 
 function DayDetailPanel({
@@ -258,11 +348,17 @@ function DayDetailPanel({
 
 export function DailySpendingCalendarSection({
   calendar,
+  error,
+  loading,
   month,
 }: DailySpendingCalendarSectionProps) {
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const today = toDateInputValue()
   const cells = buildCells(month, calendar)
+  const stats = getStats(cells, today)
+  // The calendar owns this query, so it owns the alert. `Reports.tsx` must not
+  // pass the same error to `useErrorAlert` again or it would fire twice.
+  useErrorAlert(error)
   // Derived rather than reset in an effect: a day from March has no meaning
   // once the picker moves to April, so it is simply not active any more.
   const activeSelection =
@@ -298,81 +394,135 @@ export function DailySpendingCalendarSection({
         </div>
       </div>
 
-      <div className={`grid gap-7 ${selectedDay ? 'xl:grid-cols-5' : ''}`}>
-        <div className={selectedDay ? 'xl:col-span-3' : ''}>
-          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-            {weekdays.map((weekday) => (
-              <span
-                key={weekday}
-                className="pb-1 text-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
-              >
-                {weekday}
-              </span>
-            ))}
-
-            {cells.map((cell, index) => {
-              if (!cell) {
-                return <span key={`blank-${index}`} aria-hidden="true" />
-              }
-
-              const selected = cell.date === activeSelection
-              const isToday = cell.date === today
-
-              return (
-                <button
-                  key={cell.date}
-                  type="button"
-                  onClick={() => toggleDay(cell.date)}
-                  disabled={cell.date > today}
-                  className={`flex min-h-12 flex-col items-start justify-between rounded-xl p-1.5 text-left transition sm:min-h-16 sm:rounded-2xl sm:p-2 ${getIntensity(
-                    cell.total,
-                    calendar.maxDailyTotal,
-                  )} ${
-                    selected
-                      ? 'ring-2 ring-gray-900 ring-offset-2 ring-offset-white dark:ring-white dark:ring-offset-slate-900'
-                      : isToday
-                        ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
-                        : ''
-                  } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-200 disabled:ring-0 dark:disabled:text-slate-700`}
-                  aria-label={getCellLabel(cell)}
-                  aria-pressed={selected}
-                >
-                  <span className="text-[11px] font-black leading-none sm:text-xs">
-                    {cell.day}
-                  </span>
-                  {cell.total > 0 ? (
-                    // Hidden below `sm` because a peso amount cannot fit a
-                    // 320px seven-column grid; the `aria-label` still carries
-                    // it.
-                    <span className="hidden w-full truncate text-[10px] font-bold leading-none sm:block">
-                      {compactReportCurrency.format(cell.total)}
-                    </span>
-                  ) : null}
-                </button>
-              )
-            })}
-          </div>
-
-          <div className="mt-6 flex items-center justify-end gap-2">
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-              Less
-            </span>
-            <span className="flex items-center gap-1" aria-hidden="true">
-              <span className={`h-3 w-3 rounded-sm ${quietStep}`} />
-              {intensitySteps.map((step) => (
-                <span key={step} className={`h-3 w-3 rounded-sm ${step}`} />
-              ))}
-            </span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-              More
-            </span>
-          </div>
-        </div>
-
-        {selectedDay ? (
-          <DayDetailPanel day={selectedDay} onClose={closeDay} />
-        ) : null}
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <CalendarStat
+          label="Highest day"
+          value={
+            stats.highest && stats.highest.total > 0
+              ? compactReportCurrency.format(stats.highest.total)
+              : 'N/A'
+          }
+          hint={
+            stats.highest && stats.highest.total > 0
+              ? formatShortDate(stats.highest.date)
+              : undefined
+          }
+        />
+        <CalendarStat
+          label="Average daily"
+          value={
+            stats.spent > 0
+              ? compactReportCurrency.format(stats.averageDaily)
+              : 'N/A'
+          }
+          hint={
+            stats.spent > 0 ? `Across ${stats.elapsedDays} days` : undefined
+          }
+        />
+        <CalendarStat
+          label="No-spend days"
+          value={
+            stats.elapsedDays > 0 ? String(stats.noSpendDays) : 'N/A'
+          }
+          hint={
+            stats.elapsedDays > 0
+              ? `Of ${stats.elapsedDays} so far`
+              : undefined
+          }
+        />
       </div>
+
+      {loading ? (
+        <CalendarGridSkeleton />
+      ) : error ? (
+        <CalendarNotice
+          icon={AlertTriangle}
+          title="Daily spending is unavailable"
+          description="The rest of this report is still accurate. Reload to try the calendar again."
+        />
+      ) : calendar.totalSpent <= 0 ? (
+        <CalendarNotice
+          icon={CalendarOff}
+          title="No spending this month"
+          description="Every day is clear. Expenses will fill the calendar as you record them."
+        />
+      ) : (
+        <div className={`grid gap-7 ${selectedDay ? 'xl:grid-cols-5' : ''}`}>
+          <div className={selectedDay ? 'xl:col-span-3' : ''}>
+            <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+              {weekdays.map((weekday) => (
+                <span
+                  key={weekday}
+                  className="pb-1 text-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+                >
+                  {weekday}
+                </span>
+              ))}
+
+              {cells.map((cell, index) => {
+                if (!cell) {
+                  return <span key={`blank-${index}`} aria-hidden="true" />
+                }
+
+                const selected = cell.date === activeSelection
+                const isToday = cell.date === today
+
+                return (
+                  <button
+                    key={cell.date}
+                    type="button"
+                    onClick={() => toggleDay(cell.date)}
+                    disabled={cell.date > today}
+                    className={`flex min-h-12 flex-col items-start justify-between rounded-xl p-1.5 text-left transition sm:min-h-16 sm:rounded-2xl sm:p-2 ${getIntensity(
+                      cell.total,
+                      calendar.maxDailyTotal,
+                    )} ${
+                      selected
+                        ? 'ring-2 ring-gray-900 ring-offset-2 ring-offset-white dark:ring-white dark:ring-offset-slate-900'
+                        : isToday
+                          ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                          : ''
+                    } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-200 disabled:ring-0 dark:disabled:text-slate-700`}
+                    aria-label={getCellLabel(cell)}
+                    aria-pressed={selected}
+                  >
+                    <span className="text-[11px] font-black leading-none sm:text-xs">
+                      {cell.day}
+                    </span>
+                    {cell.total > 0 ? (
+                      // Hidden below `sm` because a peso amount cannot fit a
+                      // 320px seven-column grid; the `aria-label` still carries
+                      // it.
+                      <span className="hidden w-full truncate text-[10px] font-bold leading-none sm:block">
+                        {compactReportCurrency.format(cell.total)}
+                      </span>
+                    ) : null}
+                  </button>
+                )
+              })}
+            </div>
+
+            <div className="mt-6 flex items-center justify-end gap-2">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+                Less
+              </span>
+              <span className="flex items-center gap-1" aria-hidden="true">
+                <span className={`h-3 w-3 rounded-sm ${quietStep}`} />
+                {intensitySteps.map((step) => (
+                  <span key={step} className={`h-3 w-3 rounded-sm ${step}`} />
+                ))}
+              </span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+                More
+              </span>
+            </div>
+          </div>
+
+          {selectedDay ? (
+            <DayDetailPanel day={selectedDay} onClose={closeDay} />
+          ) : null}
+        </div>
+      )}
     </article>
   )
 }

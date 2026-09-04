@@ -135,6 +135,10 @@ function DayDetailPanel({
   const panelRef = useRef<HTMLElement>(null)
   const headline = formatLongDate(day.date)
   const categories = getCategorySplit(day.transactions)
+  // Scaled to the biggest category, matching `CategoryAllocationSection`, so
+  // the two charts on this page read the same way. The seed keeps a day whose
+  // rows all total zero from dividing by zero.
+  const maximum = Math.max(...categories.map((category) => category.total), 1)
 
   // Selecting a day moves focus into the panel so the region is announced and
   // the close control is the next stop for keyboard users.
@@ -203,7 +207,7 @@ function DayDetailPanel({
                 <div className="h-2.5 overflow-hidden rounded-full bg-white dark:bg-slate-950">
                   <div
                     className={`h-full rounded-full ${categoryBarColors[index % categoryBarColors.length]}`}
-                    style={{ width: `${(category.total / day.total) * 100}%` }}
+                    style={{ width: `${(category.total / maximum) * 100}%` }}
                   />
                 </div>
               </div>

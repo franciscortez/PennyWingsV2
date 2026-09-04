@@ -4,6 +4,7 @@ import type { Json } from '@/lib/database.types'
 import type {
   DailySpending,
   DailySpendingCalendar,
+  DailySpendingTransaction,
   MonthlyReport,
   MonthlyReportRow,
   ReportAccountSnapshot,
@@ -125,15 +126,60 @@ const getMonthBounds = (month: string) => {
   }
 }
 
+type DailySpendingRelationRow = {
+  card_name?: string | null
+  wallet_name?: string | null
+}
+
+// PostgREST types an embedded relation as an object or an array depending on
+// what it can infer, so both shapes are narrowed the same way the transactions
+// and monitoring services do.
+const firstRelation = <T>(value: T | T[] | null | undefined) =>
+  Array.isArray(value) ? (value[0] ?? null) : (value ?? null)
+
+type DailySpendingRow = {
+  amount: number | string | null
+  card?: DailySpendingRelationRow | DailySpendingRelationRow[] | null
+  category?: { color: string | null; name: string | null } | null
+  description: string | null
+  id: string
+  transaction_date: string
+  wallet?: DailySpendingRelationRow | DailySpendingRelationRow[] | null
+}
+
+const mapDailySpendingTransaction = (
+  row: DailySpendingRow,
+): DailySpendingTransaction => {
+  const category = firstRelation(row.category)
+  const account =
+    firstRelation(row.card) ?? firstRelation(row.wallet) ?? null
+
+  return {
+    accountName: account?.card_name ?? account?.wallet_name ?? null,
+    amount: Number(row.amount),
+    categoryColor: category?.color ?? null,
+    categoryName: category?.name ?? null,
+    description: row.description,
+    id: row.id,
+  }
+}
+
 export const fetchDailySpending = async (
   userId: string,
   month: string,
 ): Promise<DailySpendingCalendar> => {
   const { monthStart, nextMonthStart } = getMonthBounds(month)
 
+  // One month-scoped request. The day detail panel reads from these rows, so
+  // selecting a day never costs another round trip.
   const { data, error } = await supabase
     .from('transactions')
-    .select('transaction_date, amount')
+    .select(
+      `id, transaction_date, amount, description,
+      category:categories(name, color),
+      card:bank_cards!transactions_card_id_fkey(card_name),
+      wallet:e_wallets!transactions_wallet_id_fkey(wallet_name)`,
+    )
     // Scoped to the signed-in user on purpose. `save_monthly_report()`
     // aggregates `t.user_id = current_user_id` only, and shared-account
     // activity is recorded on the owner's ledger, so widening this to every
@@ -146,6 +192,9 @@ export const fetchDailySpending = async (
     .eq('type', 'expense')
     .gte('transaction_date', monthStart)
     .lt('transaction_date', nextMonthStart)
+    .order('transaction_date', { ascending: true })
+    .order('created_at', { ascending: true })
+    .overrideTypes<DailySpendingRow[]>()
 
   if (error) throw AppError.from(error)
 
@@ -154,20 +203,22 @@ export const fetchDailySpending = async (
   for (const row of data ?? []) {
     // `save_monthly_report()` sums `amount` alone for `expense_total` and
     // ignores `fee_amount`, so the calendar matches it exactly.
-    const amount = Number(row.amount)
+    const transaction = mapDailySpendingTransaction(row)
     // Bucket on the raw `YYYY-MM-DD` string; see `getMonthBounds`.
     const existing = dayTotals.get(row.transaction_date)
 
     if (existing) {
-      existing.total += amount
+      existing.total += transaction.amount
       existing.transactionCount += 1
+      existing.transactions.push(transaction)
       continue
     }
 
     dayTotals.set(row.transaction_date, {
       date: row.transaction_date,
-      total: amount,
+      total: transaction.amount,
       transactionCount: 1,
+      transactions: [transaction],
     })
   }
 

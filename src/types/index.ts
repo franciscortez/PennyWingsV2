@@ -47,6 +47,7 @@ export type {
 export type {
   DailySpending,
   DailySpendingCalendar,
+  DailySpendingTransaction,
   MonthlyReport,
   MonthlyReportRow,
   ReportAccountSnapshot,

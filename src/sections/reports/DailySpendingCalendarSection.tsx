@@ -1,12 +1,13 @@
-import { CalendarDays } from 'lucide-react'
-import { useState } from 'react'
+import { CalendarDays, Receipt, X } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { formatLongDate, toDateInputValue } from '@/lib/date'
 import {
+  categoryBarColors,
   compactReportCurrency,
   reportCurrency,
 } from '@/sections/reports/reportFormat'
-import type { DailySpendingCalendar } from '@/types'
+import type { DailySpendingCalendar, DailySpendingTransaction } from '@/types'
 
 type DailySpendingCalendarSectionProps = {
   calendar: DailySpendingCalendar
@@ -18,6 +19,7 @@ type CalendarCell = {
   day: number
   total: number
   transactionCount: number
+  transactions: DailySpendingTransaction[]
 }
 
 const pad = (value: number) => String(value).padStart(2, '0')
@@ -71,6 +73,7 @@ const buildCells = (month: string, calendar: DailySpendingCalendar) => {
       day,
       total: spending?.total ?? 0,
       transactionCount: spending?.transactionCount ?? 0,
+      transactions: spending?.transactions ?? [],
     })
   }
 
@@ -101,9 +104,152 @@ const getCellLabel = (cell: CalendarCell) => {
   }
 
   const transactions =
-    cell.transactionCount === 1 ? '1 transaction' : `${cell.transactionCount} transactions`
+    cell.transactionCount === 1
+      ? '1 transaction'
+      : `${cell.transactionCount} transactions`
 
   return `${date} — ${reportCurrency.format(cell.total)} across ${transactions}`
+}
+
+const getCategorySplit = (transactions: DailySpendingTransaction[]) => {
+  const totals = new Map<string, number>()
+
+  for (const transaction of transactions) {
+    const name = transaction.categoryName ?? 'Uncategorized'
+
+    totals.set(name, (totals.get(name) ?? 0) + transaction.amount)
+  }
+
+  return [...totals.entries()]
+    .map(([name, total]) => ({ name, total }))
+    .sort((first, second) => second.total - first.total)
+}
+
+function DayDetailPanel({
+  day,
+  onClose,
+}: {
+  day: CalendarCell
+  onClose: () => void
+}) {
+  const panelRef = useRef<HTMLElement>(null)
+  const headline = formatLongDate(day.date)
+  const categories = getCategorySplit(day.transactions)
+
+  // Selecting a day moves focus into the panel so the region is announced and
+  // the close control is the next stop for keyboard users.
+  useEffect(() => {
+    panelRef.current?.focus()
+  }, [day.date])
+
+  // Same Escape handling `ReportMonthPicker` uses for its month dialog.
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [onClose])
+
+  return (
+    <section
+      ref={panelRef}
+      tabIndex={-1}
+      role="region"
+      aria-label={`Spending on ${headline}`}
+      className="rounded-3xl border border-pink-50 bg-pink-50/40 p-5 xl:col-span-2 dark:border-slate-800 dark:bg-slate-950/40"
+    >
+      <div className="mb-5 flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            Day detail
+          </p>
+          <h3 className="mt-1 truncate text-lg font-black tracking-tight text-gray-950 dark:text-white">
+            {headline}
+          </h3>
+          <p className="mt-1 text-2xl font-black tracking-tight text-pink-600 dark:text-pink-400">
+            {reportCurrency.format(day.total)}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close day details"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-400 transition hover:bg-pink-100 hover:text-pink-600 dark:bg-slate-900 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-pink-400"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      </div>
+
+      {day.transactions.length ? (
+        <>
+          <div className="space-y-4">
+            {categories.map((category, index) => (
+              <div key={category.name}>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <span className="truncate text-sm font-black text-gray-700 dark:text-slate-300">
+                    {category.name}
+                  </span>
+                  <span className="shrink-0 text-sm font-black text-gray-950 dark:text-slate-100">
+                    {compactReportCurrency.format(category.total)}
+                  </span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-white dark:bg-slate-950">
+                  <div
+                    className={`h-full rounded-full ${categoryBarColors[index % categoryBarColors.length]}`}
+                    style={{ width: `${(category.total / day.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <ul className="mt-6 space-y-2">
+            {day.transactions.map((transaction) => (
+              <li
+                key={transaction.id}
+                className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2.5 dark:bg-slate-900"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-black text-gray-800 dark:text-slate-200">
+                    {transaction.description ||
+                      transaction.categoryName ||
+                      'Transaction'}
+                  </span>
+                  <span className="block truncate text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-slate-500">
+                    {[transaction.categoryName, transaction.accountName]
+                      .filter(Boolean)
+                      .join(' · ') || 'No category'}
+                  </span>
+                </span>
+                <span className="shrink-0 text-sm font-black text-gray-950 dark:text-slate-100">
+                  {reportCurrency.format(transaction.amount)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <div className="flex min-h-40 flex-col items-center justify-center text-center">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-pink-200 dark:bg-slate-900 dark:text-slate-700">
+            <Receipt className="h-7 w-7" aria-hidden="true" />
+          </span>
+          <p className="font-black text-gray-700 dark:text-slate-300">
+            No spending on this day
+          </p>
+          <p className="mt-1 max-w-xs text-sm font-medium text-gray-400 dark:text-slate-500">
+            Nothing left your accounts on {headline}.
+          </p>
+        </div>
+      )}
+    </section>
+  )
 }
 
 export function DailySpendingCalendarSection({
@@ -119,6 +265,14 @@ export function DailySpendingCalendarSection({
     selectedDate?.startsWith(`${month.slice(0, 7)}-`) === true
       ? selectedDate
       : null
+  const selectedDay =
+    cells.find((cell) => cell?.date === activeSelection) ?? null
+
+  // Stable identity, so the panel's Escape listener is registered once rather
+  // than torn down and rebuilt on every parent render.
+  const closeDay = useCallback(() => {
+    setSelectedDate(null)
+  }, [])
 
   const toggleDay = (date: string) => {
     setSelectedDate(activeSelection === date ? null : date)
@@ -140,71 +294,80 @@ export function DailySpendingCalendarSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-        {weekdays.map((weekday) => (
-          <span
-            key={weekday}
-            className="pb-1 text-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
-          >
-            {weekday}
-          </span>
-        ))}
-
-        {cells.map((cell, index) => {
-          if (!cell) {
-            return <span key={`blank-${index}`} aria-hidden="true" />
-          }
-
-          const selected = cell.date === activeSelection
-          const isToday = cell.date === today
-
-          return (
-            <button
-              key={cell.date}
-              type="button"
-              onClick={() => toggleDay(cell.date)}
-              disabled={cell.date > today}
-              className={`flex min-h-12 flex-col items-start justify-between rounded-xl p-1.5 text-left transition sm:min-h-16 sm:rounded-2xl sm:p-2 ${getIntensity(
-                cell.total,
-                calendar.maxDailyTotal,
-              )} ${
-                selected
-                  ? 'ring-2 ring-gray-900 ring-offset-2 ring-offset-white dark:ring-white dark:ring-offset-slate-900'
-                  : isToday
-                    ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
-                    : ''
-              } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-200 disabled:ring-0 dark:disabled:text-slate-700`}
-              aria-label={getCellLabel(cell)}
-              aria-pressed={selected}
-            >
-              <span className="text-[11px] font-black leading-none sm:text-xs">
-                {cell.day}
+      <div className={`grid gap-7 ${selectedDay ? 'xl:grid-cols-5' : ''}`}>
+        <div className={selectedDay ? 'xl:col-span-3' : ''}>
+          <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+            {weekdays.map((weekday) => (
+              <span
+                key={weekday}
+                className="pb-1 text-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+              >
+                {weekday}
               </span>
-              {cell.total > 0 ? (
-                // Hidden below `sm` because a peso amount cannot fit a 320px
-                // seven-column grid; the `aria-label` still carries it.
-                <span className="hidden w-full truncate text-[10px] font-bold leading-none sm:block">
-                  {compactReportCurrency.format(cell.total)}
-                </span>
-              ) : null}
-            </button>
-          )
-        })}
-      </div>
+            ))}
 
-      <div className="mt-6 flex items-center justify-end gap-2">
-        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-          Less
-        </span>
-        <span className="flex items-center gap-1" aria-hidden="true">
-          <span className={`h-3 w-3 rounded-sm ${quietStep}`} />
-          {intensitySteps.map((step) => (
-            <span key={step} className={`h-3 w-3 rounded-sm ${step}`} />
-          ))}
-        </span>
-        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-          More
-        </span>
+            {cells.map((cell, index) => {
+              if (!cell) {
+                return <span key={`blank-${index}`} aria-hidden="true" />
+              }
+
+              const selected = cell.date === activeSelection
+              const isToday = cell.date === today
+
+              return (
+                <button
+                  key={cell.date}
+                  type="button"
+                  onClick={() => toggleDay(cell.date)}
+                  disabled={cell.date > today}
+                  className={`flex min-h-12 flex-col items-start justify-between rounded-xl p-1.5 text-left transition sm:min-h-16 sm:rounded-2xl sm:p-2 ${getIntensity(
+                    cell.total,
+                    calendar.maxDailyTotal,
+                  )} ${
+                    selected
+                      ? 'ring-2 ring-gray-900 ring-offset-2 ring-offset-white dark:ring-white dark:ring-offset-slate-900'
+                      : isToday
+                        ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                        : ''
+                  } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-200 disabled:ring-0 dark:disabled:text-slate-700`}
+                  aria-label={getCellLabel(cell)}
+                  aria-pressed={selected}
+                >
+                  <span className="text-[11px] font-black leading-none sm:text-xs">
+                    {cell.day}
+                  </span>
+                  {cell.total > 0 ? (
+                    // Hidden below `sm` because a peso amount cannot fit a
+                    // 320px seven-column grid; the `aria-label` still carries
+                    // it.
+                    <span className="hidden w-full truncate text-[10px] font-bold leading-none sm:block">
+                      {compactReportCurrency.format(cell.total)}
+                    </span>
+                  ) : null}
+                </button>
+              )
+            })}
+          </div>
+
+          <div className="mt-6 flex items-center justify-end gap-2">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+              Less
+            </span>
+            <span className="flex items-center gap-1" aria-hidden="true">
+              <span className={`h-3 w-3 rounded-sm ${quietStep}`} />
+              {intensitySteps.map((step) => (
+                <span key={step} className={`h-3 w-3 rounded-sm ${step}`} />
+              ))}
+            </span>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+              More
+            </span>
+          </div>
+        </div>
+
+        {selectedDay ? (
+          <DayDetailPanel day={selectedDay} onClose={closeDay} />
+        ) : null}
       </div>
     </article>
   )

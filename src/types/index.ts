@@ -45,6 +45,8 @@ export type {
   MonitoringTab,
 } from '@/types/monitoring'
 export type {
+  DailySpending,
+  DailySpendingCalendar,
   MonthlyReport,
   MonthlyReportRow,
   ReportAccountSnapshot,

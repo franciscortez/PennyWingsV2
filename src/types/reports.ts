@@ -1,6 +1,19 @@
 import type { Tables } from '@/lib/database.types'
 import type { AccountKind } from '@/types/accounts'
 
+export type DailySpending = {
+  date: string
+  total: number
+  transactionCount: number
+}
+
+export type DailySpendingCalendar = {
+  days: DailySpending[]
+  maxDailyTotal: number
+  month: string
+  totalSpent: number
+}
+
 export type ReportCategoryBreakdown = {
   categoryId: string | null
   categoryName: string

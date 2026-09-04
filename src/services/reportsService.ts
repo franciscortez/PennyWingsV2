@@ -2,6 +2,8 @@ import { AppError } from '@/lib/errors'
 import { supabase } from '@/lib/supabase'
 import type { Json } from '@/lib/database.types'
 import type {
+  DailySpending,
+  DailySpendingCalendar,
   MonthlyReport,
   MonthlyReportRow,
   ReportAccountSnapshot,
@@ -102,4 +104,82 @@ export const fetchMonthlyReports = async (
   if (error) throw AppError.from(error)
 
   return (data ?? []).map(mapMonthlyReport)
+}
+
+const padMonth = (value: number) => String(value).padStart(2, '0')
+
+// `transaction_date` is a `date` column with no time component, so the month
+// bounds are built as plain strings. Parsing into `Date` and re-serializing
+// would shift days for users east of UTC (Asia/Manila).
+const getMonthBounds = (month: string) => {
+  const monthKey = month.slice(0, 7)
+  const year = Number(monthKey.slice(0, 4))
+  const monthNumber = Number(monthKey.slice(5, 7))
+  const rollsOver = monthNumber === 12
+
+  return {
+    monthStart: `${monthKey}-01`,
+    nextMonthStart: `${rollsOver ? year + 1 : year}-${padMonth(
+      rollsOver ? 1 : monthNumber + 1,
+    )}-01`,
+  }
+}
+
+export const fetchDailySpending = async (
+  userId: string,
+  month: string,
+): Promise<DailySpendingCalendar> => {
+  const { monthStart, nextMonthStart } = getMonthBounds(month)
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('transaction_date, amount')
+    // Scoped to the signed-in user on purpose. `save_monthly_report()`
+    // aggregates `t.user_id = current_user_id` only, and shared-account
+    // activity is recorded on the owner's ledger, so widening this to every
+    // RLS-visible row would make the calendar disagree with the
+    // `expense_total` that `ReportSummarySection` shows on the same page.
+    .eq('user_id', userId)
+    // `expense` only. `monthly_reports` keeps `withdrawal_total` separate from
+    // `expense_total`, and a withdrawal moves cash between the user's own
+    // accounts rather than out of their money.
+    .eq('type', 'expense')
+    .gte('transaction_date', monthStart)
+    .lt('transaction_date', nextMonthStart)
+
+  if (error) throw AppError.from(error)
+
+  const dayTotals = new Map<string, DailySpending>()
+
+  for (const row of data ?? []) {
+    // `save_monthly_report()` sums `amount` alone for `expense_total` and
+    // ignores `fee_amount`, so the calendar matches it exactly.
+    const amount = Number(row.amount)
+    // Bucket on the raw `YYYY-MM-DD` string; see `getMonthBounds`.
+    const existing = dayTotals.get(row.transaction_date)
+
+    if (existing) {
+      existing.total += amount
+      existing.transactionCount += 1
+      continue
+    }
+
+    dayTotals.set(row.transaction_date, {
+      date: row.transaction_date,
+      total: amount,
+      transactionCount: 1,
+    })
+  }
+
+  const days = [...dayTotals.values()].sort((first, second) =>
+    first.date.localeCompare(second.date),
+  )
+
+  return {
+    days,
+    // Seeded folds, so an empty month reports 0 instead of -Infinity or NaN.
+    maxDailyTotal: days.reduce((max, day) => Math.max(max, day.total), 0),
+    month: monthStart,
+    totalSpent: days.reduce((total, day) => total + day.total, 0),
+  }
 }

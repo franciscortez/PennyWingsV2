@@ -8,7 +8,7 @@ import {
   compactReportCurrency,
   microReportCurrency,
   reportCurrency,
-} from '@/sections/reports/reportFormat'
+} from '@/lib/currency'
 import type { DailySpendingCalendar, DailySpendingTransaction } from '@/types'
 
 type DailySpendingCalendarSectionProps = {

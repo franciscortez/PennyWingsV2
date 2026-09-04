@@ -1,5 +1,6 @@
 import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
+import { useDailySpendingData } from '@/hooks/useDailySpendingData'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import {
@@ -8,8 +9,9 @@ import {
   DashboardSkeleton,
   MiniStatsSection,
   ProgressOverviewSection,
-  RecentActivitySection,
 } from '@/sections/dashboard'
+import { DailySpendingCalendarSection } from '@/sections/shared'
+import { currentMonthInput, toReportMonth } from '@/lib/date'
 
 export default function Dashboard() {
   const { profile, user } = useAuth()
@@ -22,6 +24,16 @@ export default function Dashboard() {
     totalBalance,
     transactions,
   } = useDashboardData(user?.id)
+  // The dashboard is a current-month surface and deliberately has no month
+  // picker; `/reports` is where other months are browsed.
+  const dashboardMonth = currentMonthInput()
+  const {
+    calendar,
+    loading: dailySpendingLoading,
+    error: dailySpendingError,
+  } = useDailySpendingData(user?.id, toReportMonth(dashboardMonth))
+  // `dailySpendingError` is not alerted here. The calendar section owns that
+  // query's alert, so repeating it would show the same toast twice.
   useErrorAlert(error)
 
   if (loading) {
@@ -54,9 +66,11 @@ export default function Dashboard() {
           totalBalance={totalBalance}
         />
         <ProgressOverviewSection progress={progress} />
-        <RecentActivitySection
-          loading={loading}
-          transactions={transactions}
+        <DailySpendingCalendarSection
+          calendar={calendar}
+          error={dailySpendingError}
+          loading={dailySpendingLoading}
+          month={dashboardMonth}
         />
         <MiniStatsSection
           accountCount={accounts.length}

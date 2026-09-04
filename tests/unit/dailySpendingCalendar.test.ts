@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
+import { currentMonthInput } from '@/lib/date'
+
 import {
   buildCells,
   getCategorySplit,
@@ -110,6 +112,64 @@ describe('buildCells', () => {
 
     expect(cells[0]).toMatchObject({ total: 0, transactionCount: 0, transactions: [] })
     expect(cells[1]).toMatchObject({ total: 50, transactionCount: 1 })
+  })
+})
+
+// The fixtures above pin specific month shapes, but none of them is the month
+// the app actually renders. Without this, a regression in the month arithmetic
+// would pass CI on every day of the year except the ones where it bites.
+describe('the current month', () => {
+  // Counts by walking a Date forward rather than reusing
+  // `Date.UTC(year, month, 0)`, so this cannot agree with `buildCells` by
+  // sharing the same mistake.
+  const countDaysIndependently = (month: string) => {
+    const year = Number(month.slice(0, 4))
+    const monthIndex = Number(month.slice(5, 7)) - 1
+    const cursor = new Date(year, monthIndex, 1)
+    let days = 0
+
+    while (cursor.getMonth() === monthIndex) {
+      days += 1
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    return days
+  }
+
+  it('renders one cell per real day of the month', () => {
+    const month = currentMonthInput()
+    const days = realCells(buildCells(month, calendar([], `${month}-01`)))
+
+    expect(days).toHaveLength(countDaysIndependently(month))
+  })
+
+  it('numbers the last cell with the month length', () => {
+    const month = currentMonthInput()
+    const days = realCells(buildCells(month, calendar([], `${month}-01`)))
+
+    expect(days.at(-1)?.day).toBe(countDaysIndependently(month))
+    expect(days.at(-1)?.date).toBe(
+      `${month}-${String(countDaysIndependently(month)).padStart(2, '0')}`,
+    )
+  })
+
+  it('still fills whole weeks', () => {
+    const month = currentMonthInput()
+
+    expect(buildCells(month, calendar([], `${month}-01`)).length % 7).toBe(0)
+  })
+
+  it('agrees with the independent count across a full year either side', () => {
+    const now = new Date()
+
+    for (let offset = -12; offset <= 12; offset += 1) {
+      const cursor = new Date(now.getFullYear(), now.getMonth() + offset, 1)
+      const month = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`
+
+      expect(realCells(buildCells(month, calendar([], `${month}-01`)))).toHaveLength(
+        countDaysIndependently(month),
+      )
+    }
   })
 })
 

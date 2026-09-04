@@ -68,6 +68,28 @@ test.describe('Daily spending calendar', () => {
     await expect(page.getByRole('region', { name: /^Spending on / })).toHaveCount(0)
   })
 
+  test('renders one cell per real day of the current month', async ({ page }) => {
+    await page.goto('/dashboard')
+
+    // Counted here rather than hardcoded, so the assertion follows the calendar
+    // instead of drifting out of date with it.
+    const now = new Date()
+    const cursor = new Date(now.getFullYear(), now.getMonth(), 1)
+    let daysInMonth = 0
+
+    while (cursor.getMonth() === now.getMonth()) {
+      daysInMonth += 1
+      cursor.setDate(cursor.getDate() + 1)
+    }
+
+    await expect(
+      page.getByRole('heading', { name: 'Daily Spending' }),
+    ).toBeVisible()
+    await expect(page.getByRole('button', { name: /, \d{4} — / })).toHaveCount(
+      daysInMonth,
+    )
+  })
+
   test('replaced the recent activity list', async ({ page }) => {
     await page.goto('/dashboard')
 

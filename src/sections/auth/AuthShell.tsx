@@ -68,7 +68,7 @@ export function AuthShell({
         <div className="flex flex-1 flex-col justify-center">
           <div className="relative z-10 mx-auto w-full max-w-2xl">
             <div className="mb-8 inline-flex items-center gap-2 rounded-full bg-pink-600 px-4 py-2 text-sm font-medium text-white">
-              <PennyWingsMark className="h-5 w-5 text-white" />
+              <PennyWingsMark className="h-6 w-9" />
               PennyWings
             </div>
 

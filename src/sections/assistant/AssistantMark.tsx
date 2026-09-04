@@ -9,16 +9,16 @@ type AssistantMarkProps = {
 
 const sizes = {
   sm: {
-    container: 'h-8 w-8 rounded-lg',
-    mark: 'h-5 w-5',
+    container: 'h-8 w-11 rounded-lg',
+    mark: 'h-7 w-10',
   },
   md: {
-    container: 'h-10 w-10 rounded-xl',
-    mark: 'h-6 w-6',
+    container: 'h-10 w-14 rounded-xl',
+    mark: 'h-9 w-13',
   },
   lg: {
-    container: 'h-14 w-14 rounded-2xl',
-    mark: 'h-8 w-8',
+    container: 'h-14 w-20 rounded-2xl',
+    mark: 'h-13 w-19',
   },
 } as const
 

@@ -7,7 +7,7 @@ export function FooterSection() {
     <footer className="border-t border-pink-200 bg-gray-50 px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 md:flex-row">
         <div className="flex items-center gap-2 text-xl font-bold text-gray-900">
-          <PennyWingsMark className="h-8 w-8 text-pink-600" />
+          <PennyWingsMark className="h-9 w-13" />
           <span className="inline-block bg-gradient-to-r from-pink-500 to-pink-700 bg-clip-text text-transparent transition-transform hover:scale-105">
             PennyWings
           </span>

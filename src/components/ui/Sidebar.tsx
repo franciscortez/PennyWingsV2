@@ -110,9 +110,7 @@ function DesktopSidebar({
             sidebarOpen ? 'w-auto opacity-100' : 'w-0 opacity-0'
           }`}
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pink-500 text-white">
-            <PennyWingsMark className="h-7 w-7" />
-          </span>
+          <PennyWingsMark className="h-12 w-16 shrink-0" />
           <span className="bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-xl font-black text-transparent">
             PennyWings
           </span>

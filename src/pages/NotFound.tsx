@@ -18,8 +18,8 @@ export default function NotFound() {
     <main className="min-h-screen overflow-hidden bg-pink-50 px-4 py-6 text-gray-900 md:px-8">
       <header className="mx-auto flex max-w-6xl items-center justify-between">
         <AppButton to={user ? '/dashboard' : '/'} variant="ghost" className="rounded-xl px-2 text-gray-700">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-500 text-white">
-            <PennyWingsMark className="h-7 w-7" />
+          <span className="flex h-10 w-14 items-center justify-center rounded-xl bg-pink-500 text-white">
+            <PennyWingsMark className="h-9 w-13" />
           </span>
           <span className="bg-linear-to-r from-pink-600 to-pink-500 bg-clip-text text-lg font-black text-transparent">
             PennyWings
@@ -99,7 +99,7 @@ function NotFoundPanel({
           to="/dashboard"
         />
         <QuickLink
-          icon={<PennyWingsMark className="h-5 w-5" />}
+          icon={<PennyWingsMark className="h-5 w-7" />}
           label="Visit PennyWings"
           text="Return to the public home page."
           to="/"

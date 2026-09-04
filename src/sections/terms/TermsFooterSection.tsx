@@ -46,7 +46,7 @@ export function TermsFooterSection() {
             to="/"
             className="flex items-center gap-2 text-lg font-black text-gray-950"
           >
-            <PennyWingsMark className="h-8 w-8 text-pink-600" />
+            <PennyWingsMark className="h-9 w-13" />
             <span>
               <span className="bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-transparent">
                 PennyWings

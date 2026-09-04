@@ -9,9 +9,7 @@ export function PageLoader({ forceLight = false }: { forceLight?: boolean }) {
       aria-label="Loading PennyWings"
     >
       <PennyWingsMark
-        className={`mb-6 h-24 w-24 animate-bounce text-pink-500 ${
-          forceLight ? '' : 'dark:text-pink-400'
-        }`}
+        className="mb-6 h-28 w-40 animate-bounce"
       />
       <div className="flex items-center gap-2">
         <div

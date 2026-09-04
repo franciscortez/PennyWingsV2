@@ -40,7 +40,7 @@ export function HeroSection() {
       <div className="animate-fade-in relative z-10 flex w-full max-w-6xl flex-col items-center justify-between gap-12 md:flex-row">
         <div className="flex-1 space-y-6 text-center md:text-left">
           <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-pink-200 bg-white px-4 py-2 text-sm font-medium text-pink-600">
-            <PennyWingsMark className="h-5 w-5 text-pink-500" />
+            <PennyWingsMark className="h-6 w-9" />
             PennyWings Tracker
           </div>
 
@@ -87,8 +87,8 @@ export function HeroSection() {
                     PHP 12,450.00
                   </div>
                 </div>
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white bg-gradient-to-br from-pink-100 to-pink-200">
-                  <PennyWingsMark className="h-10 w-10 text-pink-600" />
+                <div className="flex h-14 w-18 items-center justify-center rounded-2xl border border-white bg-gradient-to-br from-pink-100 to-pink-200">
+                  <PennyWingsMark className="h-12 w-17" />
                 </div>
               </div>
 

@@ -13,8 +13,8 @@ export function TermsHeroSection() {
             className="flex min-w-0 items-center gap-3 text-gray-950"
             aria-label="Go to PennyWings home"
           >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-pink-500 text-white">
-              <PennyWingsMark className="h-8 w-8" />
+            <span className="flex h-11 w-16 shrink-0 items-center justify-center rounded-2xl bg-pink-500 text-white">
+              <PennyWingsMark className="h-10 w-15" />
             </span>
             <span className="min-w-0">
               <span className="block bg-gradient-to-r from-pink-600 to-pink-500 bg-clip-text text-xl font-black text-transparent">

@@ -18,6 +18,16 @@ export const compactReportCurrency = new Intl.NumberFormat('en-PH', {
   style: 'currency',
 })
 
+// Calendar cells are roughly 36px wide at 320px, where even the compact
+// formatter's "PHP 1,240" overflows. Compact notation keeps the amount visible
+// on mobile instead of hiding it behind the `aria-label` alone.
+export const microReportCurrency = new Intl.NumberFormat('en-PH', {
+  currency: 'PHP',
+  maximumFractionDigits: 1,
+  notation: 'compact',
+  style: 'currency',
+})
+
 export const formatGeneratedAt = (value: string) =>
   formatDateTime(value)
 

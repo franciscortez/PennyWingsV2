@@ -6,6 +6,7 @@ import { useErrorAlert } from '@/hooks/useErrorAlert'
 import {
   categoryBarColors,
   compactReportCurrency,
+  microReportCurrency,
   reportCurrency,
 } from '@/sections/reports/reportFormat'
 import type { DailySpendingCalendar, DailySpendingTransaction } from '@/types'
@@ -36,17 +37,18 @@ const weekdays = Array.from({ length: 7 }, (_, dayIndex) =>
   }).format(new Date(Date.UTC(2024, 0, 7 + dayIndex))),
 )
 
-// The quiet cell and the five brand steps. A zero-spend day never borrows a
-// pink step, so intensity always means money left the account.
+// The quiet cell and the five heat steps. A zero-spend day never borrows a
+// heat step, so intensity always means money left the account. Every pairing
+// below is AA-verified; see the ramp comment in `src/index.css`.
 const quietStep =
-  'bg-gray-50 text-gray-400 dark:bg-slate-800/60 dark:text-slate-500'
+  'bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-400'
 
 const intensitySteps = [
-  'bg-pink-50 text-pink-700 dark:bg-pink-950/30 dark:text-pink-200',
-  'bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-200',
-  'bg-pink-300 text-pink-900 dark:bg-pink-900/60 dark:text-pink-100',
-  'bg-pink-500 text-white dark:bg-pink-800',
-  'bg-pink-700 text-white',
+  'bg-heat-1 text-pink-900 dark:bg-heat-dark-1 dark:text-pink-200',
+  'bg-heat-2 text-pink-900 dark:bg-heat-dark-2 dark:text-pink-200',
+  'bg-heat-3 text-slate-950 dark:bg-heat-dark-3 dark:text-white',
+  'bg-heat-4 text-white dark:bg-heat-dark-4',
+  'bg-heat-5 text-white dark:bg-heat-dark-5 dark:text-slate-950',
 ]
 
 // Built from `YYYY-MM-DD` strings in UTC, matching `fetchDailySpending`. Using
@@ -161,14 +163,14 @@ function CalendarStat({
 }) {
   return (
     <div className="rounded-2xl border border-pink-50 bg-pink-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
-      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
         {label}
       </p>
       <p className="mt-1 truncate text-base font-black text-gray-900 dark:text-slate-200">
         {value}
       </p>
       {hint ? (
-        <p className="mt-0.5 truncate text-[11px] font-bold text-gray-400 dark:text-slate-500">
+        <p className="mt-0.5 truncate text-[10px] font-bold text-gray-500 dark:text-slate-400">
           {hint}
         </p>
       ) : null}
@@ -207,9 +209,27 @@ function CalendarNotice({
       <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pink-50 text-pink-200 dark:bg-slate-950 dark:text-slate-800">
         <Icon className="h-8 w-8" aria-hidden="true" />
       </span>
-      <p className="font-black text-gray-700 dark:text-slate-300">{title}</p>
+      <p className="font-bold text-gray-700 dark:text-slate-300">{title}</p>
       <p className="mt-1 max-w-xs text-sm font-medium text-gray-400 dark:text-slate-500">
         {description}
+      </p>
+    </div>
+  )
+}
+
+// Holds the panel column open while no day is selected, so tapping a day never
+// reflows the grid, and says what the column is for.
+function DayDetailPlaceholder() {
+  return (
+    <div className="hidden rounded-3xl border border-dashed border-pink-100 p-5 xl:flex xl:col-span-2 xl:flex-col xl:items-center xl:justify-center xl:text-center dark:border-slate-800">
+      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-50 text-pink-300 dark:bg-slate-950 dark:text-slate-700">
+        <CalendarDays className="h-6 w-6" aria-hidden="true" />
+      </span>
+      <p className="text-sm font-bold text-gray-500 dark:text-slate-400">
+        Select a day
+      </p>
+      <p className="mt-1 max-w-[16rem] text-xs font-medium text-gray-400 dark:text-slate-500">
+        Its categories and transactions appear here.
       </p>
     </div>
   )
@@ -261,7 +281,7 @@ function DayDetailPanel({
     >
       <div className="mb-5 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             Day detail
           </p>
           <h3 className="mt-1 truncate text-lg font-black tracking-tight text-gray-950 dark:text-white">
@@ -287,7 +307,7 @@ function DayDetailPanel({
             {categories.map((category, index) => (
               <div key={category.name}>
                 <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="truncate text-sm font-black text-gray-700 dark:text-slate-300">
+                  <span className="truncate text-sm font-bold text-gray-700 dark:text-slate-300">
                     {category.name}
                   </span>
                   <span className="shrink-0 text-sm font-black text-gray-950 dark:text-slate-100">
@@ -311,12 +331,12 @@ function DayDetailPanel({
                 className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2.5 dark:bg-slate-900"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-black text-gray-800 dark:text-slate-200">
+                  <span className="block truncate text-sm font-bold text-gray-800 dark:text-slate-200">
                     {transaction.description ||
                       transaction.categoryName ||
                       'Transaction'}
                   </span>
-                  <span className="block truncate text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-slate-500">
+                  <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
                     {[transaction.categoryName, transaction.accountName]
                       .filter(Boolean)
                       .join(' · ') || 'No category'}
@@ -334,7 +354,7 @@ function DayDetailPanel({
           <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-pink-200 dark:bg-slate-900 dark:text-slate-700">
             <Receipt className="h-7 w-7" aria-hidden="true" />
           </span>
-          <p className="font-black text-gray-700 dark:text-slate-300">
+          <p className="font-bold text-gray-700 dark:text-slate-300">
             No spending on this day
           </p>
           <p className="mt-1 max-w-xs text-sm font-medium text-gray-400 dark:text-slate-500">
@@ -365,6 +385,9 @@ export function DailySpendingCalendarSection({
     selectedDate?.startsWith(`${month.slice(0, 7)}-`) === true
       ? selectedDate
       : null
+  // The grid and panel column spans are fixed rather than conditional. Letting
+  // the grid widen while nothing was selected meant every cell resized the
+  // moment a day was tapped.
   const selectedDay =
     cells.find((cell) => cell?.date === activeSelection) ?? null
 
@@ -379,7 +402,7 @@ export function DailySpendingCalendarSection({
   }
 
   return (
-    <article className="rounded-[2.5rem] border border-pink-50 bg-white p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
+    <article className="rounded-[2.5rem] border border-pink-50 bg-white p-4 sm:p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
       <div className="mb-7 flex items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-50 text-pink-500 dark:bg-slate-800 dark:text-pink-400">
           <CalendarDays className="h-5 w-5" aria-hidden="true" />
@@ -388,7 +411,7 @@ export function DailySpendingCalendarSection({
           <h2 className="text-xl font-black tracking-tight text-gray-950 dark:text-white">
             Daily Spending
           </h2>
-          <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500">
+          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
             {compactReportCurrency.format(calendar.totalSpent)} this month
           </p>
         </div>
@@ -447,13 +470,13 @@ export function DailySpendingCalendarSection({
           description="Every day is clear. Expenses will fill the calendar as you record them."
         />
       ) : (
-        <div className={`grid gap-7 ${selectedDay ? 'xl:grid-cols-5' : ''}`}>
-          <div className={selectedDay ? 'xl:col-span-3' : ''}>
+        <div className="grid gap-7 xl:grid-cols-5">
+          <div className="xl:col-span-3">
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {weekdays.map((weekday) => (
                 <span
                   key={weekday}
-                  className="pb-1 text-center text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+                  className="pb-1 text-center text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400"
                 >
                   {weekday}
                 </span>
@@ -486,16 +509,20 @@ export function DailySpendingCalendarSection({
                     aria-label={getCellLabel(cell)}
                     aria-pressed={selected}
                   >
-                    <span className="text-[11px] font-black leading-none sm:text-xs">
+                    <span className="text-xs font-bold leading-none">
                       {cell.day}
                     </span>
                     {cell.total > 0 ? (
-                      // Hidden below `sm` because a peso amount cannot fit a
-                      // 320px seven-column grid; the `aria-label` still carries
-                      // it.
-                      <span className="hidden w-full truncate text-[10px] font-bold leading-none sm:block">
-                        {compactReportCurrency.format(cell.total)}
-                      </span>
+                      <>
+                        {/* Compact notation below `sm`, where a cell is about
+                            36px wide and the full amount does not fit. */}
+                        <span className="w-full truncate text-[10px] font-bold leading-none sm:hidden">
+                          {microReportCurrency.format(cell.total)}
+                        </span>
+                        <span className="hidden w-full truncate text-[10px] font-bold leading-none sm:block">
+                          {compactReportCurrency.format(cell.total)}
+                        </span>
+                      </>
                     ) : null}
                   </button>
                 )
@@ -503,7 +530,7 @@ export function DailySpendingCalendarSection({
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
                 Less
               </span>
               <span className="flex items-center gap-1" aria-hidden="true">
@@ -512,7 +539,7 @@ export function DailySpendingCalendarSection({
                   <span key={step} className={`h-3 w-3 rounded-sm ${step}`} />
                 ))}
               </span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
                 More
               </span>
             </div>
@@ -520,7 +547,9 @@ export function DailySpendingCalendarSection({
 
           {selectedDay ? (
             <DayDetailPanel day={selectedDay} onClose={closeDay} />
-          ) : null}
+          ) : (
+            <DayDetailPlaceholder />
+          )}
         </div>
       )}
     </article>

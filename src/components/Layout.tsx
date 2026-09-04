@@ -58,7 +58,7 @@ export default function Layout({ children }: LayoutProps) {
           sidebarOpen ? 'md:ml-72 xl:ml-80' : 'md:ml-24'
         }`}
       >
-        <div className="mx-auto max-w-6xl px-4 py-6 pb-28 md:px-6 md:py-8 lg:px-8 xl:px-12">
+        <div className="mx-auto max-w-6xl px-4 py-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-8 md:pb-8 lg:px-8 xl:px-12">
           {children}
         </div>
       </main>

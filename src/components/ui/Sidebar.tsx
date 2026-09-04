@@ -233,10 +233,14 @@ function MobileNavigation({
   secondaryItems: typeof navigation
 }) {
   const secondaryActive = secondaryItems.some((item) => item.href === pathname)
+  const moreActive = menuOpen || secondaryActive
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-pink-100 bg-white/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 md:hidden">
-      <div className="flex w-full items-stretch">
+    <nav
+      aria-label="Primary mobile navigation"
+      className="fixed bottom-0 left-0 right-0 z-50 min-h-[calc(5rem+env(safe-area-inset-bottom))] border-t border-pink-100 bg-white/95 px-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/95 md:hidden"
+    >
+      <div className="flex min-h-16 w-full items-stretch">
         {items.map((item) => {
           const active = pathname === item.href
           const Icon = item.icon
@@ -246,15 +250,29 @@ function MobileNavigation({
               key={item.name}
               to={item.href}
               onClick={onCloseMenu}
-              className={`flex min-w-0 flex-1 basis-0 flex-col items-center justify-center rounded-2xl px-1 py-2.5 transition ${
+              aria-label={item.name}
+              aria-current={active ? 'page' : undefined}
+              title={item.name}
+              className={`group relative flex min-h-15 min-w-0 flex-1 basis-0 items-center justify-center rounded-2xl px-1 py-2 outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
                 active
-                  ? 'bg-pink-50 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400'
-                  : 'text-gray-400 dark:text-slate-400'
+                  ? 'text-white'
+                  : 'text-gray-400 hover:text-pink-600 dark:text-slate-400 dark:hover:text-pink-300'
               }`}
             >
-              <Icon className="mb-1 h-5 w-5" aria-hidden="true" />
-              <span className="truncate text-[8px] font-black uppercase tracking-tight sm:text-[9px]">
-                {item.name}
+              <span
+                data-active-indicator={active ? 'true' : undefined}
+                className={`flex h-12 w-14 items-center justify-center rounded-full transition-all duration-200 motion-reduce:transition-none ${
+                  active
+                    ? 'bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg shadow-pink-300/50 ring-1 ring-inset ring-white/30 dark:from-pink-500 dark:to-rose-600 dark:shadow-pink-950/70'
+                    : 'group-hover:bg-pink-50 group-hover:shadow-sm group-active:scale-95 dark:group-hover:bg-slate-800'
+                }`}
+                aria-hidden="true"
+              >
+                <Icon
+                  className={`h-7 w-7 transition-transform duration-200 motion-reduce:transition-none ${
+                    active ? 'scale-110 stroke-[2.5]' : 'group-hover:scale-110'
+                  }`}
+                />
               </span>
             </Link>
           )
@@ -262,18 +280,30 @@ function MobileNavigation({
         <button
           type="button"
           onClick={onToggleMenu}
-          className={`flex min-w-0 flex-1 basis-0 flex-col items-center justify-center rounded-2xl px-1 py-2.5 transition ${
-            menuOpen || secondaryActive
-              ? 'bg-pink-50 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400'
-              : 'text-gray-400 dark:text-slate-400'
+          className={`group relative flex min-h-15 min-w-0 flex-1 basis-0 items-center justify-center rounded-2xl px-1 py-2 outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-pink-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 ${
+            moreActive
+              ? 'text-white'
+              : 'text-gray-400 hover:text-pink-600 dark:text-slate-400 dark:hover:text-pink-300'
           }`}
           aria-expanded={menuOpen}
           aria-haspopup="menu"
           aria-label={menuOpen ? 'Close more navigation' : 'Open more navigation'}
+          title="More"
         >
-          <MoreHorizontal className="mb-1 h-5 w-5" aria-hidden="true" />
-          <span className="text-[8px] font-black uppercase tracking-tight sm:text-[9px]">
-            More
+          <span
+            data-active-indicator={moreActive ? 'true' : undefined}
+            className={`flex h-12 w-14 items-center justify-center rounded-full transition-all duration-200 motion-reduce:transition-none ${
+              moreActive
+                ? 'bg-gradient-to-br from-pink-500 to-rose-500 shadow-lg shadow-pink-300/50 ring-1 ring-inset ring-white/30 dark:from-pink-500 dark:to-rose-600 dark:shadow-pink-950/70'
+                : 'group-hover:bg-pink-50 group-hover:shadow-sm group-active:scale-95 dark:group-hover:bg-slate-800'
+            }`}
+            aria-hidden="true"
+          >
+            <MoreHorizontal
+              className={`h-7 w-7 transition-transform duration-200 motion-reduce:transition-none ${
+                moreActive ? 'scale-110 stroke-[2.5]' : 'group-hover:scale-110'
+              }`}
+            />
           </span>
         </button>
       </div>
@@ -301,7 +331,7 @@ function MobileMenu({
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-20 top-0 z-40 md:hidden">
+    <div className="fixed inset-x-0 bottom-[calc(5rem+env(safe-area-inset-bottom))] top-0 z-40 md:hidden">
       <button
         type="button"
         className="absolute inset-0 bg-black/30"

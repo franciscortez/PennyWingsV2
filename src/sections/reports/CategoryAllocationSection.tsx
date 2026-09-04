@@ -1,16 +1,10 @@
 import { PieChart } from 'lucide-react'
 
-import { compactReportCurrency } from '@/sections/reports/reportFormat'
+import {
+  categoryBarColors,
+  compactReportCurrency,
+} from '@/sections/reports/reportFormat'
 import type { MonthlyReport } from '@/types'
-
-const colors = [
-  'bg-pink-500',
-  'bg-rose-400',
-  'bg-amber-400',
-  'bg-violet-400',
-  'bg-emerald-400',
-  'bg-sky-400',
-]
 
 export function CategoryAllocationSection({
   report,
@@ -52,7 +46,7 @@ export function CategoryAllocationSection({
               </div>
               <div className="h-2.5 overflow-hidden rounded-full bg-pink-50 dark:bg-slate-950">
                 <div
-                  className={`h-full rounded-full ${colors[index % colors.length]}`}
+                  className={`h-full rounded-full ${categoryBarColors[index % categoryBarColors.length]}`}
                   style={{ width: `${(category.total / maximum) * 100}%` }}
                 />
               </div>

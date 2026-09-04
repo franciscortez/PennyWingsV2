@@ -417,7 +417,7 @@ function TransactionRow({
         </div>
       </td>
       <td className="px-4 py-4 lg:px-6 lg:py-5 xl:px-8 xl:py-6">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-455">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-450">
           {getPaymentLabel(transaction)}
         </span>
       </td>

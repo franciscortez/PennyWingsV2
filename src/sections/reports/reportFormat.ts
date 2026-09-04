@@ -6,17 +6,15 @@ export {
   toReportMonth,
 } from '@/lib/date'
 
-export const reportCurrency = new Intl.NumberFormat('en-PH', {
-  currency: 'PHP',
-  minimumFractionDigits: 2,
-  style: 'currency',
-})
-
-export const compactReportCurrency = new Intl.NumberFormat('en-PH', {
-  currency: 'PHP',
-  maximumFractionDigits: 0,
-  style: 'currency',
-})
+// Re-exported so every existing `@/sections/reports/reportFormat` import keeps
+// working; the definitions moved to `@/lib/currency` when the calendar became
+// a shared section.
+export {
+  categoryBarColors,
+  compactReportCurrency,
+  microReportCurrency,
+  reportCurrency,
+} from '@/lib/currency'
 
 export const formatGeneratedAt = (value: string) =>
   formatDateTime(value)

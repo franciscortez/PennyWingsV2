@@ -30,6 +30,8 @@ export const queryKeys = {
   monitoringData: (userId: string, tab: MonitoringTab) =>
     [...queryKeys.monitoring(userId), tab] as const,
   reports: (userId: string) => ['reports', userId] as const,
+  dailySpending: (userId: string, month: string) =>
+    [...queryKeys.reports(userId), 'daily', month] as const,
   transactions: (userId: string) => ['transactions', userId] as const,
   transactionsList: (
     userId: string,

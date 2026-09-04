@@ -13,6 +13,43 @@
   --color-pink-700: #c94466;
   --color-pink-800: #a32e50;
   --color-pink-900: #7d1a3a;
+
+  /* Half-steps the app already used before they existed. Without these,
+     `dark:bg-slate-850` and friends compiled to nothing and the element kept
+     its light value. Interpolated between the neighbouring Tailwind steps, so
+     they stay on the default palette's oklch curve. */
+  --color-slate-350: oklch(78.7% 0.031 254.841);
+  --color-slate-450: oklch(62.9% 0.043 257.103);
+  --color-slate-550: oklch(50% 0.045 257.349);
+  --color-slate-650: oklch(40.9% 0.044 257.284);
+  --color-slate-750: oklch(32.6% 0.043 258.659);
+  --color-slate-850: oklch(24.4% 0.042 262.893);
+  --color-amber-450: oklch(79.9% 0.189 77.255);
+  --color-pink-450: #ff8ca0;
+
+  /* Heatmap ramp for the daily spending calendar. Purpose-built rather than
+     borrowed from the brand ramp, which tops out too light to carry text and
+     is non-monotonic between 200 and 300. Every step clears WCAG AA 4.5:1
+     against its paired ink, and each is distinguishable from its neighbour.
+       1 #ffdde5 + pink-900   8.04:1      4 #c9345c + white   5.09:1
+       2 #ffb3c6 + pink-900   6.01:1      5 #8c1338 + white   9.27:1
+       3 #f47e9d + slate-950  7.99:1 */
+  --color-heat-1: #ffdde5;
+  --color-heat-2: #ffb3c6;
+  --color-heat-3: #f47e9d;
+  --color-heat-4: #c9345c;
+  --color-heat-5: #8c1338;
+
+  /* Dark counterparts, read against `slate-900`. Intensity climbs by getting
+     brighter rather than darker, so the scale still reads as "more".
+       1 #3d1424 + pink-200   9.60:1      4 #c04068 + white   5.03:1
+       2 #5c1c33 + pink-200   7.62:1      5 #f2789a + slate-950 7.62:1
+       3 #8a2a4a + white      8.36:1 */
+  --color-heat-dark-1: #3d1424;
+  --color-heat-dark-2: #5c1c33;
+  --color-heat-dark-3: #8a2a4a;
+  --color-heat-dark-4: #c04068;
+  --color-heat-dark-5: #f2789a;
 }
 
 html {

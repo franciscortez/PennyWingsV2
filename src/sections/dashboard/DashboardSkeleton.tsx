@@ -1,4 +1,4 @@
-const skeletonCards = [1, 2, 3]
+const skeletonStats = [1, 2, 3]
 
 export function DashboardSkeleton() {
   return (
@@ -51,21 +51,25 @@ export function DashboardSkeleton() {
         ))}
       </section>
 
-      <section className="rounded-[2.5rem] border border-pink-50 bg-white p-6 sm:p-10 dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-8 h-8 w-52 rounded-full bg-pink-100 dark:bg-slate-800" />
-        <div className="space-y-4">
-          {skeletonCards.map((item) => (
+      <section className="rounded-[2.5rem] border border-pink-50 bg-white p-4 sm:p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
+        <div className="mb-7 flex items-center gap-3">
+          <div className="h-11 w-11 rounded-2xl bg-pink-100 dark:bg-slate-800" />
+          <div className="space-y-2">
+            <div className="h-5 w-40 rounded-full bg-pink-100 dark:bg-slate-800" />
+            <div className="h-3 w-28 rounded-full bg-pink-50 dark:bg-slate-950" />
+          </div>
+        </div>
+        <div className="mb-6 grid gap-3 sm:grid-cols-3">
+          {skeletonStats.map((item) => (
+            <div key={item} className="h-20 rounded-2xl bg-pink-50 dark:bg-slate-950" />
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
+          {Array.from({ length: 42 }, (_, cell) => (
             <div
-              key={item}
-              className="flex h-24 items-center gap-4 rounded-[2rem] border border-pink-50 p-4 dark:border-slate-800"
-            >
-              <div className="h-12 w-12 shrink-0 rounded-2xl bg-pink-100 dark:bg-slate-800" />
-              <div className="flex-1 space-y-3">
-                <div className="h-4 w-1/2 rounded-full bg-pink-100 dark:bg-slate-800" />
-                <div className="h-3 w-1/3 rounded-full bg-pink-50 dark:bg-slate-950" />
-              </div>
-              <div className="h-5 w-24 rounded-full bg-pink-100 dark:bg-slate-800" />
-            </div>
+              key={cell}
+              className="min-h-12 rounded-xl bg-pink-50 sm:min-h-16 sm:rounded-2xl dark:bg-slate-950"
+            />
           ))}
         </div>
       </section>

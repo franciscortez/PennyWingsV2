@@ -62,9 +62,7 @@ export default function Reports() {
             <AccountSnapshotSection report={selectedReport} />
           </>
         ) : (
-          <EmptyReport
-            month={toReportMonth(selectedMonth)}
-          />
+          <EmptyReport month={toReportMonth(selectedMonth)} />
         )}
       </div>
     </Layout>
@@ -86,7 +84,7 @@ function EmptyReport({
         <h2 className="mt-6 text-2xl font-black tracking-tight text-gray-950 dark:text-white md:text-3xl">
           No report for {formatReportMonth(month)}
         </h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-450">
+        <p className="mx-auto mt-3 max-w-lg text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-400">
           Automatic reports begin with your first account or transaction.
           There is nothing to calculate for this earlier month.
         </p>

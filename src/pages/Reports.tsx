@@ -3,14 +3,12 @@ import { useMemo, useState } from 'react'
 
 import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
-import { useDailySpendingData } from '@/hooks/useDailySpendingData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useReportsData } from '@/hooks/useReportsData'
 import {
   AccountSnapshotSection,
   CashFlowOverviewSection,
   CategoryAllocationSection,
-  DailySpendingCalendarSection,
   ReportsHeader,
   ReportsSkeleton,
   ReportSummarySection,
@@ -25,14 +23,6 @@ export default function Reports() {
   const { user } = useAuth()
   const [selectedMonth, setSelectedMonth] = useState(currentMonthInput)
   const { error, loading, reports } = useReportsData(user?.id)
-  const {
-    calendar,
-    error: dailySpendingError,
-    loading: dailySpendingLoading,
-  } = useDailySpendingData(user?.id, toReportMonth(selectedMonth))
-  // `dailySpendingError` is deliberately not alerted here.
-  // `DailySpendingCalendarSection` owns that query's alert, and repeating it
-  // would show the same toast twice.
   useErrorAlert(error)
   const selectedReport = useMemo(
     () =>
@@ -69,37 +59,19 @@ export default function Reports() {
                 <CategoryAllocationSection report={selectedReport} />
               </div>
             </section>
+            <AccountSnapshotSection report={selectedReport} />
           </>
         ) : (
-          <EmptyReport
-            hasDailySpending={calendar.totalSpent > 0}
-            month={toReportMonth(selectedMonth)}
-          />
+          <EmptyReport month={toReportMonth(selectedMonth)} />
         )}
-
-        {/* Rendered outside the `selectedReport` branch on purpose. A month can
-            hold transactions before `sync_monthly_reports()` has written its
-            row, and the calendar reads those transactions directly. */}
-        <DailySpendingCalendarSection
-          calendar={calendar}
-          error={dailySpendingError}
-          loading={dailySpendingLoading}
-          month={selectedMonth}
-        />
-
-        {selectedReport ? (
-          <AccountSnapshotSection report={selectedReport} />
-        ) : null}
       </div>
     </Layout>
   )
 }
 
 function EmptyReport({
-  hasDailySpending,
   month,
 }: {
-  hasDailySpending: boolean
   month: string
 }) {
   return (
@@ -113,9 +85,8 @@ function EmptyReport({
           No report for {formatReportMonth(month)}
         </h2>
         <p className="mx-auto mt-3 max-w-lg text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-400">
-          {hasDailySpending
-            ? 'This month has spending, but its monthly report has not been generated yet. The daily calendar below reads your transactions directly.'
-            : 'Automatic reports begin with your first account or transaction. There is nothing to calculate for this earlier month.'}
+          Automatic reports begin with your first account or transaction.
+          There is nothing to calculate for this earlier month.
         </p>
       </div>
     </section>

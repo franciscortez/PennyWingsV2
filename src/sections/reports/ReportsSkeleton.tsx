@@ -65,29 +65,6 @@ export function ReportsSkeleton() {
         </div>
       </section>
 
-      <section className="rounded-[2.5rem] border border-pink-50 bg-white p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
-        <div className="mb-7 flex items-center gap-3">
-          <div className="h-11 w-11 rounded-2xl bg-pink-100 dark:bg-slate-800" />
-          <div className="space-y-2">
-            <div className="h-5 w-40 rounded-full bg-pink-100 dark:bg-slate-800" />
-            <div className="h-3 w-28 rounded-full bg-pink-50 dark:bg-slate-950" />
-          </div>
-        </div>
-        <div className="mb-6 grid gap-3 sm:grid-cols-3">
-          {[1, 2, 3].map((item) => (
-            <div key={item} className="h-20 rounded-2xl bg-pink-50 dark:bg-slate-950" />
-          ))}
-        </div>
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
-          {Array.from({ length: 42 }, (_, cell) => (
-            <div
-              key={cell}
-              className="min-h-12 rounded-xl bg-pink-50 sm:min-h-16 sm:rounded-2xl dark:bg-slate-950"
-            />
-          ))}
-        </div>
-      </section>
-
       <section className="h-72 rounded-[2.5rem] border border-pink-50 bg-white p-8 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-8 h-7 w-48 rounded-full bg-pink-100 dark:bg-slate-800" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

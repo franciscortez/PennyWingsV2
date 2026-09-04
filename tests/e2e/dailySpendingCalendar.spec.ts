@@ -19,8 +19,8 @@ test.describe('Daily spending calendar', () => {
     await setupAuthenticatedMocks(page)
   })
 
-  test('renders on /reports with the month grid', async ({ page }) => {
-    await page.goto('/reports')
+  test('renders on /dashboard with the month grid', async ({ page }) => {
+    await page.goto('/dashboard')
 
     const calendar = page.getByRole('article').filter({
       has: page.getByRole('heading', { name: 'Daily Spending' }),
@@ -32,7 +32,7 @@ test.describe('Daily spending calendar', () => {
   })
 
   test('labels a spending day with its amount and count', async ({ page }) => {
-    await page.goto('/reports')
+    await page.goto('/dashboard')
 
     const { first } = calendarFixtureDates()
 
@@ -44,7 +44,7 @@ test.describe('Daily spending calendar', () => {
   })
 
   test('opens and closes the day detail panel', async ({ page }) => {
-    await page.goto('/reports')
+    await page.goto('/dashboard')
 
     const { first } = calendarFixtureDates()
     const day = page.getByRole('button', {
@@ -68,43 +68,23 @@ test.describe('Daily spending calendar', () => {
     await expect(page.getByRole('region', { name: /^Spending on / })).toHaveCount(0)
   })
 
-  test('changing the month through the picker updates the calendar', async ({
-    page,
-  }) => {
-    await page.goto('/reports')
-
-    const { first } = calendarFixtureDates()
-    const currentDay = page.getByRole('button', {
-      name: new RegExp(`^${longDate(first)} — ₱1,200\\.00`),
-    })
-
-    await expect(currentDay).toBeVisible()
-
-    // `ReportMonthPicker` is the only month control on the page.
-    await page.getByRole('button', { name: /Report Period/ }).click()
-
-    const dialog = page.getByRole('dialog', { name: 'Choose report month' })
-
-    await expect(dialog).toBeVisible()
-
-    await dialog.getByRole('button', { name: /^January / }).click()
-
-    // The January grid cannot carry a day labelled with the current month.
-    await expect(currentDay).toHaveCount(0)
-    await expect(
-      page.getByRole('button', { name: /^January 1, / }),
-    ).toBeVisible()
-  })
-
-  test('renders on /dashboard as well', async ({ page }) => {
+  test('replaced the recent activity list', async ({ page }) => {
     await page.goto('/dashboard')
 
     await expect(
       page.getByRole('heading', { name: 'Daily Spending' }),
     ).toBeVisible()
-    // The section it replaced must be gone.
     await expect(
       page.getByRole('heading', { name: 'Recent Activity' }),
+    ).toHaveCount(0)
+  })
+
+  test('is no longer rendered on /reports', async ({ page }) => {
+    await page.goto('/reports')
+
+    await expect(page.getByRole('heading', { name: 'Financial Insights' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Daily Spending' }),
     ).toHaveCount(0)
   })
 
@@ -112,7 +92,7 @@ test.describe('Daily spending calendar', () => {
     // Narrower than any viewport in `responsive.spec.ts`, and the width the
     // seven-column grid is tightest at. `body` declares `min-width: 320px`.
     await page.setViewportSize({ height: 800, width: 320 })
-    await page.goto('/reports')
+    await page.goto('/dashboard')
 
     await expect(
       page.getByRole('heading', { name: 'Daily Spending' }),

@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 
 import {
   calendarFixtureDates,
@@ -14,13 +14,31 @@ const longDate = (isoDate: string) =>
     year: 'numeric',
   })
 
+// `AuthContext` holds a 900ms minimum loader before it even starts resolving
+// the session, and the dashboard's queries land after that. On a CI runner the
+// whole sequence exceeds Playwright's 5s default `expect` timeout, so every
+// test waits for the section once, generously, before asserting anything else.
+const READY_TIMEOUT = 30_000
+
+const openCalendarPage = async (page: Page, path: string) => {
+  await page.goto(path)
+  await expect(page.getByRole('heading', { name: 'Daily Spending' })).toBeVisible({
+    timeout: READY_TIMEOUT,
+  })
+}
+
 test.describe('Daily spending calendar', () => {
+  // The default 30s test budget is the same as `READY_TIMEOUT`, which would let
+  // the test expire before the readiness wait could even finish. This spec gets
+  // its own budget rather than changing every other spec's.
+  test.describe.configure({ timeout: 60_000 })
+
   test.beforeEach(async ({ page }) => {
     await setupAuthenticatedMocks(page)
   })
 
   test('renders on /dashboard with the month grid', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openCalendarPage(page, '/dashboard')
 
     const calendar = page.getByRole('article').filter({
       has: page.getByRole('heading', { name: 'Daily Spending' }),
@@ -32,7 +50,7 @@ test.describe('Daily spending calendar', () => {
   })
 
   test('labels a spending day with its amount and count', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openCalendarPage(page, '/dashboard')
 
     const { first } = calendarFixtureDates()
 
@@ -44,7 +62,7 @@ test.describe('Daily spending calendar', () => {
   })
 
   test('opens and closes the day detail panel', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openCalendarPage(page, '/dashboard')
 
     const { first } = calendarFixtureDates()
     const day = page.getByRole('button', {
@@ -69,7 +87,7 @@ test.describe('Daily spending calendar', () => {
   })
 
   test('renders one cell per real day of the current month', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openCalendarPage(page, '/dashboard')
 
     // Counted here rather than hardcoded, so the assertion follows the calendar
     // instead of drifting out of date with it.
@@ -82,20 +100,14 @@ test.describe('Daily spending calendar', () => {
       cursor.setDate(cursor.getDate() + 1)
     }
 
-    await expect(
-      page.getByRole('heading', { name: 'Daily Spending' }),
-    ).toBeVisible()
     await expect(page.getByRole('button', { name: /, \d{4} — / })).toHaveCount(
       daysInMonth,
     )
   })
 
   test('replaced the recent activity list', async ({ page }) => {
-    await page.goto('/dashboard')
+    await openCalendarPage(page, '/dashboard')
 
-    await expect(
-      page.getByRole('heading', { name: 'Daily Spending' }),
-    ).toBeVisible()
     await expect(
       page.getByRole('heading', { name: 'Recent Activity' }),
     ).toHaveCount(0)
@@ -104,7 +116,9 @@ test.describe('Daily spending calendar', () => {
   test('is no longer rendered on /reports', async ({ page }) => {
     await page.goto('/reports')
 
-    await expect(page.getByRole('heading', { name: 'Financial Insights' })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { name: 'Financial Insights' }),
+    ).toBeVisible({ timeout: READY_TIMEOUT })
     await expect(
       page.getByRole('heading', { name: 'Daily Spending' }),
     ).toHaveCount(0)
@@ -114,11 +128,7 @@ test.describe('Daily spending calendar', () => {
     // Narrower than any viewport in `responsive.spec.ts`, and the width the
     // seven-column grid is tightest at. `body` declares `min-width: 320px`.
     await page.setViewportSize({ height: 800, width: 320 })
-    await page.goto('/dashboard')
-
-    await expect(
-      page.getByRole('heading', { name: 'Daily Spending' }),
-    ).toBeVisible()
+    await openCalendarPage(page, '/dashboard')
 
     const hasOverflow = await page.evaluate(
       () => document.documentElement.scrollWidth > window.innerWidth,

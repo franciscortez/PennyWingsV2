@@ -11,10 +11,10 @@ export function PennyWingsMark({
 }: PennyWingsMarkProps) {
   return (
     <img
-      src="/pennywings-logo.png"
+      src="/pennywings-butterfly-transparent.png"
       alt=""
       width={1254}
-      height={854}
+      height={1254}
       className={`object-contain ${className}`}
       aria-hidden="true"
       {...props}

@@ -15,7 +15,7 @@ test.describe('Public Navigation & Informational Pages', () => {
     await expect(loader).toBeVisible()
     await expect(loader.locator('img')).toHaveAttribute(
       'src',
-      '/pennywings-logo.png',
+      '/pennywings-butterfly-transparent.png',
     )
     await expect(loader.locator('svg')).toHaveCount(0)
   })

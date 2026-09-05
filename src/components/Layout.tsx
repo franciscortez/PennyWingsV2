@@ -19,7 +19,6 @@ export default function Layout({ children }: LayoutProps) {
     const saved = localStorage.getItem('sidebarOpen')
     return saved === 'true'
   })
-  const [moreOpen, setMoreOpen] = useState(false)
 
   const toggleSidebar = () => {
     setSidebarOpen((current) => {
@@ -40,14 +39,8 @@ export default function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-pink-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100 md:flex overflow-x-hidden">
       <Sidebar
-        mobileMenuOpen={moreOpen}
-        onCloseMobileMenu={() => setMoreOpen(false)}
-        onOpenAssistant={() => {
-          setMoreOpen(false)
-          openAssistant()
-        }}
+        onOpenAssistant={openAssistant}
         onSignOut={handleSignOut}
-        onToggleMobileMenu={() => setMoreOpen((current) => !current)}
         onToggleSidebar={toggleSidebar}
         sidebarInfo={sidebarInfo}
         sidebarOpen={sidebarOpen}

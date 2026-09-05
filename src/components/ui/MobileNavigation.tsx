@@ -41,6 +41,8 @@ export function MobileNavigation({
   const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [moreOpen, setMoreOpen] = useState(false)
+  const [isShrunk, setIsShrunk] = useState(false)
+  const lastScrollYRef = useRef(0)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const profileActive = pathname === '/profile'
@@ -50,6 +52,46 @@ export function MobileNavigation({
     setMoreOpen(false)
     moreButtonRef.current?.focus({ preventScroll: true })
   }
+
+  const openMore = () => {
+    setIsShrunk(false)
+    setMoreOpen(true)
+  }
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (moreOpen) return
+
+      const currentScrollY = Math.max(0, window.scrollY)
+      const previousScrollY = lastScrollYRef.current
+      const delta = currentScrollY - previousScrollY
+
+      if (currentScrollY <= 20) {
+        setIsShrunk(false)
+      } else if (delta > 8) {
+        setIsShrunk(true)
+      } else if (delta < -8) {
+        setIsShrunk(false)
+      }
+
+      lastScrollYRef.current = currentScrollY
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+    }
+  }, [moreOpen])
+
+  const [prevPathname, setPrevPathname] = useState(pathname)
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname)
+    setIsShrunk(false)
+  }
+
+  useEffect(() => {
+    lastScrollYRef.current = 0
+  }, [pathname])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -79,7 +121,11 @@ export function MobileNavigation({
 
   return (
     <>
-      <nav aria-label="Primary mobile navigation" className="mobile-dock md:hidden">
+      <nav
+        aria-label="Primary mobile navigation"
+        className="mobile-dock md:hidden"
+        data-shrunk={isShrunk}
+      >
         {destinations.map(({ href, icon: Icon, label, name }) => {
           const active = pathname === href
 
@@ -93,9 +139,8 @@ export function MobileNavigation({
               data-selected={active}
             >
               <span className="mobile-dock-icon" aria-hidden="true">
-                <Icon size={22} strokeWidth={active ? 2.25 : 1.75} />
+                <Icon size={21} strokeWidth={active ? 2.25 : 1.75} />
               </span>
-              <span className="mobile-dock-label">{label}</span>
             </Link>
           )
         })}
@@ -108,12 +153,11 @@ export function MobileNavigation({
           aria-expanded={moreOpen}
           aria-haspopup="dialog"
           aria-controls="mobile-more-panel"
-          onClick={() => setMoreOpen(true)}
+          onClick={openMore}
         >
           <span className="mobile-dock-icon" aria-hidden="true">
-            <MoreHorizontal size={22} strokeWidth={1.75} />
+            <MoreHorizontal size={21} strokeWidth={1.75} />
           </span>
-          <span className="mobile-dock-label">More</span>
         </button>
       </nav>
 

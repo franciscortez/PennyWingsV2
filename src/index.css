@@ -141,6 +141,13 @@ body {
   .animate-assistant-dot {
     animation: none;
   }
+
+  .mobile-dock,
+  .mobile-dock-item,
+  .mobile-dock-icon,
+  .mobile-dock-label {
+    transition: none !important;
+  }
 }
 
 .no-scrollbar::-webkit-scrollbar {
@@ -162,42 +169,69 @@ body {
     z-index: 50;
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    max-width: 30rem;
+    max-width: 22rem;
     margin-inline: auto;
-    padding: 6px;
+    padding: 4px 6px;
     border: 1px solid var(--color-pink-100);
-    border-radius: 26px;
+    border-radius: 20px;
     background: #fffafd;
     color: var(--color-gray-600);
     box-shadow: 0 8px 32px rgb(80 28 48 / 13%), 0 2px 6px rgb(80 28 48 / 4%);
+    transition: max-width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                padding 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 220ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+  /* Small state on scroll down */
+  .mobile-dock[data-shrunk='true'] {
+    max-width: 18.5rem;
+    padding: 3px 5px;
+    border-radius: 9999px;
+    box-shadow: 0 6px 20px rgb(80 28 48 / 12%), 0 1px 4px rgb(80 28 48 / 4%);
+  }
+
+  /* Big state (default & scroll up) */
   .mobile-dock-item {
     display: flex;
     min-width: 0;
-    min-height: 62px;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    border-radius: 19px;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .mobile-dock-icon {
-    display: flex;
-    width: 42px;
-    height: 32px;
+    height: 48px;
+    min-height: 48px;
     align-items: center;
     justify-content: center;
     border-radius: 14px;
-    transition: background-color 160ms ease, transform 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+    transition: height 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                min-height 220ms cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .mobile-dock-label {
-    font-size: 10px;
-    font-weight: 600;
-    line-height: 14px;
+  /* Small state */
+  .mobile-dock[data-shrunk='true'] .mobile-dock-item {
+    height: 38px;
+    min-height: 38px;
+  }
+
+  /* Big icon wrapper */
+  .mobile-dock-icon {
+    display: flex;
+    width: 44px;
+    height: 38px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    transition: background-color 160ms ease,
+                transform 160ms ease,
+                width 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                height 220ms cubic-bezier(0.4, 0, 0.2, 1),
+                border-radius 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Small icon wrapper */
+  .mobile-dock[data-shrunk='true'] .mobile-dock-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9999px;
+    transform: scale(0.92);
   }
 
   .mobile-dock-item[data-selected='true'] {
@@ -208,12 +242,12 @@ body {
     background: var(--color-pink-100);
   }
 
-  .mobile-dock-item[data-selected='true'] .mobile-dock-label {
-    font-weight: 800;
-  }
-
   .mobile-dock-item:active .mobile-dock-icon {
     transform: scale(0.92);
+  }
+
+  .mobile-dock[data-shrunk='true'] .mobile-dock-item:active .mobile-dock-icon {
+    transform: scale(0.85);
   }
 
   .mobile-dock-item:focus-visible,
@@ -224,10 +258,10 @@ body {
 
   .mobile-more-panel {
     position: fixed;
-    inset: auto max(0.75rem, env(safe-area-inset-right)) calc(6.25rem + env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+    inset: auto max(0.75rem, env(safe-area-inset-right)) calc(5.25rem + env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
     width: auto;
-    max-width: 30rem;
-    max-height: calc(100dvh - 7.5rem - env(safe-area-inset-bottom) - env(safe-area-inset-top));
+    max-width: 22rem;
+    max-height: calc(100dvh - 7rem - env(safe-area-inset-bottom) - env(safe-area-inset-top));
     margin: 0 auto;
     padding: 0;
     overflow-y: auto;
@@ -313,6 +347,10 @@ body {
     background: var(--color-slate-900);
     color: var(--color-slate-300);
     box-shadow: 0 8px 32px rgb(0 0 0 / 25%);
+  }
+
+  .dark .mobile-dock[data-shrunk='true'] {
+    box-shadow: 0 6px 20px rgb(0 0 0 / 30%);
   }
 
   .dark .mobile-dock-item[data-selected='true'],

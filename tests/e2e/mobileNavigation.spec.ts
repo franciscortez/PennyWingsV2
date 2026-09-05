@@ -15,30 +15,39 @@ test.describe('Mobile bottom navigation', () => {
     await expect(page.getByRole('navigation', { name: 'Primary mobile navigation' })).toBeVisible()
   })
 
-  test('keeps six labeled touch targets fixed while scrolling, including at 320px', async ({ page }, testInfo) => {
+  test('shrinks on scroll down, restores on scroll up, and keeps accessible touch targets at 320px', async ({ page }, testInfo) => {
     const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
     const items = nav.locator('a, button')
     await expect(items).toHaveCount(6)
-    await expect(nav.getByText('Home', { exact: true })).toBeVisible()
-    await expect(nav.getByText('Monitor', { exact: true })).toBeVisible()
+    await expect(nav.getByRole('link', { name: /Home/ })).toBeVisible()
+    await expect(nav.getByRole('link', { name: /Monitor/ })).toBeVisible()
+    await expect(nav.locator('.mobile-dock-label')).toHaveCount(0)
 
     for (const width of [320, 375, 430, 767]) {
       await page.setViewportSize({ width, height: 667 })
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+      await expect(nav).toHaveAttribute('data-shrunk', 'false')
       const before = await nav.boundingBox()
       expect(before).not.toBeNull()
       expect(before!.x).toBeGreaterThanOrEqual(12)
-      expect(before!.y + before!.height).toBeLessThanOrEqual(655)
+      expect(before!.y + before!.height).toBeLessThanOrEqual(656)
       for (const item of await items.all()) {
         const bounds = await item.boundingBox()
         expect(bounds!.width).toBeGreaterThanOrEqual(44)
         expect(bounds!.height).toBeGreaterThanOrEqual(44)
       }
+
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }))
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
-      const after = await nav.boundingBox()
-      expect(after!.y).toBeCloseTo(before!.y, 1)
+      await expect(nav).toHaveAttribute('data-shrunk', 'true')
+      await expect.poll(async () => (await nav.boundingBox())?.height).toBeLessThan(before!.height)
+      const shrunk = await nav.boundingBox()
+      expect(shrunk!.y + shrunk!.height).toBeCloseTo(before!.y + before!.height, 1)
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+      await expect(nav).toHaveAttribute('data-shrunk', 'false')
+      await expect.poll(async () => (await nav.boundingBox())?.height).toBeCloseTo(before!.height, 1)
     }
 
     await page.setViewportSize({ width: 375, height: 667 })

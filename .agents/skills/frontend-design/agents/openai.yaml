@@ -1,0 +1,4 @@
+interface:
+  display_name: "Frontend Design"
+  short_description: "Intentional frontend design for PennyWings"
+  default_prompt: "Use $frontend-design to redesign the requested PennyWings interface with a clear visual direction."

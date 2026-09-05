@@ -16,6 +16,7 @@
 
 ## Required skills
 
+- `$frontend-design`: visual direction and intentional UI redesign; project-local Codex adaptation of the Anthropic frontend-design plugin.
 - `$implement-frontend-feature`: React UI, forms, hooks, services, and query-backed behavior.
 - `$change-supabase-schema`: schema, RLS, grants, triggers, RPCs, migrations, or generated types.
 - `$review-financial-integrity`: accounts, balances, transactions, transfers, budgets, shared access, reports, or money-derived UI.

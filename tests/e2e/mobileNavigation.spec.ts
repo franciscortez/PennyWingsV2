@@ -15,18 +15,20 @@ test.describe('Mobile bottom navigation', () => {
     await expect(page.getByRole('navigation', { name: 'Primary mobile navigation' })).toBeVisible()
   })
 
-  test('shrinks on scroll down, restores on scroll up, and keeps accessible touch targets at 320px', async ({ page }, testInfo) => {
+  test('stays a fixed size on scroll and keeps accessible touch targets at 320px', async ({ page }, testInfo) => {
     const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
     const items = nav.locator('a, button')
     await expect(items).toHaveCount(6)
     await expect(nav.getByRole('link', { name: /Home/ })).toBeVisible()
     await expect(nav.getByRole('link', { name: /Monitor/ })).toBeVisible()
     await expect(nav.locator('.mobile-dock-label')).toHaveCount(0)
+    await expect(nav).not.toHaveAttribute('data-shrunk', 'true')
+    await expect(nav.locator('.mobile-dock-indicator')).toHaveCount(1)
+    await expect(nav.locator('.mobile-dock-indicator')).toHaveAttribute('aria-hidden', 'true')
 
     for (const width of [320, 375, 430, 767]) {
       await page.setViewportSize({ width, height: 667 })
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-      await expect(nav).toHaveAttribute('data-shrunk', 'false')
       const before = await nav.boundingBox()
       expect(before).not.toBeNull()
       expect(before!.x).toBeGreaterThanOrEqual(12)
@@ -39,14 +41,13 @@ test.describe('Mobile bottom navigation', () => {
 
       await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }))
       await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0)
-      await expect(nav).toHaveAttribute('data-shrunk', 'true')
-      await expect.poll(async () => (await nav.boundingBox())?.height).toBeLessThan(before!.height)
-      const shrunk = await nav.boundingBox()
-      expect(shrunk!.y + shrunk!.height).toBeCloseTo(before!.y + before!.height, 1)
+      await expect(nav).not.toHaveAttribute('data-shrunk', 'true')
+      await expect.poll(async () => (await nav.boundingBox())?.height).toBeCloseTo(before!.height, 1)
+      const scrolled = await nav.boundingBox()
+      expect(scrolled!.y + scrolled!.height).toBeCloseTo(before!.y + before!.height, 1)
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
 
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
-      await expect(nav).toHaveAttribute('data-shrunk', 'false')
       await expect.poll(async () => (await nav.boundingBox())?.height).toBeCloseTo(before!.height, 1)
     }
 
@@ -67,6 +68,39 @@ test.describe('Mobile bottom navigation', () => {
       await expect(nav.getByRole('link', { name: new RegExp(name) })).toHaveAttribute('aria-current', 'page')
       await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
     }
+  })
+
+  test('slides the active pill between tabs and never marks More as active', async ({ page }) => {
+    const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
+    const indicator = nav.locator('.mobile-dock-indicator')
+    await expect(indicator).toHaveCount(1)
+    await expect(indicator).toHaveAttribute('aria-hidden', 'true')
+
+    const indicatorState = () => indicator.evaluate((element) => {
+      const style = getComputedStyle(element)
+      return `${style.transform}|${style.width}|${style.opacity}`
+    })
+
+    await expect.poll(() => indicator.evaluate((element) => getComputedStyle(element).opacity)).toBe('1')
+    const dashboardState = await indicatorState()
+
+    await nav.getByRole('link', { name: /Accounts/ }).click()
+    await expect(page).toHaveURL(/\/accounts$/)
+    await expect.poll(indicatorState).not.toBe(dashboardState)
+
+    await nav.getByRole('link', { name: /Activity/ }).click()
+    await expect(page).toHaveURL(/\/transactions$/)
+    const activityState = await indicatorState()
+    await expect.poll(indicatorState).not.toBe(dashboardState)
+    expect(activityState.split('|')[2]).toBe('1')
+
+    const more = page.getByRole('button', { name: 'Open more navigation' })
+    await expect(more).not.toHaveAttribute('data-selected', 'true')
+    await more.click()
+    await expect(page.getByRole('dialog', { name: 'Your space' })).toBeVisible()
+    await expect(more).not.toHaveAttribute('data-selected', 'true')
+    expect(await indicatorState()).toBe(activityState)
+    await page.keyboard.press('Escape')
   })
 
   test('More contains focus, closes with Escape and backdrop, and restores scroll and focus', async ({ page }, testInfo) => {
@@ -108,7 +142,8 @@ test.describe('Mobile bottom navigation', () => {
     await panel.getByRole('link', { name: /Profile & settings/ }).click()
     await expect(page).toHaveURL(/\/profile$/)
     await expect(panel).not.toBeVisible()
-    await expect(more).toHaveAttribute('data-selected', 'true')
+    await expect(more).not.toHaveAttribute('data-selected', 'true')
+    await expect.poll(() => page.getByRole('navigation', { name: 'Primary mobile navigation' }).locator('.mobile-dock-indicator').evaluate((element) => getComputedStyle(element).opacity)).toBe('0')
     await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-dock-dark.png') })
     await more.click()
     await panel.getByRole('button', { name: /AI Assistant/ }).click()

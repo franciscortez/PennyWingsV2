@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   ArrowUpRight,
   BarChart3,
@@ -27,6 +27,12 @@ const destinations = [
   { label: 'Monitor', name: 'Monitoring', href: '/monitoring', icon: Wallet },
 ]
 
+// Each route renders its own Layout, so this component remounts on every
+// navigation. Without this cache the pill would snap to the new tab on first
+// paint; starting it at the previous tab's geometry lets the CSS transform
+// transition glide it left-to-right instead.
+let lastDockIndicatorGeometry: { x: number; w: number } | null = null
+
 type MobileNavigationProps = {
   onOpenAssistant: () => void
   onSignOut: () => void
@@ -41,11 +47,14 @@ export function MobileNavigation({
   const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [moreOpen, setMoreOpen] = useState(false)
-  const [isShrunk, setIsShrunk] = useState(false)
-  const lastScrollYRef = useRef(0)
   const dialogRef = useRef<HTMLDialogElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
+  const navRef = useRef<HTMLElement | null>(null)
+  const itemRefs = useRef<Array<HTMLAnchorElement | null>>([])
+  const indicatorRef = useRef<HTMLSpanElement | null>(null)
+  const didInitIndicatorRef = useRef(false)
   const profileActive = pathname === '/profile'
+  const activeIndex = destinations.findIndex(({ href }) => pathname === href)
 
   const closeMore = () => {
     dialogRef.current?.close()
@@ -54,44 +63,70 @@ export function MobileNavigation({
   }
 
   const openMore = () => {
-    setIsShrunk(false)
     setMoreOpen(true)
   }
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (moreOpen) return
+  useLayoutEffect(() => {
+    const nav = navRef.current
+    const indicator = indicatorRef.current
+    if (!nav || !indicator) return
 
-      const currentScrollY = Math.max(0, window.scrollY)
-      const previousScrollY = lastScrollYRef.current
-      const delta = currentScrollY - previousScrollY
+    let raf = 0
+    const place = (x: number, w: number) => {
+      indicator.style.transform = `translateX(${x}px)`
+      indicator.style.width = `${w}px`
+      indicator.style.opacity = '1'
+      lastDockIndicatorGeometry = { x, w }
+    }
 
-      if (currentScrollY <= 20) {
-        setIsShrunk(false)
-      } else if (delta > 8) {
-        setIsShrunk(true)
-      } else if (delta < -8) {
-        setIsShrunk(false)
+    const update = () => {
+      const item = activeIndex >= 0 ? itemRefs.current[activeIndex] : null
+      if (!item) {
+        indicator.style.opacity = '0'
+        return
       }
-
-      lastScrollYRef.current = currentScrollY
+      const x = item.offsetLeft
+      const w = item.offsetWidth
+      if (!didInitIndicatorRef.current) {
+        didInitIndicatorRef.current = true
+        const cached = lastDockIndicatorGeometry
+        if (cached && (cached.x !== x || cached.w !== w)) {
+          // Start at the previous tab so the transition glides across.
+          indicator.style.transition = 'none'
+          indicator.style.transform = `translateX(${cached.x}px)`
+          indicator.style.width = `${cached.w}px`
+          indicator.style.opacity = '1'
+          void indicator.offsetWidth
+          indicator.style.transition = ''
+          raf = requestAnimationFrame(() => place(x, w))
+        } else {
+          indicator.style.transition = 'none'
+          place(x, w)
+          void indicator.offsetWidth
+          indicator.style.transition = ''
+        }
+      } else {
+        place(x, w)
+      }
     }
 
-    window.addEventListener('scroll', handleScroll, { passive: true })
+    update()
+
+    const observer = new ResizeObserver(update)
+    observer.observe(nav)
+    for (const item of itemRefs.current) {
+      if (item) observer.observe(item)
+    }
+    window.addEventListener('resize', update)
+    const fonts = (document as Document & { fonts?: { ready: Promise<unknown> } }).fonts
+    fonts?.ready.then(update).catch(() => undefined)
+
     return () => {
-      window.removeEventListener('scroll', handleScroll)
+      cancelAnimationFrame(raf)
+      observer.disconnect()
+      window.removeEventListener('resize', update)
     }
-  }, [moreOpen])
-
-  const [prevPathname, setPrevPathname] = useState(pathname)
-  if (prevPathname !== pathname) {
-    setPrevPathname(pathname)
-    setIsShrunk(false)
-  }
-
-  useEffect(() => {
-    lastScrollYRef.current = 0
-  }, [pathname])
+  }, [activeIndex])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -122,16 +157,20 @@ export function MobileNavigation({
   return (
     <>
       <nav
+        ref={navRef}
         aria-label="Primary mobile navigation"
         className="mobile-dock md:hidden"
-        data-shrunk={isShrunk}
       >
-        {destinations.map(({ href, icon: Icon, label, name }) => {
+        <span ref={indicatorRef} aria-hidden="true" className="mobile-dock-indicator" />
+        {destinations.map(({ href, icon: Icon, label, name }, index) => {
           const active = pathname === href
 
           return (
             <Link
               key={href}
+              ref={(element) => {
+                itemRefs.current[index] = element
+              }}
               to={href}
               aria-label={name === label ? name : `${label} (${name})`}
               aria-current={active ? 'page' : undefined}
@@ -139,7 +178,7 @@ export function MobileNavigation({
               data-selected={active}
             >
               <span className="mobile-dock-icon" aria-hidden="true">
-                <Icon size={21} strokeWidth={active ? 2.25 : 1.75} />
+                <Icon size={24} strokeWidth={active ? 2.25 : 1.75} />
               </span>
             </Link>
           )
@@ -148,7 +187,6 @@ export function MobileNavigation({
           ref={moreButtonRef}
           type="button"
           className="mobile-dock-item"
-          data-selected={moreOpen || profileActive}
           aria-label="Open more navigation"
           aria-expanded={moreOpen}
           aria-haspopup="dialog"
@@ -156,7 +194,7 @@ export function MobileNavigation({
           onClick={openMore}
         >
           <span className="mobile-dock-icon" aria-hidden="true">
-            <MoreHorizontal size={21} strokeWidth={1.75} />
+            <MoreHorizontal size={24} strokeWidth={1.75} />
           </span>
         </button>
       </nav>

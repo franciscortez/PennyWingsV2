@@ -6,11 +6,6 @@ test.describe('Mobile bottom navigation', () => {
 
   test.beforeEach(async ({ page }) => {
     await setupAuthenticatedMocks(page)
-    for (const table of ['budgets', 'goals']) {
-      await page.route(`**/rest/v1/${table}*`, (route) => route.fulfill({
-        status: 200, contentType: 'application/json', body: '[]',
-      }))
-    }
     await page.goto('/dashboard')
     await expect(page.getByRole('navigation', { name: 'Primary mobile navigation' })).toBeVisible()
   })
@@ -81,17 +76,39 @@ test.describe('Mobile bottom navigation', () => {
       return `${style.transform}|${style.width}|${style.opacity}`
     })
 
-    await expect.poll(() => indicator.evaluate((element) => getComputedStyle(element).opacity)).toBe('1')
+    // The dock remounts on navigation and glides the pill from the previous
+    // tab (360ms CSS transition after a rAF). Reading the transform
+    // immediately after the URL changes can hit the detached old node
+    // (empty computed style) or the glide start position, so wait for the
+    // pill to settle before capturing a state for later comparison.
+    const waitForSettledIndicator = async () => {
+      await expect.poll(() => indicator.evaluate(
+        (element) => `${element.isConnected}|${getComputedStyle(element).opacity}`,
+      )).toBe('true|1')
+      await expect.poll(async () => {
+        const first = await indicatorState()
+        if (first.split('|')[2] !== '1') return 'unsettled'
+        await page.waitForTimeout(150)
+        const second = await indicatorState()
+        return first === second ? first : 'unsettled'
+      }).not.toBe('unsettled')
+    }
+
+    await waitForSettledIndicator()
     const dashboardState = await indicatorState()
 
     await nav.getByRole('link', { name: /Accounts/ }).click()
     await expect(page).toHaveURL(/\/accounts$/)
-    await expect.poll(indicatorState).not.toBe(dashboardState)
+    await waitForSettledIndicator()
+    const accountsState = await indicatorState()
+    expect(accountsState).not.toBe(dashboardState)
 
     await nav.getByRole('link', { name: /Activity/ }).click()
     await expect(page).toHaveURL(/\/transactions$/)
+    await waitForSettledIndicator()
     const activityState = await indicatorState()
-    await expect.poll(indicatorState).not.toBe(dashboardState)
+    expect(activityState).not.toBe(dashboardState)
+    expect(activityState).not.toBe(accountsState)
     expect(activityState.split('|')[2]).toBe('1')
 
     const more = page.getByRole('button', { name: 'Open more navigation' })
@@ -99,7 +116,7 @@ test.describe('Mobile bottom navigation', () => {
     await more.click()
     await expect(page.getByRole('dialog', { name: 'Your space' })).toBeVisible()
     await expect(more).not.toHaveAttribute('data-selected', 'true')
-    expect(await indicatorState()).toBe(activityState)
+    await expect.poll(indicatorState).toBe(activityState)
     await page.keyboard.press('Escape')
   })
 

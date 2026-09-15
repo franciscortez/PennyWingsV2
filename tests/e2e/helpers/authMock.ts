@@ -54,6 +54,14 @@ export const calendarFixtureDates = () => ({
 export async function setupAuthenticatedMocks(page: Page) {
   const { first, second } = calendarFixtureDates()
 
+  // Dashboard readiness also depends on these queries. Keep them mocked so
+  // the suite never waits for a real backend connection to fail.
+  for (const table of ['budgets', 'goals']) {
+    await page.route(`**/rest/v1/${table}*`, (route) => route.fulfill({
+      status: 200, contentType: 'application/json', body: '[]',
+    }))
+  }
+
   const mockUser = {
     id: 'test-user-id',
     email: 'test@example.com',

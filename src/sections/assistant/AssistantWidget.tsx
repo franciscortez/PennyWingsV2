@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react'
 
 import { useAssistant } from '@/hooks/useAssistant'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useScrollLock } from '@/hooks/useScrollLock'
+import { registerOverlay } from '@/lib/overlayStack'
 import { AssistantComposer } from '@/sections/assistant/AssistantComposer'
 import { AssistantConversation } from '@/sections/assistant/AssistantConversation'
 import { AssistantHeader } from '@/sections/assistant/AssistantHeader'
@@ -24,6 +27,11 @@ export function AssistantWidget() {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
+
+  // The desktop panel is a companion to the page and must not freeze it; the
+  // mobile panel is full screen, so there it owns the page like any overlay.
+  useScrollLock(isOpen && !isDesktop)
 
   useEffect(() => {
     if (!isOpen) return
@@ -33,9 +41,9 @@ export function AssistantWidget() {
         ? document.activeElement
         : null
 
-    const isMobile = !window.matchMedia('(min-width: 768px)').matches
+    const isMobileViewport = !window.matchMedia('(min-width: 768px)').matches
     const focusFrame = window.requestAnimationFrame(() => {
-      if (isMobile) {
+      if (isMobileViewport) {
         panelRef.current
           ?.querySelector<HTMLElement>('button:not([disabled])')
           ?.focus()
@@ -44,37 +52,12 @@ export function AssistantWidget() {
       }
     })
 
-    let cleanupScrollLock = () => {}
-
-    if (isMobile) {
-      const body = document.body
-      const previousBodyStyles = {
-        overflow: body.style.overflow,
-        position: body.style.position,
-        top: body.style.top,
-        width: body.style.width,
-      }
-      const lockedScrollY = window.scrollY
-      body.style.overflow = 'hidden'
-      body.style.position = 'fixed'
-      body.style.top = `-${lockedScrollY}px`
-      body.style.width = '100%'
-
-      cleanupScrollLock = () => {
-        body.style.overflow = previousBodyStyles.overflow
-        body.style.position = previousBodyStyles.position
-        body.style.top = previousBodyStyles.top
-        body.style.width = previousBodyStyles.width
-        const root = document.documentElement
-        const previousScrollBehavior = root.style.scrollBehavior
-        root.style.scrollBehavior = 'auto'
-        window.scrollTo(0, lockedScrollY)
-        root.style.scrollBehavior = previousScrollBehavior
-      }
-    }
+    const overlay = registerOverlay(document)
 
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === 'Escape') closeAssistant()
+      // Escape belongs to the topmost overlay, so dismissing a modal above the
+      // assistant does not also close the assistant.
+      if (event.key === 'Escape' && overlay.isTopmost()) closeAssistant()
 
       if (event.key === 'Tab') {
         const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
@@ -98,7 +81,7 @@ export function AssistantWidget() {
     return () => {
       window.cancelAnimationFrame(focusFrame)
       window.removeEventListener('keydown', handleKeyDown)
-      cleanupScrollLock()
+      overlay.release()
       previousFocusRef.current?.focus({ preventScroll: true })
     }
   }, [closeAssistant, isOpen])

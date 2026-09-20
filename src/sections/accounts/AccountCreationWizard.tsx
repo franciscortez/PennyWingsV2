@@ -6,10 +6,9 @@ import {
   FaMobileScreenButton,
   FaMoneyBillWave,
   FaWallet,
-  FaXmark,
 } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
-import { memo, useCallback, useEffect, useState } from 'react'
+import { memo, useCallback, useEffect, useRef, useState } from 'react'
 import {
   useForm,
   type FieldErrors,
@@ -17,6 +16,8 @@ import {
   type FieldPathValue,
 } from 'react-hook-form'
 import { z } from 'zod'
+
+import { ModalFrame } from '@/components/ui/ModalFrame'
 
 import type { AccountColor, AccountCreateValues } from '@/types'
 import { BankCardFace } from '@/sections/accounts/BankCardFace'
@@ -208,14 +209,17 @@ export function AccountCreationWizard({
   // eslint-disable-next-line react-hooks/incompatible-library
   const form = watch()
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
+  const bodyRef = useRef<HTMLDivElement>(null)
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
+  useEffect(() => {
+    if (!bodyRef.current) return
+
+    if (typeof bodyRef.current.scrollTo === 'function') {
+      bodyRef.current.scrollTo({ behavior: 'instant', top: 0 })
+    } else {
+      bodyRef.current.scrollTop = 0
+    }
+  }, [step])
 
   const handleFieldChange = useCallback(
     <TField extends FieldPath<WizardForm>>(
@@ -279,104 +283,86 @@ export function AccountCreationWizard({
     }
   })
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+  const title = isDirectSetupType(form.setupType)
+    ? form.setupType === 'cash'
+      ? 'Cash on Hand'
+      : 'Lent Money'
+    : `Step ${step} of 3`
+
+  const backButton =
+    step > 1 ? (
       <button
         type="button"
-        onClick={onClose}
-        className="absolute inset-0 animate-fade-in bg-black/40"
-        aria-label="Close account setup"
-      />
-      <section
-        aria-labelledby="account-creation-title"
-        aria-modal="true"
-        role="dialog"
-        className="relative z-10 flex max-h-[95vh] w-full max-w-md flex-col overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900"
+        onClick={handleBack}
+        className="rounded-full p-2 text-gray-400 transition-colors hover:bg-pink-50 active:scale-90 dark:hover:bg-slate-800"
+        aria-label="Back"
       >
-        <div className="flex items-center justify-between border-b border-pink-50 p-6 pb-4 sm:p-8 sm:pb-4 dark:border-slate-800">
-          <div className="flex items-center gap-2">
-            {step > 1 ? (
-              <button
-                type="button"
-                onClick={handleBack}
-                className="rounded-full p-2 text-gray-400 transition-colors hover:bg-pink-50 active:scale-90 dark:hover:bg-slate-800"
-                aria-label="Back"
-              >
-                <FaArrowLeft className="h-5 w-5" aria-hidden="true" />
-              </button>
-            ) : null}
-            <h2 id="account-creation-title" className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
-              {isDirectSetupType(form.setupType)
-                ? form.setupType === 'cash'
-                  ? 'Cash on Hand'
-                  : 'Lent Money'
-                : `Step ${step} of 3`}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-2 text-gray-400 transition-all duration-200 hover:rotate-90 hover:bg-pink-50 active:scale-90 dark:hover:bg-slate-800"
-            aria-label="Close account setup"
+        <FaArrowLeft className="h-5 w-5" aria-hidden="true" />
+      </button>
+    ) : null
+
+  return (
+    <ModalFrame
+      bodyRef={bodyRef}
+      closeDisabled={saving}
+      closeLabel="Close account setup"
+      headerLeading={backButton}
+      onClose={onClose}
+      panelClassName="max-w-md rounded-[2.5rem]"
+      title={title}
+      titleId="account-creation-title"
+    >
+      <div className="mb-8 flex gap-2">
+        {[1, 2, 3].map((item) => (
+          <div
+            key={item}
+            className="relative h-2 flex-1 overflow-hidden rounded-full bg-pink-100 dark:bg-slate-800"
           >
-            <FaXmark className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-6 pt-4 sm:p-8 sm:pt-4">
-          <div className="mb-8 flex gap-2">
-            {[1, 2, 3].map((item) => (
-              <div
-                key={item}
-                className="relative h-2 flex-1 overflow-hidden rounded-full bg-pink-100 dark:bg-slate-800"
-              >
-                <div
-                  className="absolute inset-0 bg-pink-500 transition-all duration-200 ease-out"
-                  style={{
-                    width:
-                      item <= step || isDirectSetupType(form.setupType)
-                        ? '100%'
-                        : '0%',
-                  }}
-                />
-              </div>
-            ))}
+            <div
+              className="absolute inset-0 bg-pink-500 transition-all duration-200 ease-out"
+              style={{
+                width:
+                  item <= step || isDirectSetupType(form.setupType)
+                    ? '100%'
+                    : '0%',
+              }}
+            />
           </div>
+        ))}
+      </div>
 
-          <div key={step} className="animate-fade-in">
-            {step === 1 ? (
-              <StepOne
-                errors={errors}
-                form={form}
-                hasCashAccount={hasCashAccount}
-                onNext={handleStep1Next}
-                onSelectType={handleSelectType}
-              />
-            ) : null}
+      <div key={step} className="animate-fade-in">
+        {step === 1 ? (
+          <StepOne
+            errors={errors}
+            form={form}
+            hasCashAccount={hasCashAccount}
+            onNext={handleStep1Next}
+            onSelectType={handleSelectType}
+          />
+        ) : null}
 
-            {step === 2 && form.setupType && !isDirectSetupType(form.setupType) ? (
-              <StepTwo
-                errors={errors}
-                form={form}
-                providers={providerOptions[form.setupType]}
-                onChange={handleFieldChange}
-                onNext={handleStep2Next}
-              />
-            ) : null}
+        {step === 2 && form.setupType && !isDirectSetupType(form.setupType) ? (
+          <StepTwo
+            errors={errors}
+            form={form}
+            providers={providerOptions[form.setupType]}
+            onChange={handleFieldChange}
+            onNext={handleStep2Next}
+          />
+        ) : null}
 
-            {step === 3 ? (
-              <StepThree
-                errors={errors}
-                form={form}
-                saving={saving}
-                onChange={handleFieldChange}
-                onSubmit={() => void handleSubmit()}
-              />
-            ) : null}
-          </div>
-        </div>
-      </section>
-    </div>
+        {step === 3 ? (
+          <StepThree
+            errors={errors}
+            form={form}
+            saving={saving}
+            onChange={handleFieldChange}
+            onSubmit={() => void handleSubmit()}
+          />
+        ) : null}
+      </div>
+    </ModalFrame>
   )
 }
 
@@ -563,7 +549,6 @@ const StepThree = memo(function StepThree({
             aria-describedby={errors.accountName ? 'lent-account-name-error' : undefined}
             aria-invalid={Boolean(errors.accountName)}
             id="lent-account-name"
-            autoFocus
             type="text"
             placeholder="e.g. Juan's utang"
             value={form.accountName}
@@ -592,7 +577,6 @@ const StepThree = memo(function StepThree({
           <input
             aria-describedby={errors.balance ? 'account-balance-error' : undefined}
             aria-invalid={Boolean(errors.balance)}
-            autoFocus={form.setupType !== 'lent'}
             type="number"
             step="0.01"
             placeholder="0.00"

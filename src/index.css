@@ -65,6 +65,80 @@ body {
   min-height: 100vh;
 }
 
+/* Shared modal frame geometry (issue #35).
+   The page behind an overlay is frozen by `src/lib/scrollLock.ts`; these rules
+   make sure only the intended region can scroll, and that the panel stays
+   bounded on short, zoomed and safe-area-padded viewports. */
+.modal-overlay {
+  --modal-gutter: 0.5rem;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--modal-gutter) + env(safe-area-inset-top, 0px))
+    calc(var(--modal-gutter) + env(safe-area-inset-right, 0px))
+    calc(var(--modal-gutter) + env(safe-area-inset-bottom, 0px))
+    calc(var(--modal-gutter) + env(safe-area-inset-left, 0px));
+}
+
+@media (min-width: 40rem) {
+  .modal-overlay {
+    --modal-gutter: 1rem;
+  }
+}
+
+.modal-panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: 100%;
+  max-height: calc(
+    100vh - (var(--modal-gutter) * 2) - env(safe-area-inset-top, 0px) -
+      env(safe-area-inset-bottom, 0px)
+  );
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* `dvh` tracks the retracting mobile URL bar; the `vh` rule above is the
+   fallback for engines that do not support it. */
+@supports (height: 100dvh) {
+  .modal-panel {
+    max-height: calc(
+      100dvh - (var(--modal-gutter) * 2) - env(safe-area-inset-top, 0px) -
+        env(safe-area-inset-bottom, 0px)
+    );
+  }
+}
+
+.modal-header,
+.modal-actions {
+  flex-shrink: 0;
+}
+
+.modal-body {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Landscape phones and heavily zoomed viewports: a pinned footer would leave
+   the fields unreachable, so the panel becomes the single scroller instead of
+   the content region. */
+@media (max-height: 30rem) {
+  .modal-panel {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .modal-body {
+    overflow: visible;
+  }
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

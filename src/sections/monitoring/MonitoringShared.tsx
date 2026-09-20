@@ -1,5 +1,7 @@
-import { Pencil, Plus, Trash2, X, type LucideIcon } from 'lucide-react'
-import { useEffect, type ReactNode } from 'react'
+import { Pencil, Plus, Trash2, type LucideIcon } from 'lucide-react'
+import type { ReactNode } from 'react'
+
+import { ModalFrame } from '@/components/ui/ModalFrame'
 
 export type ModalMode = 'create' | 'edit'
 
@@ -112,73 +114,54 @@ export function CardSkeletonGrid() {
   )
 }
 
+/**
+ * Compatibility wrapper over the shared `ModalFrame` (issue #35), so budget and
+ * goal forms inherit the page scroll lock and the bounded scroll region without
+ * each one re-implementing the overlay.
+ */
 export function ModalShell({
+  actions,
   children,
   onClose,
   saving,
   title,
 }: {
+  actions?: ReactNode
   children: ReactNode
   onClose: () => void
   saving: boolean
   title: string
 }) {
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
-
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40"
-        aria-label="Close monitoring form"
-      />
-      <section
-        aria-labelledby="monitoring-modal-title"
-        aria-modal="true"
-        role="dialog"
-        className="relative z-10 max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-[2.5rem] border border-pink-100 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 sm:p-8"
-      >
-        <div className="mb-6 flex items-center justify-between">
-          <h2 id="monitoring-modal-title" className="text-2xl font-black tracking-tight text-gray-900 dark:text-slate-100">
-            {title}
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={saving}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-pink-50 text-gray-400 transition hover:text-pink-600 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-450 dark:hover:text-pink-400"
-            aria-label="Close monitoring form"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
-        {children}
-      </section>
-    </div>
+    <ModalFrame
+      actions={actions}
+      closeDisabled={saving}
+      closeLabel="Close monitoring form"
+      onClose={onClose}
+      panelClassName="max-w-lg rounded-[2.5rem]"
+      title={title}
+      titleId="monitoring-modal-title"
+    >
+      {children}
+    </ModalFrame>
   )
 }
 
 export function ModalActions({
+  formId,
   onClose,
   saving,
   submitLabel,
   waitingLabel,
 }: {
+  formId: string
   onClose: () => void
   saving: boolean
   submitLabel: string
   waitingLabel: string
 }) {
   return (
-    <div className="flex items-center justify-end gap-3 pt-3">
+    <div className="flex items-center justify-end gap-3">
       <button
         type="button"
         onClick={onClose}
@@ -189,6 +172,7 @@ export function ModalActions({
       </button>
       <button
         type="submit"
+        form={formId}
         disabled={saving}
         className="rounded-2xl bg-pink-500 px-7 py-3 text-sm font-black text-white transition hover:bg-pink-600 disabled:opacity-50"
       >

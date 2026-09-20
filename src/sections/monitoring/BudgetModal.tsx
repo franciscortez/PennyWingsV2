@@ -43,6 +43,7 @@ export function BudgetModal({
     budget ? String(budget.limitAmount) : '',
   )
   const [period, setPeriod] = useState<BudgetPeriod>(budget?.period ?? 'monthly')
+  const formId = 'budget-form'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -64,11 +65,20 @@ export function BudgetModal({
 
   return (
     <ModalShell
+      actions={
+        <ModalActions
+          formId={formId}
+          saving={saving}
+          submitLabel={mode === 'edit' ? 'Save Budget' : 'Create Budget'}
+          waitingLabel={mode === 'edit' ? 'Saving...' : 'Creating...'}
+          onClose={onClose}
+        />
+      }
       saving={saving}
       title={mode === 'edit' ? 'Edit Budget' : 'New Budget'}
       onClose={onClose}
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form id={formId} onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label
             htmlFor="budget-category"
@@ -130,12 +140,6 @@ export function BudgetModal({
             </select>
           </div>
         </div>
-        <ModalActions
-          saving={saving}
-          submitLabel={mode === 'edit' ? 'Save Budget' : 'Create Budget'}
-          waitingLabel={mode === 'edit' ? 'Saving...' : 'Creating...'}
-          onClose={onClose}
-        />
       </form>
     </ModalShell>
   )

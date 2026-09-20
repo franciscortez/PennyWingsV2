@@ -223,6 +223,7 @@ export default function Transactions() {
           cardAccounts={cardAccounts}
           cashAccount={cashAccount}
           categories={categories}
+          dismissDisabled={saving}
           lentAccounts={lentAccounts}
           saving={saving || optionsLoading}
           transaction={editingTransaction}

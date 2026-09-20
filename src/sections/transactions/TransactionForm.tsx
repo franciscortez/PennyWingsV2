@@ -1,6 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { X } from 'lucide-react'
-import { useEffect, useMemo } from 'react'
+import { useMemo } from 'react'
 import {
   useForm,
   type FieldErrors,
@@ -9,6 +8,7 @@ import {
   type Resolver,
 } from 'react-hook-form'
 
+import { ModalFrame } from '@/components/ui/ModalFrame'
 import { toDateInputValue } from '@/lib/date'
 import type {
   Account,
@@ -25,9 +25,16 @@ type TransactionFormProps = {
   cardAccounts: Account[]
   cashAccount: Account | null
   categories: TransactionCategory[]
+  /**
+   * Dismissal permission only. The caller owns the real guard, but the frame
+   * needs it too so Escape, the backdrop and the close button stay inert while
+   * the mutation is in flight.
+   */
+  dismissDisabled: boolean
   lentAccounts: Account[]
   onClose: () => void
   onSubmit: (values: TransactionFormValues) => Promise<boolean>
+  /** Busy submission: mutation saving plus option loading. */
   saving: boolean
   transaction: Transaction | null
   walletAccounts: Account[]
@@ -97,6 +104,7 @@ export function TransactionForm({
   cardAccounts,
   cashAccount,
   categories,
+  dismissDisabled,
   lentAccounts,
   onClose,
   onSubmit,
@@ -123,15 +131,6 @@ export function TransactionForm({
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const form = watch()
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
 
   const filteredCategories = useMemo(
     () =>
@@ -263,178 +262,165 @@ export function TransactionForm({
     }
   })
 
+  const formId = 'transaction-form'
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4">
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute inset-0 bg-black/40"
-        aria-label="Close transaction form"
-      />
-      <section
-        aria-labelledby="transaction-form-title"
-        aria-modal="true"
-        role="dialog"
-        className="relative z-10 flex max-h-[95vh] w-full flex-col overflow-hidden rounded-[2rem] border border-pink-100 bg-white dark:border-slate-800 dark:bg-slate-900 md:max-h-[90vh] md:max-w-lg md:rounded-[2.5rem]"
+    <ModalFrame
+      actions={
+        <button
+          disabled={saving}
+          form={formId}
+          type="submit"
+          className="w-full rounded-[1.5rem] bg-gradient-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition disabled:opacity-50 md:rounded-[2rem] md:py-5 md:text-xl"
+        >
+          {saving
+            ? transaction
+              ? 'Updating...'
+              : 'Recording...'
+            : transaction
+              ? 'Update Transaction'
+              : 'Save Transaction'}
+        </button>
+      }
+      closeDisabled={dismissDisabled}
+      closeLabel="Close transaction form"
+      onClose={onClose}
+      panelClassName="md:max-w-lg md:rounded-[2.5rem]"
+      title={transaction ? 'Edit Transaction' : 'New Transaction'}
+      titleId="transaction-form-title"
+    >
+      <form
+        id={formId}
+        noValidate
+        onSubmit={submitForm}
+        className="space-y-4 md:space-y-6"
       >
-        <div className="overflow-y-auto p-6 md:p-8">
-          <div className="mb-6 flex items-center justify-between md:mb-8">
-            <h2 id="transaction-form-title" className="text-xl font-black tracking-tight text-gray-800 dark:text-slate-100 md:text-2xl">
-              {transaction ? 'Edit Transaction' : 'New Transaction'}
-            </h2>
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="rounded-full p-2 text-gray-400 transition hover:bg-pink-50 hover:text-pink-600 disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-pink-400"
-              aria-label="Close transaction form"
-            >
-              <X className="h-6 w-6" aria-hidden="true" />
-            </button>
+          <TransactionTypePicker value={form.type} onChange={updateType} />
+
+          <div className="text-center">
+            <div className="relative">
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-black text-pink-300 md:left-6 md:text-2xl dark:text-slate-650">
+                PHP
+              </span>
+              <input
+                aria-describedby={errors.amount ? 'transaction-amount-error' : undefined}
+                aria-invalid={Boolean(errors.amount)}
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={form.amount}
+                onChange={(event) => updateField('amount', event.target.value)}
+                className="w-full rounded-xl border-2 border-pink-100 bg-pink-50/50 py-3 pl-20 pr-4 text-xl font-black text-gray-800 outline-none transition placeholder:text-pink-300 focus:border-pink-500 md:rounded-2xl md:py-4 md:pl-24 md:pr-6 md:text-2xl dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+              />
+            </div>
+            {errors.amount ? (
+              <p id="transaction-amount-error" className="mt-2 text-left text-xs font-bold text-red-500">
+                {errors.amount.message}
+              </p>
+            ) : null}
           </div>
 
-          <form onSubmit={submitForm} noValidate className="space-y-4 md:space-y-6">
-            <TransactionTypePicker value={form.type} onChange={updateType} />
+          <AccountSourcePanel
+            cardAccounts={cardAccounts}
+            cashAccount={cashAccount}
+            errors={errors}
+            form={form}
+            lentAccounts={lentAccounts}
+            onPaymentMethodChange={updatePaymentMethod}
+            onUpdate={updateField}
+            walletAccounts={walletAccounts}
+          />
 
-            <div className="text-center">
-              <div className="relative">
-                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-black text-pink-300 md:left-6 md:text-2xl dark:text-slate-650">
-                  PHP
-                </span>
-                <input
-                  aria-describedby={errors.amount ? 'transaction-amount-error' : undefined}
-                  aria-invalid={Boolean(errors.amount)}
-                  type="number"
-                  step="0.01"
-                  placeholder="0.00"
-                  value={form.amount}
-                  onChange={(event) => updateField('amount', event.target.value)}
-                  className="w-full rounded-xl border-2 border-pink-100 bg-pink-50/50 py-3 pl-20 pr-4 text-xl font-black text-gray-800 outline-none transition placeholder:text-pink-300 focus:border-pink-500 md:rounded-2xl md:py-4 md:pl-24 md:pr-6 md:text-2xl dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
-                />
-              </div>
-              {errors.amount ? (
-                <p id="transaction-amount-error" className="mt-2 text-left text-xs font-bold text-red-500">
-                  {errors.amount.message}
+          {form.type === 'transfer' ? (
+            <>
+              <DestinationPanel
+                cardAccounts={destinationCardAccounts}
+                cashAccount={destinationCashAccount}
+                errors={errors}
+                form={form}
+                lentAccounts={destinationLentAccounts}
+                onDestinationMethodChange={updateDestinationMethod}
+                onUpdate={updateField}
+                walletAccounts={destinationWalletAccounts}
+              />
+              <TransferFeePanel
+                errors={errors}
+                form={form}
+                onUpdate={updateField}
+              />
+            </>
+          ) : null}
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1 md:space-y-2">
+              <label
+                htmlFor="transaction-category"
+                className="ml-1 block truncate text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+              >
+                Category
+              </label>
+              <select
+                aria-describedby={errors.category_id ? 'transaction-category-error' : undefined}
+                aria-invalid={Boolean(errors.category_id)}
+                id="transaction-category"
+                value={form.category_id}
+                onChange={(event) =>
+                  updateField('category_id', event.target.value)
+                }
+                className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+              >
+                <option value="" className="dark:bg-slate-900">Choose a category</option>
+                {filteredCategories.map((category) => (
+                  <option key={category.id} value={category.id} className="dark:bg-slate-900">
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+              {errors.category_id ? (
+                <p id="transaction-category-error" className="text-xs font-bold text-red-500">
+                  {errors.category_id.message}
                 </p>
               ) : null}
             </div>
 
-            <AccountSourcePanel
-              cardAccounts={cardAccounts}
-              cashAccount={cashAccount}
-              errors={errors}
-              form={form}
-              lentAccounts={lentAccounts}
-              onPaymentMethodChange={updatePaymentMethod}
-              onUpdate={updateField}
-              walletAccounts={walletAccounts}
-            />
-
-            {form.type === 'transfer' ? (
-              <>
-                <DestinationPanel
-                  cardAccounts={destinationCardAccounts}
-                  cashAccount={destinationCashAccount}
-                  errors={errors}
-                  form={form}
-                  lentAccounts={destinationLentAccounts}
-                  onDestinationMethodChange={updateDestinationMethod}
-                  onUpdate={updateField}
-                  walletAccounts={destinationWalletAccounts}
-                />
-                <TransferFeePanel
-                  errors={errors}
-                  form={form}
-                  onUpdate={updateField}
-                />
-              </>
-            ) : null}
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div className="space-y-1 md:space-y-2">
-                <label
-                  htmlFor="transaction-category"
-                  className="ml-1 block truncate text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
-                >
-                  Category
-                </label>
-                <select
-                  aria-describedby={errors.category_id ? 'transaction-category-error' : undefined}
-                  aria-invalid={Boolean(errors.category_id)}
-                  id="transaction-category"
-                  value={form.category_id}
-                  onChange={(event) =>
-                    updateField('category_id', event.target.value)
-                  }
-                  className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
-                >
-                  <option value="" className="dark:bg-slate-900">Choose a category</option>
-                  {filteredCategories.map((category) => (
-                    <option key={category.id} value={category.id} className="dark:bg-slate-900">
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-                {errors.category_id ? (
-                  <p id="transaction-category-error" className="text-xs font-bold text-red-500">
-                    {errors.category_id.message}
-                  </p>
-                ) : null}
-              </div>
-
-              <div className="space-y-1 md:space-y-2">
-                <label
-                  htmlFor="transaction-date"
-                  className="ml-1 block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
-                >
-                  Date
-                </label>
-                <input
-                  aria-describedby={errors.transaction_date ? 'transaction-date-error' : undefined}
-                  aria-invalid={Boolean(errors.transaction_date)}
-                  id="transaction-date"
-                  type="date"
-                  value={form.transaction_date}
-                  onChange={(event) =>
-                    updateField('transaction_date', event.target.value)
-                  }
-                  className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
-                />
-                {errors.transaction_date ? (
-                  <p id="transaction-date-error" className="text-xs font-bold text-red-500">
-                    {errors.transaction_date.message}
-                  </p>
-                ) : null}
-              </div>
+            <div className="space-y-1 md:space-y-2">
+              <label
+                htmlFor="transaction-date"
+                className="ml-1 block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+              >
+                Date
+              </label>
+              <input
+                aria-describedby={errors.transaction_date ? 'transaction-date-error' : undefined}
+                aria-invalid={Boolean(errors.transaction_date)}
+                id="transaction-date"
+                type="date"
+                value={form.transaction_date}
+                onChange={(event) =>
+                  updateField('transaction_date', event.target.value)
+                }
+                className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+              />
+              {errors.transaction_date ? (
+                <p id="transaction-date-error" className="text-xs font-bold text-red-500">
+                  {errors.transaction_date.message}
+                </p>
+              ) : null}
             </div>
+          </div>
 
-            <input
-              type="text"
-              placeholder="Short note..."
-              value={form.description}
-              onChange={(event) =>
-                updateField('description', event.target.value)
-              }
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-3.5 text-sm font-bold text-gray-700 outline-none transition placeholder:text-pink-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 md:py-4 md:text-base dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
-            />
+          <input
+            type="text"
+            placeholder="Short note..."
+            value={form.description}
+            onChange={(event) =>
+              updateField('description', event.target.value)
+            }
+            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-3.5 text-sm font-bold text-gray-700 outline-none transition placeholder:text-pink-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 md:py-4 md:text-base dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+          />
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-[1.5rem] bg-gradient-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition disabled:opacity-50 md:rounded-[2rem] md:py-5 md:text-xl"
-            >
-              {saving
-                ? transaction
-                  ? 'Updating...'
-                  : 'Recording...'
-                : transaction
-                  ? 'Update Transaction'
-                  : 'Save Transaction'}
-            </button>
-          </form>
-        </div>
-      </section>
-    </div>
+      </form>
+    </ModalFrame>
   )
 }
 

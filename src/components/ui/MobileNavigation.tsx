@@ -16,6 +16,8 @@ import {
 } from 'lucide-react'
 import { Link, useLocation } from 'react-router'
 
+import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useScrollLock } from '@/hooks/useScrollLock'
 import { useTheme } from '@/context/ThemeContext'
 import type { SidebarInfo } from '@/types'
 
@@ -47,6 +49,7 @@ export function MobileNavigation({
   const { pathname } = useLocation()
   const { theme, toggleTheme } = useTheme()
   const [moreOpen, setMoreOpen] = useState(false)
+  const isDesktop = useMediaQuery('(min-width: 768px)')
   const dialogRef = useRef<HTMLDialogElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement | null>(null)
@@ -61,6 +64,10 @@ export function MobileNavigation({
     setMoreOpen(false)
     moreButtonRef.current?.focus({ preventScroll: true })
   }
+
+  // The sheet is a native dialog (browser-owned top layer and focus), so only
+  // the page freeze is delegated to the shared lock manager.
+  useScrollLock(moreOpen && !isDesktop)
 
   const openMore = () => {
     setMoreOpen(true)
@@ -130,28 +137,30 @@ export function MobileNavigation({
 
   useEffect(() => {
     const dialog = dialogRef.current
-    if (!moreOpen || !dialog) return
 
-    const desktop = window.matchMedia('(min-width: 768px)')
+    if (!moreOpen || !dialog || isDesktop) return
+
     // A native modal keeps keyboard focus inside the sheet and the page inert.
-    if (!desktop.matches) dialog.showModal()
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    const handleResize = () => {
-      if (desktop.matches) {
-        dialog.close()
-        setMoreOpen(false)
-      }
-    }
-    desktop.addEventListener('change', handleResize)
+    if (!dialog.open) dialog.showModal()
 
     return () => {
-      desktop.removeEventListener('change', handleResize)
-      document.body.style.overflow = previousOverflow
       if (dialog.open) dialog.close()
     }
+  }, [isDesktop, moreOpen])
+
+  // The sheet is only shown below the desktop breakpoint (the dock hides and the
+  // sidebar takes over), so crossing it dismisses the sheet instead of leaving
+  // an invisible overlay holding a lock.
+  useEffect(() => {
+    if (!moreOpen) return
+
+    const desktop = window.matchMedia('(min-width: 768px)')
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) setMoreOpen(false)
+    }
+
+    desktop.addEventListener('change', handleChange)
+    return () => desktop.removeEventListener('change', handleChange)
   }, [moreOpen])
 
   return (

@@ -1,6 +1,9 @@
 import Swal, { type SweetAlertIcon, type SweetAlertOptions } from 'sweetalert2'
 import 'sweetalert2/dist/sweetalert2.min.css'
 
+import { registerOverlay } from '@/lib/overlayStack'
+import { acquireScrollLock, reassertScrollLock } from '@/lib/scrollLock'
+
 type AlertMessage =
   | string
   | {
@@ -72,16 +75,38 @@ const showToast = (icon: SweetAlertIcon, message: AlertMessage) => {
 
 const ask = async (options: SweetAlertOptions) => {
   const theme = getAlertTheme()
-  const result = await confirm.fire({
-    background: theme.background,
-    cancelButtonColor: theme.cancelButtonColor,
-    color: theme.color,
-    confirmButtonColor: theme.confirmButtonColor,
-    showCancelButton: true,
-    ...options,
-  })
+  const overlay = registerOverlay(document)
+  const releaseLock = acquireScrollLock(document)
 
-  return result.isConfirmed
+  try {
+    const result = await confirm.fire({
+      background: theme.background,
+      cancelButtonColor: theme.cancelButtonColor,
+      color: theme.color,
+      confirmButtonColor: theme.confirmButtonColor,
+      showCancelButton: true,
+      ...options,
+      willOpen: (popup) => {
+        document.body.classList.add('swal2-iosfix')
+        options.willOpen?.(popup)
+      },
+      didOpen: (popup) => {
+        document.body.classList.remove('swal2-iosfix')
+        reassertScrollLock(document)
+        options.didOpen?.(popup)
+      },
+      didClose: () => {
+        reassertScrollLock(document)
+        options.didClose?.()
+      },
+    })
+
+    return result.isConfirmed
+  } finally {
+    document.body.classList.remove('swal2-iosfix')
+    overlay.release()
+    releaseLock()
+  }
 }
 
 export const alerts = {

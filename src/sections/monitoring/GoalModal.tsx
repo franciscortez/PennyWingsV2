@@ -42,6 +42,7 @@ export function GoalModal({
   )
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? '')
   const [linkedValue, setLinkedValue] = useState(initialLinkedValue)
+  const formId = 'goal-form'
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -67,11 +68,20 @@ export function GoalModal({
 
   return (
     <ModalShell
+      actions={
+        <ModalActions
+          formId={formId}
+          saving={saving}
+          submitLabel={mode === 'edit' ? 'Save Goal' : 'Create Goal'}
+          waitingLabel={mode === 'edit' ? 'Saving...' : 'Creating...'}
+          onClose={onClose}
+        />
+      }
       saving={saving}
       title={mode === 'edit' ? 'Edit Goal' : 'New Goal'}
       onClose={onClose}
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form id={formId} onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label
             htmlFor="goal-name"
@@ -166,12 +176,6 @@ export function GoalModal({
             className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
           />
         </div>
-        <ModalActions
-          saving={saving}
-          submitLabel={mode === 'edit' ? 'Save Goal' : 'Create Goal'}
-          waitingLabel={mode === 'edit' ? 'Saving...' : 'Creating...'}
-          onClose={onClose}
-        />
       </form>
     </ModalShell>
   )

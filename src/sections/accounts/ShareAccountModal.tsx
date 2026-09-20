@@ -1,6 +1,7 @@
-import { FaCopy, FaTrashCan, FaUserMinus, FaXmark } from 'react-icons/fa6'
-import { useEffect, useState } from 'react'
+import { FaCopy, FaTrashCan, FaUserMinus } from 'react-icons/fa6'
+import { useState } from 'react'
 
+import { ModalFrame } from '@/components/ui/ModalFrame'
 import { useAuth } from '@/hooks/useAuth'
 import { useJointAccountData } from '@/hooks/useJointAccountData'
 import { alerts } from '@/lib/alert'
@@ -20,15 +21,6 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
   const resourceType = getResourceType(account)
   const [generatedCode, setGeneratedCode] = useState<string | null>(null)
   const [inviteRole, setInviteRole] = useState<AccountMemberRole>('viewer')
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose()
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [onClose])
 
   const {
     generating,
@@ -123,40 +115,15 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
   }
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      <button
-        type="button"
-        onClick={onClose}
-        className="absolute inset-0 animate-fade-in bg-black/40"
-        aria-label="Close share modal"
-      />
-      <section
-        aria-labelledby="share-account-title"
-        aria-modal="true"
-        role="dialog"
-        className="relative z-10 flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-[2.5rem] border border-pink-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900"
-      >
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-pink-50 p-6 pb-4 dark:border-slate-800">
-          <div>
-            <h2 id="share-account-title" className="text-2xl font-black tracking-tight text-gray-800 dark:text-slate-100">
-              Share Account
-            </h2>
-            <p className="mt-1 text-sm font-bold text-gray-400 dark:text-slate-500">
-              {account.name}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-2 text-gray-400 transition-all duration-200 hover:rotate-90 hover:bg-pink-50 active:scale-90 dark:hover:bg-slate-800"
-            aria-label="Close"
-          >
-            <FaXmark className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-
-        <div className="flex-1 space-y-6 overflow-y-auto p-6 pt-4">
+    <ModalFrame
+      closeLabel="Close share modal"
+      description={account.name}
+      onClose={onClose}
+      panelClassName="max-w-lg rounded-[2.5rem]"
+      title="Share Account"
+      titleId="share-account-title"
+    >
+      <div className="space-y-6">
           {/* ─── Generate Invite Code ─── */}
           <div className="space-y-3">
             <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
@@ -328,7 +295,6 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
             )}
           </div>
         </div>
-      </section>
-    </div>
+    </ModalFrame>
   )
 }

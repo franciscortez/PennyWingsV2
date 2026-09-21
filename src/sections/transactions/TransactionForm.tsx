@@ -352,7 +352,7 @@ export function TransactionForm({
           ) : null}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-1 md:space-y-2">
+            <div className="min-w-0 space-y-1 md:space-y-2">
               <label
                 htmlFor="transaction-category"
                 className="ml-1 block truncate text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
@@ -383,24 +383,26 @@ export function TransactionForm({
               ) : null}
             </div>
 
-            <div className="space-y-1 md:space-y-2">
+            <div className="min-w-0 space-y-1 md:space-y-2">
               <label
                 htmlFor="transaction-date"
                 className="ml-1 block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
               >
                 Date
               </label>
-              <input
-                aria-describedby={errors.transaction_date ? 'transaction-date-error' : undefined}
-                aria-invalid={Boolean(errors.transaction_date)}
-                id="transaction-date"
-                type="date"
-                value={form.transaction_date}
-                onChange={(event) =>
-                  updateField('transaction_date', event.target.value)
-                }
-                className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
-              />
+              <div className="flex w-full min-w-0 items-center rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 transition focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:focus-within:border-pink-500">
+                <input
+                  aria-describedby={errors.transaction_date ? 'transaction-date-error' : undefined}
+                  aria-invalid={Boolean(errors.transaction_date)}
+                  id="transaction-date"
+                  type="date"
+                  value={form.transaction_date}
+                  onChange={(event) =>
+                    updateField('transaction_date', event.target.value)
+                  }
+                  className="block w-full min-w-0 max-w-full border-0 bg-transparent p-0 text-xs font-bold text-gray-700 outline-none dark:text-slate-200"
+                />
+              </div>
               {errors.transaction_date ? (
                 <p id="transaction-date-error" className="text-xs font-bold text-red-500">
                   {errors.transaction_date.message}

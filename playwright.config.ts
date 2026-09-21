@@ -29,6 +29,11 @@ export default defineConfig({
       name: 'Mobile Chrome',
       use: { ...devices['Pixel 5'] },
     },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 13'] },
+      testMatch: /.*transactionModalOverflow\.spec\.ts/,
+    },
   ],
   webServer: {
     command: 'npm run dev',

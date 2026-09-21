@@ -161,20 +161,22 @@ export function GoalModal({
             })}
           </select>
         </div>
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="goal-date"
             className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
           >
             Target Date
           </label>
-          <input
-            id="goal-date"
-            type="date"
-            value={targetDate}
-            onChange={(event) => setTargetDate(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
-          />
+          <div className="flex w-full min-w-0 items-center rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 transition focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:focus-within:border-pink-500">
+            <input
+              id="goal-date"
+              type="date"
+              value={targetDate}
+              onChange={(event) => setTargetDate(event.target.value)}
+              className="block w-full min-w-0 max-w-full border-0 bg-transparent p-0 text-sm font-bold text-gray-700 outline-none dark:text-slate-200"
+            />
+          </div>
         </div>
       </form>
     </ModalShell>

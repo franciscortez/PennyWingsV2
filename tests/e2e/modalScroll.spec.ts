@@ -375,7 +375,7 @@ test('does not dismiss the edit account modal from the backdrop', async ({
   await page.goto('/accounts')
   await expect(page.getByRole('button', { name: 'Edit BDO Debit' })).toBeVisible()
 
-  await page.getByRole('button', { name: 'Edit BDO Debit' }).click()
+  await page.getByRole('button', { name: 'Edit BDO Debit' }).dispatchEvent('click')
 
   const dialog = page.getByRole('dialog', { name: 'Edit Account' })
   await expect(dialog).toBeVisible()

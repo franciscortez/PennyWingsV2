@@ -52,7 +52,7 @@ export const fixtureTransactionRows = (count = PAGE_SIZE) =>
  */
 export async function mockTransactionPage(
   page: Page,
-  rows = fixtureTransactionRows(),
+  rows: Record<string, unknown>[] = fixtureTransactionRows(),
 ) {
   await page.route('**/rest/v1/transactions*', (route) =>
     route.fulfill({

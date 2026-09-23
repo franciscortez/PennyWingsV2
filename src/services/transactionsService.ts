@@ -61,6 +61,11 @@ type ProcessTransactionArgs =
 type UpdateTransactionArgs =
   Database['public']['Functions']['update_transaction_checked']['Args']
 
+const checkedTransactionError = (error: { code?: string; message?: string }) =>
+  error.code === 'P0001' && error.message === 'Insufficient balance.'
+    ? new AppError('Insufficient balance.', { cause: error, code: error.code })
+    : AppError.from(error)
+
 const firstRelation = <T>(value: T | T[] | null | undefined) =>
   Array.isArray(value) ? (value[0] ?? null) : (value ?? null)
 
@@ -208,7 +213,7 @@ export const processTransaction = async (values: TransactionMutationValues) => {
     p_card_id: values.card_id,
     p_category_id: values.category_id,
     p_description: values.description,
-    p_fee_amount: values.fee_amount ?? 0,
+    p_fee_amount: values.fee_amount,
     p_payment_method: values.payment_method,
     p_to_card_id: values.to_card_id,
     p_to_wallet_id: values.to_wallet_id,
@@ -218,7 +223,7 @@ export const processTransaction = async (values: TransactionMutationValues) => {
   } as unknown as ProcessTransactionArgs
   const { error } = await supabase.rpc('process_transaction_checked', args)
 
-  if (error) throw AppError.from(error)
+  if (error) throw checkedTransactionError(error)
 }
 
 export const updateTransaction = async (
@@ -230,7 +235,7 @@ export const updateTransaction = async (
     p_card_id: values.card_id,
     p_category_id: values.category_id,
     p_description: values.description,
-    p_fee_amount: values.fee_amount ?? 0,
+    p_fee_amount: values.fee_amount,
     p_id: id,
     p_payment_method: values.payment_method,
     p_to_card_id: values.to_card_id,
@@ -241,7 +246,7 @@ export const updateTransaction = async (
   } as unknown as UpdateTransactionArgs
   const { error } = await supabase.rpc('update_transaction_checked', args)
 
-  if (error) throw AppError.from(error)
+  if (error) throw checkedTransactionError(error)
 }
 
 export const deleteTransaction = async (id: string) => {

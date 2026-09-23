@@ -180,10 +180,17 @@ export function TransactionForm({
     field: TField,
     value: FieldPathValue<TransactionFormState, TField>,
   ) => {
+    const sourceChanged =
+      (field === 'card_id' || field === 'wallet_id') &&
+      getValues(field) !== value
     setValue(field, value, { shouldDirty: true })
     clearErrors(field)
 
     if (field === 'card_id' || field === 'wallet_id') {
+      if (sourceChanged && getValues('type') === 'withdrawal') {
+        setValue('fee_amount', '0', { shouldDirty: true })
+        clearErrors('fee_amount')
+      }
       setValue('to_card_id', '', { shouldDirty: true })
       setValue('to_wallet_id', '', { shouldDirty: true })
       clearErrors(['to_card_id', 'to_wallet_id'])
@@ -197,6 +204,7 @@ export function TransactionForm({
         ...current,
         card_id: current.payment_method === 'card' ? current.card_id : '',
         category_id: '',
+        fee_amount: type === current.type ? current.fee_amount : '0',
         payment_method:
           type === 'withdrawal' && current.payment_method === 'cash'
             ? 'card'
@@ -228,6 +236,10 @@ export function TransactionForm({
       {
         ...current,
         card_id: '',
+        fee_amount:
+          current.type === 'withdrawal' && paymentMethod !== current.payment_method
+            ? '0'
+            : current.fee_amount,
         payment_method: paymentMethod,
         to_payment_method:
           paymentMethod === 'cash' && current.to_payment_method === 'cash'
@@ -332,23 +344,24 @@ export function TransactionForm({
           />
 
           {form.type === 'transfer' ? (
-            <>
-              <DestinationPanel
-                cardAccounts={destinationCardAccounts}
-                cashAccount={destinationCashAccount}
-                errors={errors}
-                form={form}
-                lentAccounts={destinationLentAccounts}
-                onDestinationMethodChange={updateDestinationMethod}
-                onUpdate={updateField}
-                walletAccounts={destinationWalletAccounts}
-              />
-              <TransferFeePanel
-                errors={errors}
-                form={form}
-                onUpdate={updateField}
-              />
-            </>
+            <DestinationPanel
+              cardAccounts={destinationCardAccounts}
+              cashAccount={destinationCashAccount}
+              errors={errors}
+              form={form}
+              lentAccounts={destinationLentAccounts}
+              onDestinationMethodChange={updateDestinationMethod}
+              onUpdate={updateField}
+              walletAccounts={destinationWalletAccounts}
+            />
+          ) : null}
+
+          {form.type === 'transfer' || form.type === 'withdrawal' ? (
+            <TransactionFeePanel
+              errors={errors}
+              form={form}
+              onUpdate={updateField}
+            />
           ) : null}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -664,7 +677,7 @@ function DestinationPanel({
   )
 }
 
-function TransferFeePanel({
+function TransactionFeePanel({
   errors,
   form,
   onUpdate,
@@ -686,7 +699,7 @@ function TransferFeePanel({
           htmlFor="transaction-fee"
           className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
         >
-          Transfer Fee (PHP)
+          {form.type === 'withdrawal' ? 'Withdrawal' : 'Transfer'} Fee (PHP)
         </label>
         <div className="flex gap-1.5">
           {presets.map((preset) => (
@@ -709,9 +722,8 @@ function TransferFeePanel({
         aria-describedby={errors.fee_amount ? 'transaction-fee-error' : undefined}
         aria-invalid={Boolean(errors.fee_amount)}
         id="transaction-fee"
-        type="number"
-        step="0.01"
-        min="0"
+        type="text"
+        inputMode="decimal"
         placeholder="0.00"
         value={form.fee_amount}
         onChange={(event) => onUpdate('fee_amount', event.target.value)}

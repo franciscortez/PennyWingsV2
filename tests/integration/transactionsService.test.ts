@@ -18,13 +18,13 @@ describe('transactionsService integration', () => {
       amount: 100,
       card_id: 'card-1',
       category_id: 'cat-1',
-      description: 'Lunch',
-      fee_amount: 5,
+      description: 'Transfer',
+      fee_amount: 15,
       payment_method: 'card',
       to_card_id: null,
-      to_wallet_id: null,
+      to_wallet_id: 'wallet-1',
       transaction_date: '2026-08-17',
-      type: 'expense',
+      type: 'transfer',
       wallet_id: null,
     })
 
@@ -34,8 +34,9 @@ describe('transactionsService integration', () => {
         p_amount: 100,
         p_card_id: 'card-1',
         p_category_id: 'cat-1',
-        p_fee_amount: 5,
-        p_type: 'expense',
+        p_fee_amount: 15,
+        p_to_wallet_id: 'wallet-1',
+        p_type: 'transfer',
       }),
     )
 
@@ -68,12 +69,12 @@ describe('transactionsService integration', () => {
       card_id: 'card-1',
       category_id: 'cat-2',
       description: 'Groceries update',
-      fee_amount: 0,
+      fee_amount: 25,
       payment_method: 'card',
       to_card_id: null,
-      to_wallet_id: null,
+      to_wallet_id: 'wallet-1',
       transaction_date: '2026-08-17',
-      type: 'expense',
+      type: 'transfer',
       wallet_id: null,
     })
 
@@ -82,6 +83,8 @@ describe('transactionsService integration', () => {
       expect.objectContaining({
         p_id: 'tx-456',
         p_amount: 250,
+        p_fee_amount: 25,
+        p_to_wallet_id: 'wallet-1',
       }),
     )
 

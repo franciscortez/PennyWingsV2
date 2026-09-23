@@ -79,7 +79,7 @@ export type TransactionMutationValues = {
   card_id: string | null
   category_id: string
   description: string | null
-  fee_amount?: number
+  fee_amount: number
   payment_method: PaymentMethod
   to_card_id: string | null
   to_wallet_id: string | null

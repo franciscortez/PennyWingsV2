@@ -175,6 +175,10 @@ export function useTransactionsData({
         card_id: cardId,
         category_id: values.category_id,
         description: normalizeDescription(values.description),
+        fee_amount:
+          values.type === 'transfer' || values.type === 'withdrawal'
+            ? (values.fee_amount ?? 0)
+            : 0,
         payment_method: paymentMethod,
         to_card_id: toCardId,
         to_wallet_id: toWalletId,
@@ -197,7 +201,11 @@ export function useTransactionsData({
         wallet_id: values.wallet_id,
       })
 
-      if (values.amount > balance) {
+      const requiredAmount = values.amount + values.fee_amount
+      const roundingTolerance =
+        Number.EPSILON * Math.max(1, Math.abs(requiredAmount), Math.abs(balance)) * 2
+
+      if (requiredAmount - balance > roundingTolerance) {
         throw new Error('Insufficient balance.')
       }
     },

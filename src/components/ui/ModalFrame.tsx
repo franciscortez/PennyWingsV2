@@ -1,9 +1,19 @@
 import { X } from 'lucide-react'
-import { useEffect, useId, useRef, type ReactNode, type Ref } from 'react'
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from 'react'
+import { createPortal } from 'react-dom'
 import { twMerge } from 'tailwind-merge'
 
+import { useModalFocus } from '@/hooks/useModalFocus'
 import { useScrollLock } from '@/hooks/useScrollLock'
-import { registerOverlay } from '@/lib/overlayStack'
+import { registerOverlay, type OverlayHandle } from '@/lib/overlayStack'
 
 type ModalBackdropMode = 'dismiss' | 'none'
 
@@ -26,14 +36,30 @@ type ModalFrameProps = {
   description?: ReactNode
   headerClassName?: string
   headerLeading?: ReactNode
+  /**
+   * Receives focus on open. Defaults to the dialog panel itself, so screen
+   * readers announce the title and no mobile keyboard opens unprompted.
+   */
+  initialFocusRef?: RefObject<HTMLElement | null>
   /** Set to false for overlays that must not freeze the page. */
   lockScroll?: boolean
   onClose: () => void
   overlayClassName?: string
   panelClassName?: string
+  /**
+   * Receives focus on close. Defaults to the element focused before opening;
+   * when that is gone, focus falls back to the page heading, then `main`.
+   */
+  returnFocusRef?: RefObject<HTMLElement | null>
   title: string
   titleId?: string
 }
+
+/**
+ * Shared modal shell (issues #35, #37). Portaled to `document.body` so the rest
+ * of the page can be made inert while it is open; it locks page scroll, owns
+ * Escape while topmost, contains Tab focus and restores focus on close.
+ */
 
 export function ModalFrame({
   actions,
@@ -47,10 +73,12 @@ export function ModalFrame({
   description,
   headerClassName,
   headerLeading,
+  initialFocusRef,
   lockScroll = true,
   onClose,
   overlayClassName,
   panelClassName,
+  returnFocusRef,
   title,
   titleId,
 }: ModalFrameProps) {
@@ -59,8 +87,31 @@ export function ModalFrame({
   const descriptionId = description ? `${generatedId}-description` : undefined
   const onCloseRef = useRef(onClose)
   const closeDisabledRef = useRef(closeDisabled)
+  const layerRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useRef<HTMLElement>(null)
+  const overlayRef = useRef<OverlayHandle | null>(null)
 
+  // Hook order matters: layout cleanups run in declaration order, so the page
+  // scroll position is restored before focus returns to the opener.
   useScrollLock(lockScroll)
+
+  useLayoutEffect(() => {
+    const overlay = registerOverlay(document)
+    overlayRef.current = overlay
+
+    return () => {
+      overlay.release()
+      overlayRef.current = null
+    }
+  }, [])
+
+  useModalFocus({
+    dialogRef,
+    initialFocusRef,
+    isTopmost: () => overlayRef.current?.isTopmost() ?? false,
+    layerRef,
+    returnFocusRef,
+  })
 
   useEffect(() => {
     onCloseRef.current = onClose
@@ -68,14 +119,20 @@ export function ModalFrame({
   })
 
   useEffect(() => {
-    const overlay = registerOverlay(document)
-
     const handleKeyDown = (event: KeyboardEvent) => {
       // Escape belongs to the topmost overlay: a form underneath another layer
       // must not close in response to a keystroke aimed at that layer.
-      if (event.key !== 'Escape' || !overlay.isTopmost()) {
+      if (
+        event.key !== 'Escape' ||
+        event.defaultPrevented ||
+        !overlayRef.current?.isTopmost()
+      ) {
         return
       }
+
+      // Consumed even while saving, so it never falls through to a layer
+      // below (the assistant listens on window, after this handler).
+      event.preventDefault()
 
       if (closeDisabledRef.current) {
         return
@@ -88,7 +145,6 @@ export function ModalFrame({
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown)
-      overlay.release()
     }
   }, [])
 
@@ -103,8 +159,9 @@ export function ModalFrame({
   const closeButtonClass =
     'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-pink-50 hover:text-pink-600 disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-pink-400'
 
-  return (
+  return createPortal(
     <div
+      ref={layerRef}
       className={twMerge(
         'modal-overlay z-[100]',
         backdrop === 'dismiss' ? backdropClassName : undefined,
@@ -120,13 +177,14 @@ export function ModalFrame({
       }}
     >
       <section
+        ref={dialogRef}
         aria-describedby={descriptionId}
         aria-labelledby={resolvedTitleId}
         aria-modal="true"
         role="dialog"
         tabIndex={-1}
         className={twMerge(
-          'modal-panel rounded-[2rem] border border-pink-100 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-900',
+          'modal-panel rounded-[2rem] border border-pink-100 bg-white shadow-2xl outline-none focus-visible:ring-2 focus-visible:ring-pink-400 dark:border-slate-800 dark:bg-slate-900',
           panelClassName,
         )}
       >
@@ -182,6 +240,7 @@ export function ModalFrame({
           </div>
         ) : null}
       </section>
-    </div>
+    </div>,
+    document.body,
   )
 }

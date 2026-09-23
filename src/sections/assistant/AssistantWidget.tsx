@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react'
 import { useAssistant } from '@/hooks/useAssistant'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useScrollLock } from '@/hooks/useScrollLock'
+import { getTabbableElements } from '@/lib/focusable'
 import { registerOverlay } from '@/lib/overlayStack'
 import { AssistantComposer } from '@/sections/assistant/AssistantComposer'
 import { AssistantConversation } from '@/sections/assistant/AssistantConversation'
@@ -52,18 +53,25 @@ export function AssistantWidget() {
       }
     })
 
+    const panel = panelRef.current
     const overlay = registerOverlay(document)
 
     const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      // Escape belongs to the topmost overlay, so dismissing a modal above the
-      // assistant does not also close the assistant.
-      if (event.key === 'Escape' && overlay.isTopmost()) closeAssistant()
+      // Escape and Tab belong to the topmost overlay, so a modal above the
+      // assistant keeps its keystrokes; a key a modal already consumed on the
+      // document is not handled again here.
+      if (event.defaultPrevented || !overlay.isTopmost()) return
+
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeAssistant()
+      }
 
       if (event.key === 'Tab') {
-        const focusable = panelRef.current?.querySelectorAll<HTMLElement>(
-          'button:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
-        )
-        if (!focusable?.length) return
+        const focusable = panelRef.current
+          ? getTabbableElements(panelRef.current)
+          : []
+        if (!focusable.length) return
 
         const first = focusable[0]
         const last = focusable[focusable.length - 1]
@@ -82,7 +90,15 @@ export function AssistantWidget() {
       window.cancelAnimationFrame(focusFrame)
       window.removeEventListener('keydown', handleKeyDown)
       overlay.release()
-      previousFocusRef.current?.focus({ preventScroll: true })
+
+      // Only return focus the assistant still owns; another overlay may have
+      // taken it since.
+      const active = document.activeElement
+      const ownsFocus =
+        !active ||
+        active === document.body ||
+        Boolean(panel?.contains(active))
+      if (ownsFocus) previousFocusRef.current?.focus({ preventScroll: true })
     }
   }, [closeAssistant, isOpen])
 

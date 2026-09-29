@@ -6,6 +6,9 @@ import {
 } from 'react'
 import { Link } from 'react-router'
 
+import { fieldError, fieldInput, fieldLabel } from '@/sections/auth/fieldStyles'
+import { textLink } from '@/sections/shared'
+
 type PasswordInputProps = {
   error?: string
   forgotPassword?: boolean
@@ -21,7 +24,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
       id,
       label,
       required = true,
-      className = '',
+      className,
       ...props
     },
     ref,
@@ -30,16 +33,13 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
     const errorId = `${id}-error`
 
     return (
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <label htmlFor={id} className="block text-sm font-bold text-pink-700">
+      <div className="grid gap-2">
+        <div className="flex items-center justify-between gap-4">
+          <label htmlFor={id} className={fieldLabel}>
             {label}
           </label>
           {forgotPassword ? (
-            <Link
-              to="/forgot-password"
-              className="text-xs font-bold text-pink-600 transition hover:text-pink-700"
-            >
+            <Link to="/forgot-password" className={`text-sm ${textLink}`}>
               Forgot password?
             </Link>
           ) : null}
@@ -53,23 +53,23 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             required={required}
             aria-describedby={error ? errorId : props['aria-describedby']}
             aria-invalid={error ? true : props['aria-invalid']}
-            className={`w-full rounded-xl border-2 bg-white px-4 py-3 pr-12 text-sm text-pink-900 transition placeholder:text-pink-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 ${error ? 'border-red-300' : 'border-pink-200'} ${className}`}
+            className={fieldInput(Boolean(error), `pr-14 ${className ?? ''}`)}
           />
           <button
             type="button"
             onClick={() => setShowPassword((current) => !current)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-pink-400 transition-colors hover:text-pink-600"
+            className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-pink-50 hover:text-pink-900 focus-visible:outline-2 focus-visible:outline-pink-800"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? (
-              <EyeOff className="h-5 w-5" aria-hidden="true" />
+              <EyeOff className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             ) : (
-              <Eye className="h-5 w-5" aria-hidden="true" />
+              <Eye className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
             )}
           </button>
         </div>
         {error ? (
-          <p id={errorId} className="mt-2 text-xs font-bold text-red-500">
+          <p id={errorId} className={fieldError}>
             {error}
           </p>
         ) : null}

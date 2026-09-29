@@ -53,15 +53,9 @@ export const landingImages = {
 } satisfies Record<string, LandingImage>
 
 /* ─── Actions ──────────────────────────────────────────────────────────────
-   One label per intent across the whole page: "Start free" always signs up,
-   "Sign in" always logs in. Interactive elements are full pills; surfaces
-   use 32px corners and nested surfaces 20px. */
+   Shared with the auth pages; see `src/sections/shared/brandActions.ts`. */
 
-export const primaryAction =
-  'inline-flex h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-pink-700 px-6 font-semibold text-white shadow-wing transition-[background-color,transform] duration-200 hover:bg-pink-800 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800'
-
-export const secondaryAction =
-  'inline-flex h-12 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-pink-200 bg-white px-6 font-semibold text-pink-900 transition-[background-color,border-color,transform] duration-200 hover:border-pink-300 hover:bg-pink-50 active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800'
+export { primaryAction, secondaryAction } from '@/sections/shared/brandActions'
 
 export const sectionIds = {
   features: 'features',

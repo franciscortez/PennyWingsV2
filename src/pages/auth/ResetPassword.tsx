@@ -1,35 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { twMerge } from 'tailwind-merge'
 
 import { useAuth } from '@/hooks/useAuth'
 import { alerts } from '@/lib/alert'
 import { AuthShell, PasswordInput } from '@/sections/auth'
+import { authPanels } from '@/sections/auth/authContent'
+import { actionDisabled, primaryAction, textLink } from '@/sections/shared'
 import { resetPasswordSchema } from '@/validation/authSchemas'
 import { getZodErrorMessage } from '@/validation/zodError'
-
-const resetPasswordFeatures = [
-  {
-    title: 'Strong Encryption',
-    description:
-      'All passwords are hashed and salted using industry-standard protocols.',
-    icon: 'lock' as const,
-  },
-  {
-    title: 'Enhanced Security',
-    description: 'Automatic log out from other devices after password change.',
-    icon: 'shield' as const,
-  },
-  {
-    title: 'Instant Sync',
-    description: 'Your new password works across all your devices immediately.',
-    icon: 'zap' as const,
-  },
-  {
-    title: 'Quick Updates',
-    description: 'Your new password is encrypted instantly.',
-    icon: 'check' as const,
-  },
-]
 
 export default function ResetPassword() {
   const { updatePassword } = useAuth()
@@ -64,50 +43,43 @@ export default function ResetPassword() {
 
   return (
     <AuthShell
-      title="Set New Password"
-      subtitle="Create a secure password for your account"
-      heroTitle="Create your new secure password"
-      heroDescription="We take your security seriously. Choose a strong password to protect your financial data and continue your journey."
-      features={resetPasswordFeatures}
+      title="Set a new password"
+      subtitle="Choose a password with at least 6 characters."
+      panel={authPanels.recovery}
       backTo="/login"
-      backLabel="Back to Login"
+      backLabel="Back to sign in"
     >
       <form className="space-y-5" onSubmit={handleSubmit}>
         <PasswordInput
           id="reset-password"
-          label="New Password"
+          label="New password"
           name="password"
           placeholder="Min. 6 characters"
           autoComplete="new-password"
         />
         <PasswordInput
           id="reset-confirm-password"
-          label="Confirm New Password"
+          label="Confirm new password"
           name="confirm"
-          placeholder="Password"
+          placeholder="Repeat your password"
           autoComplete="new-password"
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-gradient-to-r from-pink-600 to-pink-700 py-3.5 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:from-pink-700 hover:to-pink-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
+          className={twMerge(primaryAction, actionDisabled, 'w-full')}
         >
-          {loading ? 'Updating...' : 'Update Password'}
+          {loading ? 'Updating...' : 'Update password'}
         </button>
       </form>
 
-      <div className="mt-8 text-center">
-        <p className="text-sm text-pink-600">
-          Password already updated?{' '}
-          <Link
-            to="/login"
-            className="font-bold text-pink-700 transition hover:text-pink-800"
-          >
-            Sign in
-          </Link>
-        </p>
-      </div>
+      <p className="mt-8 text-sm text-slate-600">
+        Password already updated?{' '}
+        <Link to="/login" className={textLink}>
+          Sign in
+        </Link>
+      </p>
     </AuthShell>
   )
 }

@@ -1,5 +1,7 @@
 import { forwardRef, type InputHTMLAttributes } from 'react'
 
+import { fieldError, fieldInput, fieldLabel } from '@/sections/auth/fieldStyles'
+
 type TextInputProps = {
   error?: string
   id: string
@@ -7,12 +9,12 @@ type TextInputProps = {
 } & InputHTMLAttributes<HTMLInputElement>
 
 export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
-  function TextInput({ error, id, label, className = '', ...props }, ref) {
+  function TextInput({ error, id, label, className, ...props }, ref) {
     const errorId = `${id}-error`
 
     return (
-      <div>
-        <label htmlFor={id} className="mb-2 block text-sm font-bold text-pink-700">
+      <div className="grid gap-2">
+        <label htmlFor={id} className={fieldLabel}>
           {label}
         </label>
         <input
@@ -21,10 +23,10 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
           id={id}
           aria-describedby={error ? errorId : props['aria-describedby']}
           aria-invalid={error ? true : props['aria-invalid']}
-          className={`w-full rounded-xl border-2 bg-white px-4 py-3 text-sm text-pink-900 transition placeholder:text-pink-400 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-pink-500 ${error ? 'border-red-300' : 'border-pink-200'} ${className}`}
+          className={fieldInput(Boolean(error), className)}
         />
         {error ? (
-          <p id={errorId} className="mt-2 text-xs font-bold text-red-500">
+          <p id={errorId} className={fieldError}>
             {error}
           </p>
         ) : null}

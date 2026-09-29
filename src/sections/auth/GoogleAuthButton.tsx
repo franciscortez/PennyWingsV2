@@ -1,3 +1,7 @@
+import { twMerge } from 'tailwind-merge'
+
+import { actionDisabled, secondaryAction } from '@/sections/shared'
+
 type GoogleAuthButtonProps = {
   disabled?: boolean
   onClick?: () => void
@@ -12,10 +16,10 @@ export function GoogleAuthButton({
       type="button"
       disabled={disabled}
       onClick={onClick}
-      className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-pink-100 bg-white py-3.5 font-bold text-pink-700 transition-all duration-300 hover:-translate-y-0.5 hover:border-pink-200 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
+      className={twMerge(secondaryAction, actionDisabled, 'w-full gap-3')}
     >
       <svg
-        className="h-5 w-5 transition-transform group-hover:scale-110"
+        className="h-5 w-5"
         viewBox="0 0 24 24"
         aria-hidden="true"
       >
@@ -36,7 +40,7 @@ export function GoogleAuthButton({
           fill="#EA4335"
         />
       </svg>
-      Google
+      Continue with Google
     </button>
   )
 }

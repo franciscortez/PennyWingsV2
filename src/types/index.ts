@@ -79,4 +79,3 @@ export type {
   TransactionsListParams,
   TransactionType,
 } from '@/types/transactions'
-export type { AuthFeature, AuthFeatureIcon } from '@/types/ui'

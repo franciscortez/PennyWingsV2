@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, useNavigate } from 'react-router'
+import { twMerge } from 'tailwind-merge'
 
 import { useAuth } from '@/hooks/useAuth'
 import { alerts } from '@/lib/alert'
@@ -12,36 +13,14 @@ import {
   PasswordInput,
   TextInput,
 } from '@/sections/auth'
+import { authPanels } from '@/sections/auth/authContent'
+import { actionDisabled, primaryAction, textLink } from '@/sections/shared'
 import { loginSchema } from '@/validation/authSchemas'
 
 type LoginFormValues = {
   email: string
   password: string
 }
-
-const loginFeatures = [
-  {
-    title: 'Real-time Tracking',
-    description:
-      'Monitor your expenses and income as they happen across all your accounts.',
-    icon: 'zap' as const,
-  },
-  {
-    title: 'Smart Budgets',
-    description: 'Set intelligent budget limits and get alerts before you overspend.',
-    icon: 'check' as const,
-  },
-  {
-    title: 'Visual Analytics',
-    description: 'Beautiful charts and insights to understand your spending patterns.',
-    icon: 'chart' as const,
-  },
-  {
-    title: 'Secure & Private',
-    description: 'Bank-level encryption keeps your financial data safe and private.',
-    icon: 'lock' as const,
-  },
-]
 
 export default function Login() {
   const { loading: authLoading, signIn, signInWithGoogle } = useAuth()
@@ -86,16 +65,14 @@ export default function Login() {
 
   return (
     <AuthShell
-      title="Sign In"
-      subtitle="Enter your credentials to access your account"
-      heroTitle="Welcome back to your financial journey"
-      heroDescription="Continue tracking your expenses, managing your budgets, and achieving your financial goals with ease."
-      features={loginFeatures}
+      title="Welcome back"
+      subtitle="Sign in to pick up where your ledger left off."
+      panel={authPanels.login}
     >
       <form className="space-y-5" onSubmit={submitLogin} noValidate>
         <TextInput
           id="login-email"
-          label="Email Address"
+          label="Email address"
           type="email"
           error={errors.email?.message}
           {...register('email')}
@@ -108,7 +85,7 @@ export default function Login() {
           label="Password"
           error={errors.password?.message}
           {...register('password')}
-          placeholder="Password"
+          placeholder="Your password"
           autoComplete="current-password"
           forgotPassword
         />
@@ -116,9 +93,9 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading || googleLoading || authLoading}
-          className="w-full rounded-xl bg-gradient-to-r from-pink-600 to-pink-700 py-3.5 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:from-pink-700 hover:to-pink-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
+          className={twMerge(primaryAction, actionDisabled, 'w-full')}
         >
-          {loading ? 'Signing in...' : 'Sign In'}
+          {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
 
@@ -128,17 +105,12 @@ export default function Login() {
         onClick={handleGoogleLogin}
       />
 
-      <div className="mt-8 text-center">
-        <p className="text-sm text-pink-600">
-          Don&apos;t have an account?{' '}
-          <Link
-            to="/signup"
-            className="font-bold text-pink-700 transition hover:text-pink-800"
-          >
-            Create account
-          </Link>
-        </p>
-      </div>
+      <p className="mt-8 text-sm text-slate-600">
+        New to PennyWings?{' '}
+        <Link to="/signup" className={textLink}>
+          Start free
+        </Link>
+      </p>
     </AuthShell>
   )
 }

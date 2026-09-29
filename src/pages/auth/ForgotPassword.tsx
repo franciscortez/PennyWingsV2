@@ -1,34 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
+import { twMerge } from 'tailwind-merge'
 
 import { useAuth } from '@/hooks/useAuth'
 import { alerts } from '@/lib/alert'
 import { AuthShell, TextInput } from '@/sections/auth'
+import { authPanels } from '@/sections/auth/authContent'
+import { actionDisabled, primaryAction, textLink } from '@/sections/shared'
 import { forgotPasswordSchema } from '@/validation/authSchemas'
 import { getZodErrorMessage } from '@/validation/zodError'
-
-const forgotPasswordFeatures = [
-  {
-    title: 'Secure Process',
-    description: 'Password reset links are encrypted and expire after one use.',
-    icon: 'lock' as const,
-  },
-  {
-    title: 'Quick Recovery',
-    description: 'Receive your reset link instantly via email.',
-    icon: 'zap' as const,
-  },
-  {
-    title: 'Email Verification',
-    description: "We'll verify your email before sending the reset link.",
-    icon: 'check' as const,
-  },
-  {
-    title: 'Easy Steps',
-    description: 'Simple process to get you back into your account.',
-    icon: 'check' as const,
-  },
-]
 
 export default function ForgotPassword() {
   const { resetPassword } = useAuth()
@@ -62,16 +42,14 @@ export default function ForgotPassword() {
 
   return (
     <AuthShell
-      title="Reset Password"
-      subtitle="Enter your email and we'll send you a reset link"
-      heroTitle="Forgot your password? No worries!"
-      heroDescription="We'll send you a secure link to reset your password and get you back on track with your financial goals."
-      features={forgotPasswordFeatures}
+      title="Reset your password"
+      subtitle="Enter the email on your account and we'll send you a reset link."
+      panel={authPanels.recovery}
     >
       <form className="space-y-5" onSubmit={handleSubmit}>
         <TextInput
           id="forgot-email"
-          label="Email Address"
+          label="Email address"
           type="email"
           name="email"
           placeholder="you@example.com"
@@ -82,23 +60,18 @@ export default function ForgotPassword() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full rounded-xl bg-gradient-to-r from-pink-600 to-pink-700 py-3.5 font-bold text-white transition-all duration-300 hover:-translate-y-0.5 hover:from-pink-700 hover:to-pink-800 disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none"
+          className={twMerge(primaryAction, actionDisabled, 'w-full')}
         >
-          {loading ? 'Sending...' : 'Send Reset Link'}
+          {loading ? 'Sending...' : 'Send reset link'}
         </button>
       </form>
 
-      <div className="mt-8 text-center">
-        <p className="text-sm text-pink-600">
-          Remember your password?{' '}
-          <Link
-            to="/login"
-            className="font-bold text-pink-700 transition hover:text-pink-800"
-          >
-            Sign in
-          </Link>
-        </p>
-      </div>
+      <p className="mt-8 text-sm text-slate-600">
+        Remember your password?{' '}
+        <Link to="/login" className={textLink}>
+          Sign in
+        </Link>
+      </p>
     </AuthShell>
   )
 }

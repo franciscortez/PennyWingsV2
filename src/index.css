@@ -50,6 +50,19 @@
   --color-heat-dark-3: #8a2a4a;
   --color-heat-dark-4: #c04068;
   --color-heat-dark-5: #f2789a;
+
+  /* Landing page only. The app keeps its system font stack; the public
+     landing (`src/pages/Home.tsx`) opts into Geist through `font-geist`.
+     `paper` is the same pink-tinted white the mobile dock already uses, and
+     the `wing` shadows are tinted to the brand hue instead of pure black. */
+  --color-paper: #fffafd;
+  --font-geist: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular,
+    monospace;
+  --shadow-wing: 0 24px 56px -28px rgb(80 28 48 / 30%),
+    0 2px 6px rgb(80 28 48 / 5%);
+  --shadow-wing-lg: 0 40px 96px -40px rgb(80 28 48 / 38%),
+    0 4px 12px rgb(80 28 48 / 6%);
 }
 
 html {
@@ -228,6 +241,33 @@ body {
 
   .mobile-dock-item[data-selected='true'] .mobile-dock-icon {
     animation: none !important;
+  }
+}
+
+/* Landing assistant question ticker. The track holds the list twice, so
+   sliding it by half its width loops without a visible seam. */
+@keyframes landing-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.landing-marquee-track {
+  animation: landing-marquee 48s linear infinite;
+}
+
+.landing-marquee:hover .landing-marquee-track,
+.landing-marquee:focus-within .landing-marquee-track {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-marquee-track {
+    animation: none;
   }
 }
 

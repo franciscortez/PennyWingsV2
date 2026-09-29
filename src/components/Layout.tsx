@@ -37,7 +37,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-pink-50 text-gray-900 dark:bg-slate-950 dark:text-slate-100 md:flex overflow-x-hidden">
+    <div className="min-h-[100dvh] overflow-x-hidden bg-paper font-geist text-slate-950 antialiased md:flex dark:bg-slate-950 dark:text-slate-100">
       <Sidebar
         onOpenAssistant={openAssistant}
         onSignOut={handleSignOut}

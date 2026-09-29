@@ -6,7 +6,7 @@ import {
 } from 'react'
 import { Link } from 'react-router'
 
-import { fieldError, fieldInput, fieldLabel } from '@/sections/auth/fieldStyles'
+import { fieldError, fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
 import { textLink } from '@/sections/shared'
 
 type PasswordInputProps = {

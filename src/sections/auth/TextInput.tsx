@@ -1,6 +1,6 @@
 import { forwardRef, type InputHTMLAttributes } from 'react'
 
-import { fieldError, fieldInput, fieldLabel } from '@/sections/auth/fieldStyles'
+import { fieldError, fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
 
 type TextInputProps = {
   error?: string

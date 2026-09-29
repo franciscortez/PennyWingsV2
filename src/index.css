@@ -51,8 +51,8 @@
   --color-heat-dark-4: #c04068;
   --color-heat-dark-5: #f2789a;
 
-  /* Landing page only. The app keeps its system font stack; the public
-     landing (`src/pages/Home.tsx`) opts into Geist through `font-geist`.
+  /* Brand language shared by the landing, auth and the app. Geist is loaded
+     once in `src/main.tsx`; each shell opts in through `font-geist`.
      `paper` is the same pink-tinted white the mobile dock already uses, and
      the `wing` shadows are tinted to the brand hue instead of pure black. */
   --color-paper: #fffafd;
@@ -228,6 +228,12 @@ body {
   .animate-assistant-panel-in,
   .animate-assistant-message-in,
   .animate-assistant-dot {
+    animation: none;
+  }
+
+  /* Skeleton pulses and the page loader hold still instead of looping. */
+  .animate-pulse,
+  .animate-bounce {
     animation: none;
   }
 

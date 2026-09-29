@@ -14,7 +14,7 @@ import {
   TextInput,
 } from '@/sections/auth'
 import { authPanels } from '@/sections/auth/authContent'
-import { fieldError } from '@/sections/auth/fieldStyles'
+import { fieldError } from '@/components/ui/fieldStyles'
 import { actionDisabled, primaryAction, textLink } from '@/sections/shared'
 import { registerSchema } from '@/validation/authSchemas'
 

@@ -1,7 +1,3 @@
-import '@fontsource-variable/geist'
-import '@fontsource-variable/geist/wght-italic.css'
-import '@fontsource-variable/geist-mono'
-
 import { ArrowLeft } from 'lucide-react'
 import { MotionConfig, motion } from 'motion/react'
 import { useEffect, type ReactNode } from 'react'

@@ -1,0 +1,176 @@
+import { expect, test, type Page } from '@playwright/test'
+import { setupAuthenticatedMocks } from './helpers/authMock'
+
+const action = (page: Page) => page.locator('[data-mobile-primary-action]')
+const navigation = (page: Page) => page.getByRole('navigation', { name: 'Primary mobile navigation' })
+
+test.describe('Module-aware mobile action', () => {
+  test.use({ viewport: { width: 375, height: 667 } })
+  test.beforeEach(async ({ page }) => {
+    await setupAuthenticatedMocks(page)
+  })
+
+  test('Dashboard opens Activity composer once, then reload and history do not reopen it', async ({ page }) => {
+    await page.goto('/dashboard')
+    await expect(action(page)).toHaveText('New transaction')
+    await action(page).click()
+    await expect(page).toHaveURL(/\/transactions$/)
+    const dialog = page.getByRole('dialog', { name: 'New Transaction', exact: true })
+    await expect(dialog).toBeVisible()
+    await expect.poll(() => page.evaluate(() => window.history.state?.usr?.mobilePrimaryAction ?? null)).toBeNull()
+    await page.getByRole('button', { name: 'Close transaction form' }).click()
+    await expect(dialog).not.toBeVisible()
+    await page.reload()
+    await expect(action(page)).toHaveText('New transaction')
+    await expect(dialog).not.toBeVisible()
+    await page.goBack()
+    await expect(page).toHaveURL(/\/dashboard$/)
+    await page.goForward()
+    await expect(page).toHaveURL(/\/transactions$/)
+    await expect(dialog).not.toBeVisible()
+  })
+
+  test('consumes a direct handoff after loading while preserving unrelated state and URL', async ({ page }) => {
+    await page.addInitScript(() => {
+      if (window.location.pathname !== '/transactions') return
+      window.history.replaceState({ ...window.history.state, usr: { mobilePrimaryAction: 'new-transaction', preserved: 'fixture' } }, '')
+    })
+    await page.route('**/rest/v1/transactions*', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 600))
+      await route.fallback()
+    })
+    await page.goto('/transactions?type=expense#history')
+    await expect(page.getByRole('dialog', { name: 'New Transaction', exact: true })).toBeVisible()
+    await expect(page).toHaveURL(/\/transactions\?type=expense#history$/)
+    await expect.poll(() => page.evaluate(() => window.history.state?.usr)).toEqual({ preserved: 'fixture' })
+  })
+
+  test('Activity and Accounts call the existing page handlers', async ({ page }) => {
+    await page.goto('/transactions')
+    await action(page).click()
+    await expect(page.getByRole('dialog', { name: 'New Transaction', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Close transaction form' }).click()
+    await page.getByRole('button', { name: 'New Transaction', exact: true }).click()
+    await expect(page.getByRole('dialog', { name: 'New Transaction', exact: true })).toBeVisible()
+    await page.getByRole('button', { name: 'Close transaction form' }).click()
+
+    await navigation(page).getByRole('link', { name: 'Accounts', exact: true }).click()
+    await expect(action(page)).toHaveText('Add account')
+    await action(page).click()
+    await expect(page.getByRole('button', { name: 'Close account setup' })).toBeVisible()
+    await page.getByRole('button', { name: 'Close account setup' }).click()
+    await expect(action(page)).toBeFocused()
+  })
+
+  test('Monitoring follows its tab; Reports and Settings have no action', async ({ page }) => {
+    await page.goto('/monitoring')
+    await expect(action(page)).toHaveText('New budget')
+    await action(page).click()
+    const budget = page.getByRole('dialog', { name: 'New Budget', exact: true })
+    await expect(budget).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(budget).not.toBeVisible()
+    await page.getByRole('button', { name: 'Goals', exact: true }).click()
+    await expect(action(page)).toHaveText('New goal')
+    await action(page).click()
+    await expect(page.getByRole('dialog', { name: 'New Goal', exact: true })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await navigation(page).getByRole('link', { name: 'Reports', exact: true }).click()
+    await expect(page).toHaveURL(/\/reports$/)
+    await expect(action(page)).toHaveCount(0)
+    await page.getByRole('button', { name: 'Open more navigation' }).click()
+    await page.getByRole('link', { name: /Profile & settings/ }).click()
+    await expect(page).toHaveURL(/\/profile$/)
+    await expect(action(page)).toHaveCount(0)
+  })
+
+  test('dock and action hide for a simulated keyboard and restore without page jumping', async ({ page }) => {
+    await page.goto('/transactions')
+    await expect(action(page)).toBeVisible()
+    const setViewport = async (lostHeight: number, scale = 1) => {
+      await page.evaluate(({ lostHeight, scale }) => {
+        const viewport = window.visualViewport!
+        Object.defineProperty(viewport, 'height', { configurable: true, value: (window.innerHeight - lostHeight) / scale })
+        Object.defineProperty(viewport, 'scale', { configurable: true, value: scale })
+        viewport.dispatchEvent(new Event('resize'))
+      }, { lostHeight, scale })
+    }
+    await setViewport(70)
+    await expect(navigation(page)).toBeVisible()
+    await setViewport(0, 2)
+    await expect(navigation(page)).toBeVisible()
+    const padding = await page.locator('.app-content').evaluate((element) => getComputedStyle(element).paddingBottom)
+    await setViewport(300)
+    await expect(navigation(page)).not.toBeVisible()
+    await expect(action(page)).not.toBeVisible()
+    expect(await page.locator('.app-content').evaluate((element) => getComputedStyle(element).paddingBottom)).toBe(padding)
+    await setViewport(0)
+    await expect(navigation(page)).toBeVisible()
+    await expect(action(page)).toBeVisible()
+    await action(page).click()
+    await expect(page.getByRole('dialog', { name: 'New Transaction', exact: true })).toBeVisible()
+    await setViewport(300)
+    await expect(navigation(page)).not.toBeVisible()
+    await page.getByRole('button', { name: 'Close transaction form' }).click()
+    await setViewport(0)
+    await expect(action(page)).toBeVisible()
+  })
+
+  test('stays accessible at narrow widths, safe areas, both themes and reduced motion', async ({ page }, testInfo) => {
+    await page.goto('/dashboard')
+    await expect(action(page)).toBeVisible()
+    for (const width of [320, 375, 430, 767]) {
+      await page.setViewportSize({ width, height: 667 })
+      const buttonBox = await action(page).boundingBox()
+      const dockBox = await navigation(page).boundingBox()
+      expect(buttonBox!.height).toBeGreaterThanOrEqual(44)
+      expect(buttonBox!.width).toBeGreaterThanOrEqual(44)
+      expect(buttonBox!.y + buttonBox!.height).toBeLessThan(dockBox!.y)
+      expect(buttonBox!.x).toBeGreaterThanOrEqual(12)
+      expect(buttonBox!.x + buttonBox!.width).toBeLessThanOrEqual(width - 12)
+      await expect(navigation(page).locator('a, button')).toHaveCount(6)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+    }
+    await page.setViewportSize({ width: 375, height: 667 })
+    await page.locator('.app-layout').evaluate((element) => {
+      (element as HTMLElement).style.setProperty('--mobile-safe-bottom', '34px')
+    })
+    const dockBox = await navigation(page).boundingBox()
+    expect(dockBox!.y + dockBox!.height).toBeLessThanOrEqual(667 - 34 - 12)
+    await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-action-light.png') })
+    await page.getByRole('button', { name: 'Open more navigation' }).click()
+    await expect(action(page)).toHaveCount(0)
+    await page.getByRole('button', { name: 'Switch to dark mode' }).click()
+    await page.keyboard.press('Escape')
+    await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-action-dark.png') })
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    expect(await action(page).evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
+    expect(await navigation(page).locator('.mobile-dock-indicator').evaluate((element) => getComputedStyle(element).transitionDuration)).toBe('0s')
+    await page.setViewportSize({ width: 768, height: 1024 })
+    await expect(action(page)).not.toBeVisible()
+    await expect(navigation(page)).not.toBeVisible()
+  })
+
+  test('keeps controls and sheet reachable with enlarged text and long profile names', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 667 })
+    await page.route('**/rest/v1/profiles*', (route) => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ id: 'test-user-id', full_name: 'A very long profile name '.repeat(8), avatar_url: null }),
+    }))
+    await page.goto('/dashboard')
+    await expect(action(page)).toBeVisible()
+    await page.addStyleTag({ content: 'html { font-size: 200%; }' })
+    const dock = await navigation(page).boundingBox()
+    const button = await action(page).boundingBox()
+    expect(button!.x).toBeGreaterThanOrEqual(0)
+    expect(button!.x + button!.width).toBeLessThanOrEqual(320)
+    expect(button!.y + button!.height).toBeLessThan(dock!.y)
+    await page.getByRole('button', { name: 'Open more navigation' }).click()
+    const panel = page.getByRole('dialog', { name: 'Your space' })
+    expect(await panel.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
+    await panel.getByRole('button', { name: 'Sign out' }).scrollIntoViewIfNeeded()
+    await expect(panel.getByRole('button', { name: 'Sign out' })).toBeInViewport()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('button', { name: 'Open more navigation' })).toBeFocused()
+  })
+})

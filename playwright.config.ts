@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: 'http://127.0.0.1:4173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -32,13 +32,14 @@ export default defineConfig({
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 13'] },
-      testMatch: /.*transactionModalOverflow\.spec\.ts/,
+      testMatch: /.*(?:transactionModalOverflow|mobileNavigation|mobilePrimaryAction|pwa)\.spec\.ts/,
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:5173',
-    reuseExistingServer: !process.env.CI,
+    command: 'npm run dev -- --host 127.0.0.1 --port 4173 --strictPort',
+    url: 'http://127.0.0.1:4173',
+    // Never reuse a user's dev server with stale transforms or another checkout.
+    reuseExistingServer: false,
     timeout: 120 * 1000,
   },
 })

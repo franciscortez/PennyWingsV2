@@ -65,7 +65,7 @@ async function openScrollableTransactionsPage(page: Page, height: number) {
 }
 
 async function openTransactionForm(page: Page) {
-  await page.getByRole('button', { name: 'New Transaction' }).dispatchEvent('click')
+  await page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true }).dispatchEvent('click')
 
   const dialog = page.getByRole('dialog', { name: 'New Transaction' })
   await expect(dialog).toBeVisible()
@@ -342,7 +342,7 @@ test('locks the page behind the budget modal and restores it on cancel', async (
   await expect(page.getByRole('heading', { name: 'Budgets & Goals' })).toBeVisible()
 
   await page
-    .getByRole('button', { name: 'New Budget' })
+    .getByRole('main').getByRole('button', { name: 'New Budget', exact: true })
     .dispatchEvent('click')
 
   const dialog = page.getByRole('dialog', { name: 'New Budget' })

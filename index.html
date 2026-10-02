@@ -4,11 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/pennywings-butterfly-logo.png" />
     <link rel="apple-touch-icon" href="/pennywings-butterfly-logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#c94466" media="(prefers-color-scheme: light)" data-theme="light" />
+    <meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)" data-theme="dark" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="PennyWings" />
     <title>Penny Wings</title>
     <meta property="og:image" content="/pennywings-butterfly-transparent.png" />
     <script>
       ;(() => {
+        const setDocumentTheme = (theme) => {
+          document.documentElement.classList.toggle('dark', theme === 'dark')
+          document.documentElement.style.colorScheme = theme
+          document.querySelectorAll('meta[name="theme-color"][data-theme]').forEach((meta) => {
+            meta.setAttribute('media', meta.dataset.theme === theme ? 'all' : 'not all')
+          })
+        }
         try {
           const publicPaths = new Set([
             '/',
@@ -33,17 +46,15 @@
                 ? 'dark'
                 : 'light'
 
-          document.documentElement.classList.toggle('dark', theme === 'dark')
-          document.documentElement.style.colorScheme = theme
+          setDocumentTheme(theme)
         } catch {
-          document.documentElement.classList.remove('dark')
-          document.documentElement.style.colorScheme = 'light'
+          setDocumentTheme('light')
         }
       })()
     </script>
     <style>
       :root {
-        background: #fff0f5;
+        background: #fffafd;
       }
 
       html.dark {
@@ -53,7 +64,7 @@
       body {
         margin: 0;
         min-width: 320px;
-        background: #fff0f5;
+        background: #fffafd;
       }
 
       html.dark body {
@@ -74,7 +85,7 @@
         justify-content: center;
         padding: 16px;
         box-sizing: border-box;
-        background: #fff0f5;
+        background: #fffafd;
         color: #ff7a93;
       }
 

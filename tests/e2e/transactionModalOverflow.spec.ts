@@ -165,7 +165,7 @@ async function openTransactionsPage(page: Page) {
 }
 
 async function openNewTransactionModal(page: Page) {
-  await page.getByRole('button', { name: 'New Transaction' }).dispatchEvent('click')
+  await page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true }).dispatchEvent('click')
   const dialog = page.getByRole('dialog', { name: 'New Transaction' })
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('#transaction-date')).toBeVisible()

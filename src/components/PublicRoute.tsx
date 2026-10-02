@@ -4,6 +4,7 @@ import { Navigate } from 'react-router'
 
 import { PageLoader } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
+import { syncThemeColor } from '@/lib/theme'
 
 type PublicRouteProps = {
   children: ReactNode
@@ -15,6 +16,7 @@ export default function PublicRoute({ children }: PublicRouteProps) {
   useEffect(() => {
     document.documentElement.classList.remove('dark')
     document.documentElement.style.colorScheme = 'light'
+    syncThemeColor('light')
   }, [])
 
   if (loading) {

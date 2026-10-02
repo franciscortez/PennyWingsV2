@@ -18,6 +18,9 @@ import { Link, useLocation } from 'react-router'
 
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useScrollLock } from '@/hooks/useScrollLock'
+import { useCurrentMobileAction } from '@/hooks/useMobilePrimaryAction'
+import { useMobileKeyboard } from '@/hooks/useMobileKeyboard'
+import { AppButton } from '@/components/ui/Button'
 import { useTheme } from '@/context/ThemeContext'
 import type { SidebarInfo } from '@/types'
 
@@ -50,6 +53,9 @@ export function MobileNavigation({
   const { theme, toggleTheme } = useTheme()
   const [moreOpen, setMoreOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 768px)')
+  const keyboardOpen = useMobileKeyboard()
+  const primaryAction = useCurrentMobileAction()
+  const ActionIcon = primaryAction?.icon
   const dialogRef = useRef<HTMLDialogElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement | null>(null)
@@ -79,6 +85,7 @@ export function MobileNavigation({
     if (!nav || !indicator) return
 
     let raf = 0
+    let disposed = false
     const place = (x: number, w: number) => {
       indicator.style.transform = `translateX(${x}px)`
       indicator.style.width = `${w}px`
@@ -87,6 +94,7 @@ export function MobileNavigation({
     }
 
     const update = () => {
+      if (disposed || !nav.getClientRects().length) return
       const item = activeIndex >= 0 ? itemRefs.current[activeIndex] : null
       if (!item) {
         indicator.style.opacity = '0'
@@ -129,11 +137,12 @@ export function MobileNavigation({
     fonts?.ready.then(update).catch(() => undefined)
 
     return () => {
+      disposed = true
       cancelAnimationFrame(raf)
       observer.disconnect()
       window.removeEventListener('resize', update)
     }
-  }, [activeIndex])
+  }, [activeIndex, keyboardOpen])
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -165,48 +174,67 @@ export function MobileNavigation({
 
   return (
     <>
-      <nav
-        ref={navRef}
-        aria-label="Primary mobile navigation"
-        className="mobile-dock md:hidden"
-      >
-        <span ref={indicatorRef} aria-hidden="true" className="mobile-dock-indicator" />
-        {destinations.map(({ href, icon: Icon, label, name }, index) => {
-          const active = pathname === href
-
-          return (
-            <Link
-              key={href}
-              ref={(element) => {
-                itemRefs.current[index] = element
-              }}
-              to={href}
-              aria-label={name === label ? name : `${label} (${name})`}
-              aria-current={active ? 'page' : undefined}
-              className="mobile-dock-item"
-              data-selected={active}
-            >
-              <span className="mobile-dock-icon" aria-hidden="true">
-                <Icon size={24} strokeWidth={active ? 2.25 : 1.75} />
-              </span>
-            </Link>
-          )
-        })}
-        <button
-          ref={moreButtonRef}
-          type="button"
-          className="mobile-dock-item"
-          aria-label="Open more navigation"
-          aria-expanded={moreOpen}
-          aria-haspopup="dialog"
-          aria-controls="mobile-more-panel"
-          onClick={openMore}
+      <div className="mobile-navigation-shell md:hidden" hidden={keyboardOpen}>
+        {primaryAction && ActionIcon && !moreOpen && (
+          <AppButton
+            type="button"
+            onClick={(event) => {
+              // Safari does not focus a pointer-clicked button automatically.
+              // The existing modal can now capture and restore this opener.
+              event.currentTarget.focus({ preventScroll: true })
+              primaryAction.onSelect()
+            }}
+            tabIndex={0}
+            className="mobile-primary-action motion-reduce:transform-none motion-reduce:transition-none"
+            data-mobile-primary-action
+          >
+            <ActionIcon size={20} strokeWidth={1.75} aria-hidden="true" />
+            <span>{primaryAction.label}</span>
+          </AppButton>
+        )}
+        <nav
+          ref={navRef}
+          aria-label="Primary mobile navigation"
+          className="mobile-dock md:hidden"
         >
-          <span className="mobile-dock-icon" aria-hidden="true">
-            <MoreHorizontal size={24} strokeWidth={1.75} />
-          </span>
-        </button>
-      </nav>
+          <span ref={indicatorRef} aria-hidden="true" className="mobile-dock-indicator" />
+          {destinations.map(({ href, icon: Icon, label, name }, index) => {
+            const active = pathname === href
+
+            return (
+              <Link
+                key={href}
+                ref={(element) => {
+                  itemRefs.current[index] = element
+                }}
+                to={href}
+                aria-label={name === label ? name : `${label} (${name})`}
+                aria-current={active ? 'page' : undefined}
+                className="mobile-dock-item"
+                data-selected={active}
+              >
+                <span className="mobile-dock-icon" aria-hidden="true">
+                  <Icon size={24} strokeWidth={active ? 2.25 : 1.75} />
+                </span>
+              </Link>
+            )
+          })}
+          <button
+            ref={moreButtonRef}
+            type="button"
+            className="mobile-dock-item"
+            aria-label="Open more navigation"
+            aria-expanded={moreOpen}
+            aria-haspopup="dialog"
+            aria-controls="mobile-more-panel"
+            onClick={openMore}
+          >
+            <span className="mobile-dock-icon" aria-hidden="true">
+              <MoreHorizontal size={24} strokeWidth={1.75} />
+            </span>
+          </button>
+        </nav>
+      </div>
 
       <dialog
         ref={dialogRef}
@@ -237,7 +265,7 @@ export function MobileNavigation({
         }}
       >
         <div className="flex items-center justify-between px-5 pb-2 pt-3">
-          <h2 id="mobile-more-title" className="text-base font-bold tracking-tight">
+          <h2 id="mobile-more-title" className="text-base font-semibold tracking-tight">
             Your space
           </h2>
           <button
@@ -265,10 +293,10 @@ export function MobileNavigation({
               </span>
             )}
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-sm font-bold">
+              <span className="block truncate text-sm font-semibold">
                 {sidebarInfo.loading ? 'Loading…' : sidebarInfo.displayName}
               </span>
-              <span className="mt-0.5 block text-xs text-gray-600 dark:text-slate-400">
+              <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-300">
                 Profile & settings
               </span>
             </span>
@@ -286,7 +314,7 @@ export function MobileNavigation({
             <Bot size={22} aria-hidden="true" />
             <span className="flex-1 text-left">
               <span className="block text-sm font-semibold">AI Assistant</span>
-              <span className="mt-0.5 block text-xs text-gray-500 dark:text-slate-400">
+              <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-300">
                 Talk through your finances
               </span>
             </span>

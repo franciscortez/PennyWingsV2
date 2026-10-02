@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAssistant } from '@/hooks/useAssistant'
 import { useSidebarInfo } from '@/hooks/useSidebarInfo'
+import { useCurrentMobileAction } from '@/hooks/useMobilePrimaryAction'
 import { alerts } from '@/lib/alert'
 import { AssistantWidget } from '@/sections/assistant'
 import { Sidebar } from '@/components/ui'
@@ -12,6 +13,7 @@ type LayoutProps = {
 }
 
 export default function Layout({ children }: LayoutProps) {
+  const mobileAction = useCurrentMobileAction()
   const { loading, profile, signOut, user } = useAuth()
   const { openAssistant } = useAssistant()
   const sidebarInfo = useSidebarInfo(loading, user?.email, profile)
@@ -37,7 +39,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div className="min-h-[100dvh] overflow-x-hidden bg-paper font-geist text-slate-950 antialiased md:flex dark:bg-slate-950 dark:text-slate-100">
+    <div data-mobile-action={Boolean(mobileAction)} className="app-layout min-h-[100dvh] overflow-x-hidden bg-paper font-geist text-slate-950 antialiased md:flex dark:bg-slate-950 dark:text-slate-100">
       <Sidebar
         onOpenAssistant={openAssistant}
         onSignOut={handleSignOut}
@@ -51,7 +53,7 @@ export default function Layout({ children }: LayoutProps) {
           sidebarOpen ? 'md:ml-72 xl:ml-80' : 'md:ml-24'
         }`}
       >
-        <div className="mx-auto max-w-6xl px-4 py-6 pb-[calc(6.5rem+env(safe-area-inset-bottom))] md:px-6 md:py-8 md:pb-8 lg:px-8 xl:px-12">
+        <div className="app-content mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8 md:pb-8 lg:px-8 xl:px-12">
           {children}
         </div>
       </main>

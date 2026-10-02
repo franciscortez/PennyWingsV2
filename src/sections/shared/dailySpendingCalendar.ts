@@ -30,7 +30,7 @@ export const weekdays = Array.from({ length: 7 }, (_, dayIndex) =>
 // heat step, so intensity always means money left the account. Every pairing
 // below is AA-verified; see the ramp comment in `src/index.css`.
 export const quietStep =
-  'bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-slate-400'
+  'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
 
 export const intensitySteps = [
   'bg-heat-1 text-pink-900 dark:bg-heat-dark-1 dark:text-pink-200',

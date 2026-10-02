@@ -32,7 +32,7 @@ export default defineConfig({
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 13'] },
-      testMatch: /.*(?:transactionModalOverflow|mobileNavigation|mobilePrimaryAction|pwa)\.spec\.ts/,
+      testMatch: /.*(?:transactionModalOverflow|mobileNavigation|mobilePrimaryAction|pwa|dailySpendingCalendar|dashboardDesign)\.spec\.ts/,
     },
   ],
   webServer: {

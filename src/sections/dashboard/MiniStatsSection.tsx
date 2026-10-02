@@ -1,55 +1,19 @@
 import { PiggyBank, ReceiptText, Wallet, type LucideIcon } from 'lucide-react'
+import { figure, surface, textMuted } from '@/components/ui/surfaces'
 
-type MiniStatsSectionProps = {
-  accountCount: number
-  loading: boolean
-  profileLabel: string
-  transactionCount: number
+type MiniStatsSectionProps = { accountCount: number; loading: boolean; profileLabel: string; transactionCount: number }
+export function MiniStatsSection({ accountCount, loading, profileLabel, transactionCount }: MiniStatsSectionProps) {
+  return <section aria-label="Account summary" className="grid min-w-0 grid-cols-1 gap-4 md:grid-cols-3">
+    <MiniStat icon={Wallet} label="Connected Accounts" value={loading ? '...' : String(accountCount)} numeric />
+    <MiniStat icon={PiggyBank} label="Profile" value={profileLabel} />
+    <MiniStat icon={ReceiptText} label="Latest Entries" value={loading ? '...' : String(transactionCount)} numeric />
+  </section>
 }
-
-export function MiniStatsSection({
-  accountCount,
-  loading,
-  profileLabel,
-  transactionCount,
-}: MiniStatsSectionProps) {
-  return (
-    <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <MiniStat
-        icon={Wallet}
-        label="Connected Accounts"
-        value={loading ? '...' : String(accountCount)}
-      />
-      <MiniStat icon={PiggyBank} label="Profile" value={profileLabel} />
-      <MiniStat
-        icon={ReceiptText}
-        label="Latest Entries"
-        value={loading ? '...' : String(transactionCount)}
-      />
-    </section>
-  )
-}
-
-function MiniStat({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon
-  label: string
-  value: string
-}) {
-  return (
-    <article className="flex items-center gap-4 rounded-[2rem] border border-pink-50 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-pink-50 text-pink-500 dark:bg-slate-800 dark:text-pink-400">
-        <Icon className="h-6 w-6" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-          {label}
-        </p>
-        <p className="truncate text-lg font-black text-gray-900 dark:text-slate-100">{value}</p>
-      </div>
-    </article>
-  )
+function MiniStat({ icon: Icon, label, value, numeric = false }: { icon: LucideIcon; label: string; value: string; numeric?: boolean }) {
+  return <article className={`${surface} flex min-w-0 items-start gap-3 p-5`}>
+    <Icon className="mt-1 h-5 w-5 shrink-0 text-pink-700 dark:text-pink-400" aria-hidden="true" />
+    <div className="min-w-0"><h2 className={`text-sm ${textMuted}`}>{label}</h2>
+      <p className={`mt-1 break-words text-lg font-semibold text-slate-950 [overflow-wrap:anywhere] dark:text-slate-100 ${numeric ? figure : ''}`}>{value}</p>
+    </div>
+  </article>
 }

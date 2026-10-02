@@ -4,7 +4,6 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import PublicRoute from '@/components/PublicRoute'
 import { AuthProvider } from '@/context/AuthContext'
 import { AssistantProvider } from '@/context/AssistantContext'
-import { MobileActionProvider } from '@/context/MobileActionContext'
 import { useAuth } from '@/hooks/useAuth'
 import Accounts from '@/pages/Accounts'
 import Dashboard from '@/pages/Dashboard'
@@ -35,7 +34,6 @@ function AppRoutes() {
 
   return (
     <AssistantProvider key={user?.id ?? 'anonymous'}>
-      <MobileActionProvider key={user?.id ?? 'anonymous'}>
         <Routes>
             <Route
               path="/"
@@ -132,7 +130,6 @@ function AppRoutes() {
             />
             <Route path="*" element={<NotFound />} />
         </Routes>
-      </MobileActionProvider>
     </AssistantProvider>
   )
 }

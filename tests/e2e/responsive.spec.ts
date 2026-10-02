@@ -79,7 +79,7 @@ test.describe('Responsive Layout & Viewport Overflow Audits', () => {
           page,
         }) => {
           await page.goto('/dashboard')
-          await page.waitForLoadState('domcontentloaded')
+          await expect(page.getByRole('heading', { name: 'Total Net Worth' })).toBeVisible({ timeout: 30_000 })
 
           const hasOverflow = await page.evaluate(() => {
             return document.documentElement.scrollWidth > window.innerWidth

@@ -1,11 +1,12 @@
 import { Plus } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate, useSearchParams } from 'react-router'
 
 import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useTransactionsData } from '@/hooks/useTransactionsData'
+import { useMobilePrimaryAction } from '@/hooks/useMobilePrimaryAction'
 import { alerts } from '@/lib/alert'
 import {
   TransactionForm,
@@ -32,6 +33,9 @@ const getTypeFromUrl = (value: string | null): TransactionFilterType =>
     : 'all'
 
 export default function Transactions() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const consumedRequest = useRef<string | null>(null)
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const page = getPageFromUrl(searchParams.get('page'))
@@ -67,6 +71,27 @@ export default function Transactions() {
     userId: user?.id,
   })
   useErrorAlert(error)
+
+  const openCreateForm = useCallback(() => {
+    setEditingTransaction(null)
+    setFormOpen(true)
+  }, [])
+  useMobilePrimaryAction(loading ? null : {
+    label: 'New transaction', icon: Plus, onSelect: openCreateForm,
+  })
+
+  useEffect(() => {
+    const state = location.state as Record<string, unknown> | null
+    if (loading || state?.mobilePrimaryAction !== 'new-transaction' || consumedRequest.current === location.key) return
+    consumedRequest.current = location.key
+    openCreateForm()
+    const remainingState = { ...state }
+    delete remainingState.mobilePrimaryAction
+    void navigate(`${location.pathname}${location.search}${location.hash}`, {
+      replace: true,
+      state: Object.keys(remainingState).length ? remainingState : null,
+    })
+  }, [loading, location, navigate, openCreateForm])
 
   const setPage = useCallback((nextPage: number, replace = false) => {
     setSearchParams(
@@ -122,11 +147,6 @@ export default function Transactions() {
       },
       { replace: true },
     )
-  }
-
-  const openCreateForm = () => {
-    setEditingTransaction(null)
-    setFormOpen(true)
   }
 
   const openEditForm = (transaction: Transaction) => {

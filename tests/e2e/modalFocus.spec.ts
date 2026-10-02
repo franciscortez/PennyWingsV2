@@ -95,7 +95,7 @@ test.describe('transaction and monitoring forms', () => {
       await page.goto('/transactions')
       await expect(page.getByRole('heading', { name: 'Transaction History' })).toBeVisible()
 
-      const opener = page.getByRole('button', { name: 'New Transaction' })
+      const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
       const { anchorBefore, dialog } = await openWithKeyboard(page, opener, 'New Transaction')
 
       expect(await rootIsInert(page)).toBe(true)
@@ -159,7 +159,7 @@ test.describe('transaction and monitoring forms', () => {
     const assistant = page.getByRole('dialog', { name: 'PennyWings AI' })
     await expect(assistant).toBeVisible()
 
-    const opener = page.getByRole('button', { name: 'New Transaction' })
+    const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
     const { dialog } = await openWithKeyboard(page, opener, 'New Transaction')
 
     await expectTabContained(page, dialog)
@@ -238,7 +238,7 @@ test.describe('mobile', () => {
     await page.goto('/transactions')
     await expect(page.getByRole('heading', { name: 'Transaction History' })).toBeVisible()
 
-    const opener = page.getByRole('button', { name: 'New Transaction' })
+    const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
     const { dialog } = await openWithKeyboard(page, opener, 'New Transaction')
 
     expect(

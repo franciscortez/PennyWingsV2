@@ -167,7 +167,7 @@ test.describe('Mobile bottom navigation', () => {
     await expect(panel).not.toBeVisible()
     const assistant = page.getByRole('dialog').filter({ hasNot: page.getByText('Your space', { exact: true }) })
     await expect(assistant).toBeVisible()
-    expect(await assistant.evaluate((element) => element.contains(document.activeElement))).toBe(true)
+    await expect.poll(() => assistant.evaluate((element) => element.contains(document.activeElement))).toBe(true)
   })
 
   test('restores page before sign-out confirmation and lets the user cancel', async ({ page }) => {

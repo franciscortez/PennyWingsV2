@@ -29,7 +29,7 @@ test('create sends the entered withdrawal fee to the checked RPC', async ({ page
   })
 
   await page.goto('/transactions')
-  await page.getByRole('button', { name: 'New Transaction' }).click()
+  await page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'New Transaction' })
   await dialog.getByRole('button', { name: 'withdrawal' }).click()
   await dialog.locator('input[type="number"]').fill('40')

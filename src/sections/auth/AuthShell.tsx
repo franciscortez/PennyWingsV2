@@ -2,6 +2,7 @@ import { ArrowLeft } from 'lucide-react'
 import { MotionConfig, motion } from 'motion/react'
 import { useEffect, type ReactNode } from 'react'
 import { Link } from 'react-router'
+import { syncThemeColor } from '@/lib/theme'
 
 import type { AuthPanelContent } from '@/sections/auth/authContent'
 import { ImageSlot } from '@/sections/home/ImageSlot'
@@ -35,6 +36,7 @@ export function AuthShell({
   useEffect(() => {
     document.documentElement.classList.remove('dark')
     document.documentElement.style.colorScheme = 'light'
+    syncThemeColor('light')
   }, [])
 
   const PointList = panel.ordered ? 'ol' : 'ul'

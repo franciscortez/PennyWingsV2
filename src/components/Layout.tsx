@@ -47,7 +47,7 @@ export default function Layout({ children }: LayoutProps) {
       />
 
       <main
-        className={`min-w-0 flex-1 transition-[margin] duration-300 ${
+        className={`min-w-0 flex-1 ${
           sidebarOpen ? 'md:ml-72 xl:ml-80' : 'md:ml-24'
         }`}
       >

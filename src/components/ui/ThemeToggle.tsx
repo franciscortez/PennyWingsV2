@@ -1,4 +1,7 @@
 import { Moon, Sun } from 'lucide-react'
+
+import { AppButton } from '@/components/ui/Button'
+import { SidebarTooltip } from '@/components/ui/SidebarTooltip'
 import { useTheme } from '@/context/ThemeContext'
 
 type ThemeToggleProps = {
@@ -7,27 +10,24 @@ type ThemeToggleProps = {
 
 export function ThemeToggle({ expanded }: ThemeToggleProps) {
   const { theme, toggleTheme } = useTheme()
+  const label = `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`
+  const Icon = theme === 'light' ? Moon : Sun
 
   return (
-    <button
-      type="button"
-      onClick={toggleTheme}
-      className={`flex items-center rounded-xl py-3 font-bold transition-all w-full text-gray-400 hover:bg-pink-50/70 hover:text-pink-500 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-pink-400 ${
-        expanded ? 'gap-3 px-4' : 'justify-center px-0'
-      }`}
-      title={expanded ? undefined : `Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-    >
-      {theme === 'light' ? (
-        <>
-          <Moon className="h-6 w-6 shrink-0" aria-hidden="true" />
-          {expanded && <span className="truncate">Dark Mode</span>}
-        </>
-      ) : (
-        <>
-          <Sun className="h-6 w-6 shrink-0 text-amber-400" aria-hidden="true" />
-          {expanded && <span className="truncate text-amber-400">Light Mode</span>}
-        </>
+    <SidebarTooltip enabled={!expanded} label={label}>
+      {(tooltipProps) => (
+        <AppButton
+          {...tooltipProps}
+          type="button"
+          onClick={toggleTheme}
+          variant="ghost"
+          aria-label={label}
+          className={`w-full motion-reduce:transform-none motion-reduce:transition-none dark:hover:text-pink-400 ${expanded ? 'justify-start gap-3 px-4' : 'px-0'}`}
+        >
+          <Icon className="h-5 w-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          {expanded && <span className="truncate">{theme === 'light' ? 'Dark mode' : 'Light mode'}</span>}
+        </AppButton>
       )}
-    </button>
+    </SidebarTooltip>
   )
 }

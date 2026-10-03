@@ -1,3 +1,6 @@
+import { FormattedFigure } from '@/components/ui/FormattedFigure'
+import { surface, surfaceNested, textMuted } from '@/components/ui/surfaces'
+
 type TotalBalanceSectionProps = {
   cardCount: number
   cashCount: number
@@ -13,33 +16,22 @@ const currency = new Intl.NumberFormat('en-PH', {
   style: 'currency',
 })
 
-export function TotalBalanceSection({
-  cardCount,
-  cashCount,
-  lentCount,
-  loading,
-  total,
-  walletCount,
-}: TotalBalanceSectionProps) {
+export function TotalBalanceSection({ cardCount, cashCount, lentCount, loading, total, walletCount }: TotalBalanceSectionProps) {
   const totalAccounts = cardCount + walletCount + cashCount + lentCount
 
   return (
-    <article className="relative min-h-44 overflow-hidden rounded-[2rem] bg-pink-500 p-5 text-white dark:bg-pink-700 sm:p-6 xl:p-8">
-      <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.22),transparent_48%),repeating-linear-gradient(90deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_1px,transparent_1px,transparent_34px)]" />
-      <div className="relative flex flex-col items-center gap-6">
-        <div className="w-full min-w-0 text-center">
-          <p className="mb-3 text-xs font-black uppercase tracking-[0.2em] text-pink-100">
-            Total Net Worth
+    <article className={`${surface} min-w-0 p-5 sm:p-6 xl:p-8`}>
+      <div className="space-y-6">
+        <div className="min-w-0">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-950 dark:text-white">Total Net Worth</h2>
+          <p className="mt-3 text-3xl font-semibold leading-tight tracking-tighter text-pink-700 sm:text-5xl dark:text-pink-400" data-account-total>
+            {loading ? 'Loading...' : <FormattedFigure value={currency.format(total)} />}
           </p>
-          <h2 className="whitespace-nowrap text-[clamp(1.5rem,6vw,4.5rem)] font-black leading-none tracking-tight tabular-nums">
-            {loading ? 'Loading...' : currency.format(total)}
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm font-semibold leading-relaxed text-pink-50">
+          <p className={`mt-3 text-sm leading-relaxed ${textMuted}`}>
             All active balances combined across your account groups.
           </p>
         </div>
-
-        <div className="grid w-full max-w-3xl grid-cols-2 gap-2 sm:grid-cols-5">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(6rem,1fr))] gap-3">
           <CountPill label="Total" value={loading ? '...' : totalAccounts} />
           <CountPill label="Banks" value={loading ? '...' : cardCount} />
           <CountPill label="E-Wallet" value={loading ? '...' : walletCount} />
@@ -53,11 +45,9 @@ export function TotalBalanceSection({
 
 function CountPill({ label, value }: { label: string; value: number | string }) {
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 px-3 py-3 text-center backdrop-blur-sm">
-      <p className="text-[9px] font-black uppercase tracking-widest text-pink-100">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-black text-white">{value}</p>
+    <div className={`${surfaceNested} min-w-0 px-4 py-3`}>
+      <p className={`text-sm ${textMuted}`}>{label}</p>
+      <p className="mt-1 break-words font-geist-mono text-xl font-semibold tabular-nums text-slate-950 dark:text-white">{value}</p>
     </div>
   )
 }

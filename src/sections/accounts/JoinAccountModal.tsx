@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { AppButton } from '@/components/ui/Button'
+import { fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
+import { textMuted } from '@/components/ui/surfaces'
+import { accountModalPanel } from '@/sections/accounts/accountStyles'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { useAuth } from '@/hooks/useAuth'
 import { useJoinAccount } from '@/hooks/useJointAccountData'
@@ -19,6 +23,7 @@ export function JoinAccountModal({ onClose, onJoined }: JoinAccountModalProps) {
   const isMountedRef = useRef(true)
 
   useEffect(() => {
+    isMountedRef.current = true
     return () => {
       isMountedRef.current = false
     }
@@ -54,38 +59,39 @@ export function JoinAccountModal({ onClose, onJoined }: JoinAccountModalProps) {
       closeDisabled={false}
       closeLabel="Close join modal"
       onClose={onClose}
-      panelClassName="max-w-md rounded-[2.5rem]"
+      panelClassName={`${accountModalPanel} max-w-md`}
       title="Join Shared Account"
       titleId="join-account-title"
     >
       <div className="space-y-6">
-        <p className="text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-400">
+        <p className={`text-sm leading-relaxed ${textMuted}`}>
           Enter the invitation code you received from the account owner.
           Codes look like{' '}
-          <span className="font-bold text-pink-500">WING-123456</span>.
+          <span className="font-semibold text-pink-700 dark:text-pink-400">WING-123456</span>.
         </p>
 
         <div>
-          <label className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+          <label htmlFor="account-invitation-code" className={`mb-3 block ${fieldLabel}`}>
             Invitation Code
           </label>
           <input
+            id="account-invitation-code"
             type="text"
             placeholder="WING-000000"
             value={code}
             onChange={(event) => setCode(event.target.value.toUpperCase())}
-            className="w-full rounded-2xl border-2 border-pink-100 bg-pink-50/30 px-5 py-4 text-center font-mono text-xl font-black tracking-[0.15em] text-gray-800 outline-none transition-all placeholder:text-pink-200 focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(false, "min-w-0 font-geist-mono")}
           />
         </div>
 
-        <button
+        <AppButton
           type="button"
           onClick={handleSubmit}
           disabled={joining || !code.trim()}
-          className="w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-40"
+          className="w-full min-w-0 whitespace-normal"
         >
           {joining ? 'Joining...' : 'Join Account'}
-        </button>
+        </AppButton>
       </div>
     </ModalFrame>
   )

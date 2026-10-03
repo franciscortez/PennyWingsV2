@@ -50,7 +50,7 @@ test.describe('Page actions without duplicate mobile buttons', () => {
 
   test('Accounts and Monitoring retain their existing page actions', async ({ page }) => {
     await ready(page, '/accounts')
-    const account = page.getByRole('main').getByRole('button', { name: 'Add', exact: true })
+    const account = page.getByRole('main').getByRole('button', { name: 'Add account', exact: true })
     await expect(account).toHaveCount(1)
     await account.click()
     await expect(page.getByRole('button', { name: 'Close account setup' })).toBeVisible()

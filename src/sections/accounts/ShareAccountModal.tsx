@@ -1,6 +1,10 @@
 import { FaCopy, FaTrashCan, FaUserMinus } from 'react-icons/fa6'
 import { useState } from 'react'
 
+import { AppButton } from '@/components/ui/Button'
+import { fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
+import { surfaceNested, textMuted } from '@/components/ui/surfaces'
+import { accountModalPanel, accountChoice, accountChoiceActive, accountChoiceIdle } from '@/sections/accounts/accountStyles'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { useAuth } from '@/hooks/useAuth'
 import { useJointAccountData } from '@/hooks/useJointAccountData'
@@ -119,28 +123,25 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
       closeLabel="Close share modal"
       description={account.name}
       onClose={onClose}
-      panelClassName="max-w-lg rounded-[2.5rem]"
+      panelClassName={`${accountModalPanel} max-w-lg`}
       title="Share Account"
       titleId="share-account-title"
     >
       <div className="space-y-6">
           {/* ─── Generate Invite Code ─── */}
           <div className="space-y-3">
-            <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            <label className={`mb-3 block ${fieldLabel}`}>
               Invitation Code
             </label>
 
-            <div className="grid grid-cols-2 gap-2 rounded-2xl bg-pink-50 p-1.5 dark:bg-slate-950/60">
+            <div className={`${surfaceNested} flex flex-wrap gap-2 p-2`}>
               {(['viewer', 'transactor'] as const).map((role) => (
                 <button
                   key={role}
                   type="button"
                   onClick={() => handleInviteRoleChange(role)}
-                  className={`rounded-xl px-3 py-2.5 text-xs font-black transition ${
-                    inviteRole === role
-                      ? 'bg-white text-pink-600 shadow-sm dark:bg-slate-800 dark:text-pink-400'
-                      : 'text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300'
-                  }`}
+                  aria-pressed={inviteRole === role}
+                  className={`${accountChoice} flex-1 ${inviteRole === role ? accountChoiceActive : accountChoiceIdle}`}
                 >
                   {role === 'viewer' ? 'View only' : 'Can transact'}
                 </button>
@@ -148,42 +149,43 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
             </div>
 
             {generatedCode ? (
-              <div className="flex items-center gap-3 rounded-2xl border-2 border-pink-200 bg-pink-50/60 p-4 dark:border-slate-800 dark:bg-slate-950/40">
-                <span className="flex-1 text-center font-mono text-2xl font-black tracking-[0.2em] text-pink-600 dark:text-pink-400">
+              <div className={`${surfaceNested} flex flex-wrap items-center gap-3 p-4`}>
+                <span className="min-w-0 break-all font-geist-mono text-xl font-semibold text-pink-800 dark:text-pink-400">
                   {generatedCode}
                 </span>
-                <button
+                <AppButton
                   type="button"
                   onClick={handleCopyCode}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-pink-500 text-white transition-all hover:bg-pink-600 active:scale-90"
+                  className="h-11 w-11 shrink-0"
+                  size="icon"
                   aria-label="Copy code"
                 >
                   <FaCopy className="h-4 w-4" />
-                </button>
+                </AppButton>
               </div>
             ) : null}
 
-            <button
+            <AppButton
               type="button"
               onClick={handleGenerateCode}
               disabled={generating}
-              className="w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-3.5 text-sm font-black text-white transition-all hover:-translate-y-0.5 disabled:opacity-50"
+              className="w-full min-w-0 whitespace-normal"
             >
               {generating
                 ? 'Generating...'
                 : generatedCode
                   ? 'Generate New Code'
                   : 'Generate Invite Code'}
-            </button>
+            </AppButton>
 
-            <p className="text-center text-xs font-medium text-gray-400 dark:text-slate-550">
+            <p className={`text-center text-xs ${textMuted}`}>
               Codes expire after 1 hour and can only be used once.
             </p>
           </div>
 
           {/* ─── Current Members ─── */}
           <div className="space-y-3">
-            <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            <label className={`mb-3 block ${fieldLabel}`}>
               Members ({members.length})
             </label>
 
@@ -192,12 +194,12 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
                 {[1, 2].map((i) => (
                   <div
                     key={i}
-                    className="h-14 animate-pulse rounded-2xl bg-pink-50 dark:bg-slate-800"
+                    className="h-14 motion-safe:animate-pulse rounded-2xl bg-pink-50 dark:bg-slate-800"
                   />
                 ))}
               </div>
             ) : members.length === 0 ? (
-              <p className="rounded-2xl border-2 border-dashed border-pink-100 bg-pink-50/30 py-6 text-center text-sm font-bold text-gray-400 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-500">
+              <p className={`rounded-2xl border-2 border-dashed border-pink-100 bg-pink-50/30 py-6 text-center text-sm dark:border-slate-800 dark:bg-slate-950/40 ${textMuted}`}>
                 No members yet. Share an invite code to get started.
               </p>
             ) : (
@@ -205,22 +207,22 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
                 {members.map((member) => (
                   <div
                     key={member.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-pink-100/60 bg-white p-3.5 transition-all hover:border-pink-200 dark:border-slate-800 dark:bg-slate-950/20 dark:hover:border-slate-700"
+                    className={`${surfaceNested} flex flex-wrap items-center justify-between gap-3 p-4`}
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-pink-100 to-pink-200 text-sm font-black text-pink-600 dark:from-slate-800 dark:to-slate-750 dark:text-pink-400">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-sm font-semibold text-pink-700 dark:bg-slate-900 dark:text-pink-400">
                         {(member.fullName ?? 'U').charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-bold text-gray-800 dark:text-slate-200">
+                        <p className="break-words text-sm font-semibold text-slate-950 dark:text-white">
                           {member.fullName || 'Unknown User'}
                         </p>
-                        <p className="truncate text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-slate-500">
+                        <p className={`mb-3 block ${fieldLabel}`}>
                           Joined {formatDate(member.joinedAt)}
                         </p>
                       </div>
                     </div>
-                    <div className="flex shrink-0 items-center gap-2">
+                    <div className="flex min-w-0 flex-wrap items-center gap-2">
                       <select
                         value={member.role}
                         disabled={updatingMemberId === member.id}
@@ -230,22 +232,24 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
                             event.target.value as AccountMemberRole,
                           )
                         }
-                        className="rounded-xl border border-pink-100 bg-pink-50 px-2 py-2 text-[10px] font-black text-gray-600 outline-none focus:border-pink-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                        className={fieldInput(false, "w-auto min-w-0 max-w-full px-3 text-sm")}
                         aria-label={`Access for ${member.fullName ?? 'member'}`}
                       >
                         <option value="viewer">View only</option>
                         <option value="transactor">Can transact</option>
                       </select>
-                      <button
+                      <AppButton
                         type="button"
                         onClick={() =>
                           handleKickMember(member.id, member.fullName ?? '')
                         }
-                        className="flex h-8 w-8 items-center justify-center rounded-xl border border-gray-100 bg-white text-gray-400 transition-all hover:border-red-200 hover:bg-red-50 hover:text-red-500 active:scale-90 dark:border-slate-800 dark:bg-slate-850 dark:text-slate-400 dark:hover:border-red-900/60 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                        size="icon"
+                        variant="danger"
+                        className="h-11 w-11 shrink-0"
                         aria-label={`Remove ${member.fullName ?? 'member'}`}
                       >
                         <FaUserMinus className="h-3.5 w-3.5" />
-                      </button>
+                      </AppButton>
                     </div>
                   </div>
                 ))}
@@ -255,14 +259,14 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
 
           {/* ─── Pending Invitations ─── */}
           <div className="space-y-3">
-            <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            <label className={`mb-3 block ${fieldLabel}`}>
               Pending Invitations ({invites.length})
             </label>
 
             {invitesLoading ? (
-              <div className="h-14 animate-pulse rounded-2xl bg-pink-50 dark:bg-slate-800" />
+              <div className="h-14 motion-safe:animate-pulse rounded-2xl bg-pink-50 dark:bg-slate-800" />
             ) : invites.length === 0 ? (
-              <p className="rounded-2xl border-2 border-dashed border-pink-100 bg-pink-50/30 py-4 text-center text-sm font-bold text-gray-400 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-500">
+              <p className={`rounded-2xl border-2 border-dashed border-pink-100 bg-pink-50/30 py-4 text-center text-sm dark:border-slate-800 dark:bg-slate-950/40 ${textMuted}`}>
                 No pending invitations.
               </p>
             ) : (
@@ -270,25 +274,27 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
                 {invites.map((invite) => (
                   <div
                     key={invite.id}
-                    className="flex items-center justify-between gap-3 rounded-2xl border border-amber-100/80 bg-amber-50/40 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10"
+                    className={`${surfaceNested} flex flex-wrap items-center justify-between gap-3 p-4`}
                   >
                     <div>
-                      <p className="text-xs font-bold text-amber-700 dark:text-amber-500">
+                      <p className="text-sm font-semibold text-slate-950 dark:text-white">
                         {invite.role === 'viewer' ? 'View only' : 'Can transact'}
                       </p>
-                      <p className="text-[10px] font-bold text-amber-500 dark:text-amber-600">
+                      <p className={`text-sm ${textMuted}`}>
                         Expires {formatDate(invite.expiresAt)} at{' '}
                         {formatTime(invite.expiresAt)}
                       </p>
                     </div>
-                    <button
+                    <AppButton
                       type="button"
                       onClick={() => handleRevoke(invite.id)}
-                      className="flex h-8 w-8 items-center justify-center rounded-xl border border-amber-200 bg-white text-amber-500 transition-all hover:bg-red-50 hover:text-red-500 active:scale-90 dark:border-amber-900/60 dark:bg-slate-850 dark:text-amber-450 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+                      size="icon"
+                        variant="danger"
+                        className="h-11 w-11 shrink-0"
                       aria-label="Revoke invitation"
                     >
                       <FaTrashCan className="h-3.5 w-3.5" />
-                    </button>
+                    </AppButton>
                   </div>
                 ))}
               </div>

@@ -342,15 +342,15 @@ test('locks the page behind the budget modal and restores it on cancel', async (
   await expect(page.getByRole('heading', { name: 'Budgets & Goals' })).toBeVisible()
 
   await page
-    .getByRole('main').getByRole('button', { name: 'New Budget', exact: true })
+    .getByRole('main').locator('header').getByRole('button', { name: 'New budget', exact: true })
     .dispatchEvent('click')
 
-  const dialog = page.getByRole('dialog', { name: 'New Budget' })
+  const dialog = page.getByRole('dialog', { name: 'New budget' })
   await expect(dialog).toBeVisible()
   await expect.poll(async () => (await lockState(page)).bodyPosition).toBe('fixed')
 
   // The submit path lives outside the scroll region but still belongs to the form.
-  const submit = dialog.getByRole('button', { name: 'Create Budget' })
+  const submit = dialog.getByRole('button', { name: 'Create budget' })
   await expect(submit).toBeVisible()
   expect(await submit.getAttribute('form')).toBe('budget-form')
   expect(

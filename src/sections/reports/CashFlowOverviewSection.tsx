@@ -1,3 +1,4 @@
+import { FormattedFigure } from '@/components/ui/FormattedFigure'
 import { Activity, TrendingDown, TrendingUp } from 'lucide-react'
 
 import {
@@ -26,37 +27,36 @@ export function CashFlowOverviewSection({
     report.transactionCount === 0
       ? 'This month is still quiet. Record transactions to build your story.'
       : report.netCashflow >= 0
-        ? 'Your wings are strong—you kept more money in the nest this month.'
+        ? 'You kept more money than you spent this month.'
         : 'Your pennies moved faster than they arrived. A calmer next month is within reach.'
 
   return (
     <section className="space-y-6">
-      <article className="rounded-[2.5rem] border border-pink-50 bg-white p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
+      <article className="rounded-[2rem] border border-pink-100 bg-white shadow-wing dark:shadow-none p-4 sm:p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
         <div className="mb-8 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
           <div>
-            <h2 className="flex items-center gap-2 text-xl font-black tracking-tight text-gray-950 dark:text-white">
-              <span className="h-7 w-2 rounded-full bg-pink-500" />
-              Income vs. Expense
+            <h2 className="flex items-center gap-2 text-xl font-semibold tracking-tighter text-slate-950 dark:text-white">
+              Income vs. expense
             </h2>
-            <p className="mt-1 text-sm font-medium italic text-gray-400 dark:text-slate-500">
+            <p className="mt-1 text-sm font-medium italic text-slate-600 dark:text-slate-400">
               Monthly cash flow comparison
             </p>
           </div>
-          <p className="text-sm font-black text-gray-500 dark:text-slate-400">
-            Flow: {compactReportCurrency.format(report.incomeTotal + report.expenseTotal)}
+          <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+            Flow: <FormattedFigure value={compactReportCurrency.format(report.incomeTotal + report.expenseTotal)} />
           </p>
         </div>
 
         <div className="space-y-7">
           <FlowBar
-            color="bg-emerald-400"
+            color="bg-emerald-700 dark:bg-emerald-400"
             icon={TrendingUp}
             label="Income"
             value={report.incomeTotal}
             width={incomeWidth}
           />
           <FlowBar
-            color="bg-pink-400"
+            color="bg-rose-700 dark:bg-rose-300"
             icon={TrendingDown}
             label="Expense"
             value={report.expenseTotal}
@@ -65,26 +65,25 @@ export function CashFlowOverviewSection({
         </div>
       </article>
 
-      <article className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-gray-950 to-gray-800 p-7 text-white md:p-9 dark:border dark:border-slate-800">
-        <div className="absolute -right-12 -top-12 h-52 w-52 rounded-full bg-pink-500/20 blur-3xl" />
+      <article className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-wing sm:p-8 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none">
         <div className="relative">
           <div className="mb-5 flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-500">
+            <span className="flex h-11 w-11 items-center justify-center rounded-[1.25rem] bg-pink-50 text-pink-700 dark:bg-slate-800 dark:text-pink-400">
               <Activity className="h-5 w-5" aria-hidden="true" />
             </span>
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-pink-300">
-                Pulse Check
+              <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                Pulse check
               </p>
-              <h2 className="text-2xl font-black">Monthly efficiency</h2>
+              <h2 className="text-2xl font-semibold tracking-tighter text-slate-950 dark:text-white">Monthly efficiency</h2>
             </div>
           </div>
-          <p className="max-w-2xl font-medium leading-relaxed text-gray-300">
+          <p className="max-w-2xl font-medium leading-relaxed text-slate-600 dark:text-slate-400">
             {pulseMessage}
           </p>
-          <div className="mt-7 grid grid-cols-2 gap-3 sm:max-w-md">
-            <PulseMetric label="Savings Rate" value={savingsRate} />
-            <PulseMetric label="Burn Rate" value={burnRate} />
+          <div className="mt-7 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:max-w-md">
+            <PulseMetric label="Savings rate" value={savingsRate} />
+            <PulseMetric label="Burn rate" value={burnRate} />
           </div>
         </div>
       </article>
@@ -107,18 +106,18 @@ function FlowBar({
 }) {
   return (
     <div>
-      <div className="mb-3 flex items-center justify-between gap-4">
-        <span className="flex items-center gap-2 text-sm font-black text-gray-600 dark:text-slate-400">
-          <Icon className="h-5 w-5 text-pink-500" aria-hidden="true" />
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-4">
+        <span className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400">
+          <Icon className="h-5 w-5 text-pink-700 dark:text-pink-400" aria-hidden="true" />
           {label}
         </span>
-        <span className="text-sm font-black text-gray-950 dark:text-slate-100">
-          {reportCurrency.format(value)}
+        <span className="text-sm font-semibold text-slate-950 dark:text-slate-100">
+          <FormattedFigure value={reportCurrency.format(value)} />
         </span>
       </div>
-      <div className="h-4 overflow-hidden rounded-full bg-pink-50 dark:bg-slate-950">
+      <div className="h-4 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
         <div
-          className={`h-full min-w-1 rounded-full transition-all duration-700 ${color}`}
+          data-chart-mark={label.toLowerCase()} className={`h-full rounded-full motion-safe:transition-[width] motion-safe:duration-200 ${color}`}
           style={{ width: `${width}%` }}
         />
       </div>
@@ -134,12 +133,12 @@ function PulseMetric({
   value: number | null
 }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-      <p className="text-[10px] font-black uppercase tracking-widest text-pink-300">
+    <div className="rounded-[1.25rem] bg-pink-50/60 dark:bg-slate-800 p-4">
+      <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-black">
-        {value === null ? 'N/A' : `${value}%`}
+      <p className="mt-1 text-2xl font-semibold text-slate-950 dark:text-white">
+        <FormattedFigure value={value === null ? 'N/A' : `${value}%`} />
       </p>
     </div>
   )

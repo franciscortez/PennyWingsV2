@@ -1,3 +1,5 @@
+import { Check } from 'lucide-react'
+import { fieldInput, fieldLabel, fieldError } from '@/components/ui/fieldStyles'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Image as ImageIcon, User } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -66,48 +68,51 @@ export default function GeneralSection() {
   }
 
   return (
-    <article className="rounded-3xl border border-pink-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+    <article className="rounded-[2rem] border border-pink-100 bg-white shadow-wing dark:shadow-none p-6 dark:border-slate-800 dark:bg-slate-900 sm:p-8">
       <form onSubmit={handleSubmitDetails(onUpdateDetails)} className="space-y-6">
         <div className="flex flex-col items-center gap-6 sm:flex-row">
           <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-pink-50 text-pink-500 dark:bg-slate-800 dark:text-pink-400">
+            <div className="flex h-24 w-24 items-center justify-center rounded-[2rem] bg-pink-50 text-pink-700 dark:bg-slate-800 dark:text-pink-400">
               {selectedAvatarUrl ? (
                 <img
                   src={selectedAvatarUrl}
                   alt="Avatar preview"
-                  className="h-full w-full rounded-3xl object-cover"
+                  width={96}
+                  height={96}
+                  className="h-full w-full rounded-[2rem] object-cover"
                 />
               ) : (
-                <User className="h-10 w-10" />
+                <User className="h-10 w-10" aria-hidden="true" />
               )}
             </div>
           </div>
           <div className="flex-1 text-center sm:text-left">
-            <h3 className="text-lg font-black text-gray-800 dark:text-slate-200">Your Avatar</h3>
-            <p className="text-xs font-bold text-gray-400 dark:text-slate-500">
-              Choose one of our premium preset avatars or paste a custom image URL.
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 tracking-tighter">Your avatar</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400">
+              Choose a preset avatar or paste a custom image URL.
             </p>
           </div>
         </div>
 
         {/* Preset Avatars */}
         <div className="space-y-3">
-          <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-            Preset Options
-          </label>
-          <div className="grid grid-cols-6 gap-3">
+          <p id="avatar-presets-label" className={fieldLabel}>Avatar presets</p>
+          <div role="group" aria-labelledby="avatar-presets-label" className="grid grid-cols-[repeat(auto-fit,minmax(3.5rem,1fr))] gap-3">
             {AVATAR_PRESETS.map((url, i) => (
               <button
                 key={url}
                 type="button"
                 onClick={() => setDetailsValue('avatarUrl', url)}
-                className={`aspect-square overflow-hidden rounded-2xl border-2 bg-pink-50 transition-all hover:scale-105 dark:bg-slate-800 ${
+                aria-label={`Choose avatar ${i + 1}`}
+                aria-pressed={selectedAvatarUrl === url}
+                className={`relative min-h-14 aspect-square rounded-[1.25rem] border-2 bg-pink-50 transition-colors hover:border-pink-800 dark:hover:border-pink-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800 dark:focus-visible:outline-pink-300 dark:bg-slate-800 ${
                   selectedAvatarUrl === url
-                    ? 'border-pink-500 scale-105 dark:border-pink-400'
+                    ? 'border-pink-800 dark:border-pink-300'
                     : 'border-pink-100 dark:border-slate-700'
                 }`}
               >
-                <img src={url} alt={`Preset ${i + 1}`} className="h-full w-full object-cover" />
+                <img src={url} alt={`Preset ${i + 1}`} width={112} height={112} className="h-full w-full rounded-[1.25rem] object-cover" />
+                {selectedAvatarUrl === url ? <span data-selection-check className="absolute right-0 top-0 flex h-6 w-6 items-center justify-center rounded-full bg-white text-slate-950 shadow-wing"><Check className="h-4 w-4" aria-hidden="true" /></span> : null}
               </button>
             ))}
           </div>
@@ -116,63 +121,69 @@ export default function GeneralSection() {
         {/* Fields */}
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-              Full Name
+            <label htmlFor="profile-name" className={fieldLabel}>
+              Full name
             </label>
             <input
               type="text"
               placeholder="Display Name"
+              id="profile-name"
+              autoComplete="name"
+              aria-invalid={!!detailsErrors.fullName}
+              aria-describedby={detailsErrors.fullName ? 'profile-name-error' : undefined}
               {...registerDetails('fullName')}
-              className={`w-full rounded-2xl border-2 px-4 py-3 text-sm font-bold text-gray-800 outline-none transition-all dark:bg-slate-800 dark:text-slate-200 ${
-                detailsErrors.fullName
-                  ? 'border-red-300 focus:border-red-500 dark:border-red-900/50'
-                  : 'border-pink-100 focus:border-pink-500 dark:border-slate-700 dark:focus:border-pink-500'
-              }`}
+              className={fieldInput(!!detailsErrors.fullName, 'min-w-0')}
             />
             {detailsErrors.fullName && (
-              <p className="text-xs font-bold text-red-500">{detailsErrors.fullName.message}</p>
+              <p id="profile-name-error" aria-live="polite" className={fieldError}>{detailsErrors.fullName.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-              Email Address
+            <label htmlFor="profile-email" className={fieldLabel}>
+              Email address
             </label>
             <input
+              id="profile-email"
+              name="email"
+              autoComplete="email"
+              spellCheck={false}
               type="email"
               disabled
               value={user?.email || ''}
-              className="w-full rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold text-gray-400 cursor-not-allowed dark:border-slate-800 dark:bg-slate-800/40 dark:text-slate-500"
+              className={fieldInput(false, "cursor-not-allowed")}
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-              Custom Avatar URL
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <label htmlFor="profile-avatar-url" className={fieldLabel}>
+              Custom avatar URL
             </label>
-            <span className="flex items-center gap-1 text-[10px] font-bold text-pink-500 dark:text-pink-400">
-              <ImageIcon className="h-3 w-3" /> Image URL
+            <span className="flex items-center gap-1 text-xs font-medium text-pink-700 dark:text-pink-400">
+              <ImageIcon className="h-3 w-3" aria-hidden="true" /> Image URL
             </span>
           </div>
           <input
             type="text"
             placeholder="https://example.com/avatar.jpg"
-            {...registerDetails('avatarUrl')}
-            className={`w-full rounded-2xl border-2 px-4 py-3 text-sm font-bold text-gray-800 outline-none transition-all dark:bg-slate-800 dark:text-slate-200 ${
-              detailsErrors.avatarUrl
-                ? 'border-red-300 focus:border-red-500 dark:border-red-900/50'
-                : 'border-pink-100 focus:border-pink-500 dark:border-slate-700 dark:focus:border-pink-500'
-            }`}
+            id="profile-avatar-url"
+            autoComplete="off"
+            inputMode="url"
+            spellCheck={false}
+              aria-invalid={!!detailsErrors.avatarUrl}
+              aria-describedby={detailsErrors.avatarUrl ? 'profile-avatar-url-error' : undefined}
+              {...registerDetails('avatarUrl')}
+            className={fieldInput(!!detailsErrors.avatarUrl, 'min-w-0')}
           />
           {detailsErrors.avatarUrl && (
-            <p className="text-xs font-bold text-red-500">{detailsErrors.avatarUrl.message}</p>
+            <p id="profile-avatar-url-error" aria-live="polite" className={fieldError}>{detailsErrors.avatarUrl.message}</p>
           )}
         </div>
 
         <AppButton type="submit" disabled={updatingProfile} className="w-full sm:w-auto">
-          {updatingProfile ? 'Saving Changes...' : 'Save Profile'}
+          {updatingProfile ? 'Saving...' : 'Save profile'}
         </AppButton>
       </form>
     </article>

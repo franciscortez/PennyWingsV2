@@ -117,7 +117,7 @@ test.describe('Daily spending calendar', () => {
     await page.goto('/reports')
 
     await expect(
-      page.getByRole('heading', { name: 'Financial Insights' }),
+      page.getByRole('heading', { name: 'Reports' }),
     ).toBeVisible({ timeout: READY_TIMEOUT })
     await expect(
       page.getByRole('heading', { name: 'Daily Spending' }),

@@ -42,7 +42,7 @@ export default function Reports() {
 
   return (
     <Layout>
-      <div className="space-y-9 pb-20">
+      <div className="app-design min-w-0 space-y-8 pb-20">
         <ReportsHeader
           onMonthChange={setSelectedMonth}
           selectedMonth={selectedMonth}
@@ -52,10 +52,10 @@ export default function Reports() {
           <>
             <ReportSummarySection report={selectedReport} />
             <section className="grid grid-cols-1 gap-7 xl:grid-cols-5">
-              <div className="xl:col-span-3">
+              <div className="min-w-0 xl:col-span-3">
                 <CashFlowOverviewSection report={selectedReport} />
               </div>
-              <div className="xl:col-span-2">
+              <div className="min-w-0 xl:col-span-2">
                 <CategoryAllocationSection report={selectedReport} />
               </div>
             </section>
@@ -75,16 +75,15 @@ function EmptyReport({
   month: string
 }) {
   return (
-    <section className="relative overflow-hidden rounded-[2.75rem] border border-pink-100 bg-white px-6 py-14 text-center md:px-10 dark:border-slate-800 dark:bg-slate-900">
-      <div className="absolute left-1/2 top-0 h-52 w-52 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-200/50 blur-3xl dark:bg-pink-900/10" />
+    <section className="rounded-[2rem] border border-pink-100 bg-white px-6 py-14 text-center md:px-10 dark:border-slate-800 dark:bg-slate-900">
       <div className="relative">
-        <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-pink-50 text-pink-500 dark:bg-slate-850 dark:text-pink-400">
+        <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-pink-50 text-pink-700 dark:bg-slate-850 dark:text-pink-400">
           <FileChartColumn className="h-10 w-10" aria-hidden="true" />
         </span>
-        <h2 className="mt-6 text-2xl font-black tracking-tight text-gray-950 dark:text-white md:text-3xl">
+        <h2 className="mt-6 text-2xl font-semibold tracking-tighter text-slate-950 dark:text-white md:text-3xl">
           No report for {formatReportMonth(month)}
         </h2>
-        <p className="mx-auto mt-3 max-w-lg text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-400">
+        <p className="mx-auto mt-3 max-w-lg text-sm font-medium leading-relaxed text-slate-600 dark:text-slate-400">
           Automatic reports begin with your first account or transaction.
           There is nothing to calculate for this earlier month.
         </p>

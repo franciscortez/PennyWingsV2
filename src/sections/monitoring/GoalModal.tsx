@@ -1,3 +1,4 @@
+import { fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
 import { useState, type FormEvent } from 'react'
 
 import {
@@ -72,29 +73,31 @@ export function GoalModal({
         <ModalActions
           formId={formId}
           saving={saving}
-          submitLabel={mode === 'edit' ? 'Save Goal' : 'Create Goal'}
+          submitLabel={mode === 'edit' ? 'Save goal' : 'Create goal'}
           waitingLabel={mode === 'edit' ? 'Saving...' : 'Creating...'}
           onClose={onClose}
         />
       }
       saving={saving}
-      title={mode === 'edit' ? 'Edit Goal' : 'New Goal'}
+      title={mode === 'edit' ? 'Edit goal' : 'New goal'}
       onClose={onClose}
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label
             htmlFor="goal-name"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+            className={`mb-2 block ${fieldLabel}`}
           >
-            Goal Name
+            Goal name
           </label>
           <input
             id="goal-name"
+              name="goal-name"
+              autoComplete="off"
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(false, "min-w-0")}
             placeholder="Emergency fund"
           />
         </div>
@@ -102,36 +105,41 @@ export function GoalModal({
           <div>
             <label
               htmlFor="goal-target"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+              className={`mb-2 block ${fieldLabel}`}
             >
               Target
             </label>
             <input
               id="goal-target"
+              name="goal-target"
+              autoComplete="off"
               type="number"
+              inputMode="decimal"
               min="0"
               step="0.01"
               value={targetAmount}
               onChange={(event) => setTargetAmount(event.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+              className={fieldInput(false, "min-w-0")}
               placeholder="0.00"
             />
           </div>
           <div>
             <label
               htmlFor="goal-current"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+              className={`mb-2 block ${fieldLabel}`}
             >
               Saved
             </label>
             <input
               id="goal-current"
+              name="goal-current"
+              autoComplete="off"
               type="number"
               min="0"
               step="0.01"
               value={currentAmount}
               onChange={(event) => setCurrentAmount(event.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+              className={fieldInput(false, "min-w-0")}
               placeholder="0.00"
             />
           </div>
@@ -139,15 +147,17 @@ export function GoalModal({
         <div>
           <label
             htmlFor="goal-link"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+            className={`mb-2 block ${fieldLabel}`}
           >
-            Tracking Source
+            Tracking source
           </label>
           <select
             id="goal-link"
+              name="goal-link"
+              autoComplete="off"
             value={linkedValue}
             onChange={(event) => setLinkedValue(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(false, "min-w-0")}
           >
             <option value="none" className="dark:bg-slate-900">Manual saved amount</option>
             {accounts.map((account) => {
@@ -164,17 +174,19 @@ export function GoalModal({
         <div className="min-w-0">
           <label
             htmlFor="goal-date"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+            className={`mb-2 block ${fieldLabel}`}
           >
-            Target Date
+            Target date
           </label>
-          <div className="flex w-full min-w-0 items-center rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 transition focus-within:border-pink-500 focus-within:ring-4 focus-within:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:focus-within:border-pink-500">
+          <div className="min-w-0">
             <input
               id="goal-date"
+              name="goal-date"
+              autoComplete="off"
               type="date"
               value={targetDate}
               onChange={(event) => setTargetDate(event.target.value)}
-              className="block w-full min-w-0 max-w-full border-0 bg-transparent p-0 text-sm font-bold text-gray-700 outline-none dark:text-slate-200"
+              className={fieldInput(false, "min-w-0 max-w-full")}
             />
           </div>
         </div>

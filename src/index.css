@@ -596,3 +596,48 @@ body {
   outline-color: white;
   box-shadow: inset 0 0 0 2px var(--color-slate-950);
 }
+
+/* Scoped to the remaining authenticated pages and their portaled overlays. */
+.app-design ::selection,
+.app-design-modal ::selection {
+  background: var(--color-pink-900);
+  color: white;
+}
+.app-design input,
+.app-design-modal input {
+  caret-color: var(--color-pink-800);
+}
+.dark .app-design input,
+.dark .app-design-modal input {
+  caret-color: var(--color-pink-300);
+}
+.app-design {
+  overflow-wrap: anywhere;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-design button,
+  .app-design-modal button {
+    transition: none;
+  }
+  .app-design button:active,
+  .app-design-modal button:active {
+    transform: none;
+  }
+}
+.app-design-modal {
+  overflow-wrap: anywhere;
+}
+.app-design button,
+.app-design-modal button {
+  max-width: 100%;
+}
+/* Focus rings appear immediately, including while control colors transition. */
+.app-design :focus-visible,
+.app-design-modal :focus-visible {
+  outline-color: var(--color-pink-800);
+  transition-property: background-color, color, transform;
+}
+.dark .app-design :focus-visible,
+.dark .app-design-modal :focus-visible {
+  outline-color: var(--color-pink-300);
+}

@@ -1,3 +1,6 @@
+import { AppButton, ModalFrame } from '@/components/ui'
+import { appModalPanel } from '@/sections/shared/appDesignStyles'
+import { fieldInput, fieldLabel, fieldError } from '@/components/ui/fieldStyles'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AlertTriangle, ShieldAlert } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -121,105 +124,48 @@ export default function DangerSection({
 
   return (
     <>
-      <article className="rounded-3xl border border-red-100 bg-red-50/20 p-6 dark:border-red-950/40 dark:bg-red-950/10 sm:p-8">
+      <article className="rounded-[2rem] border border-red-100 bg-red-50/20 p-6 dark:border-red-950/40 dark:bg-red-950/10 sm:p-8">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-500">
-            <ShieldAlert className="h-8 w-8" />
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] bg-red-100 text-red-600 dark:bg-red-950/40 dark:text-red-300">
+            <ShieldAlert className="h-8 w-8" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-gray-800 dark:text-slate-200">Delete Account</h3>
-            <p className="mt-1 text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-400">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 tracking-tighter">Delete account</h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
               Permanently delete your profile and all associated data, including bank cards, digital wallets, and transaction histories. This action is irreversible.
             </p>
           </div>
         </div>
 
         <div className="mt-6 border-t border-red-100/60 pt-6 text-center sm:text-left dark:border-red-950/30">
-          <button
+          <AppButton
             type="button"
+            variant="danger"
             onClick={handleDeleteTrigger}
             disabled={deletingAccount || reauthenticating}
-            className="rounded-2xl bg-red-600 px-6 py-3 text-sm font-black text-white transition-all hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+            className="bg-red-700 text-white hover:bg-red-800 hover:text-white dark:bg-red-700 dark:text-white dark:hover:bg-red-800 dark:hover:text-white motion-reduce:transform-none motion-reduce:transition-none"
           >
-            {reauthenticating ? 'Opening Google...' : 'Delete My Account'}
-          </button>
+            {reauthenticating ? 'Opening Google...' : 'Delete my account'}
+          </AppButton>
         </div>
       </article>
 
-      {/* Delete Password Verification Modal */}
       {showDeleteModal ? (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-          <button
-            type="button"
-            onClick={() => setShowDeleteModal(false)}
-            className="absolute inset-0 animate-fade-in bg-black/40"
-            aria-label="Close verify modal"
-          />
-          <section
-            aria-labelledby="delete-account-title"
-            aria-modal="true"
-            role="dialog"
-            className="relative z-10 w-full max-w-md overflow-hidden rounded-[2.5rem] border border-red-100 bg-white animate-fade-in dark:border-slate-800 dark:bg-slate-900"
-          >
-            <div className="flex items-center gap-3 border-b border-red-50 p-6 pb-4 dark:border-slate-800/80">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500 dark:bg-red-950/30 dark:text-red-400">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-              <h2
-                id="delete-account-title"
-                className="text-xl font-black text-gray-800 dark:text-slate-100"
-              >
-                Verify Password
-              </h2>
+        <ModalFrame title="Verify password" titleId="delete-account-title" closeLabel="Close verify modal" onClose={() => setShowDeleteModal(false)} closeDisabled={deletingAccount} panelClassName={`${appModalPanel} max-w-md`} headerLeading={<AlertTriangle className="h-5 w-5 shrink-0 text-red-700 dark:text-red-300" aria-hidden="true" />} actions={
+          <div className="flex flex-wrap justify-end gap-3">
+            <AppButton type="button" variant="secondary" disabled={deletingAccount} onClick={() => setShowDeleteModal(false)}>Cancel</AppButton>
+            <AppButton type="submit" form="delete-account-form" variant="danger" disabled={deletingAccount || !isPasswordEntered} className="bg-red-700 text-white hover:bg-red-800 hover:text-white dark:bg-red-700 dark:text-white dark:hover:bg-red-800 dark:hover:text-white">{deletingAccount ? 'Deleting...' : 'Delete account'}</AppButton>
+          </div>
+        }>
+          <form id="delete-account-form" onSubmit={handleSubmitDelete((values) => onDeleteAccount(values))} className="space-y-6">
+            <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">For security, please enter your password to confirm deleting your PennyWings account.</p>
+            <div className="space-y-2">
+              <label htmlFor="delete-account-password" className={fieldLabel}>Password</label>
+              <input id="delete-account-password" autoComplete="current-password" type="password" placeholder="••••••••" {...registerDelete('password')} aria-invalid={!!deleteErrors.password} aria-describedby={deleteErrors.password ? 'delete-account-password-error' : undefined} className={fieldInput(!!deleteErrors.password)} />
+              {deleteErrors.password ? <p id="delete-account-password-error" aria-live="polite" className={fieldError}>{deleteErrors.password.message}</p> : null}
             </div>
-
-            <form
-              onSubmit={handleSubmitDelete((values) => onDeleteAccount(values))}
-              className="space-y-6 p-6"
-            >
-              <p className="text-xs font-semibold leading-relaxed text-gray-500 dark:text-slate-400">
-                For security, please enter your password to confirm deleting your PennyWings account.
-              </p>
-
-              <div className="space-y-2">
-                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-                  Password
-                </label>
-                <input
-                  autoFocus
-                  type="password"
-                  placeholder="••••••••"
-                  {...registerDelete('password')}
-                  className={`w-full rounded-2xl border-2 px-4 py-3 text-sm font-bold text-gray-800 outline-none transition-all dark:bg-slate-800 dark:text-slate-200 ${
-                    deleteErrors.password
-                      ? 'border-red-300 focus:border-red-500 dark:border-red-900/50'
-                      : 'border-pink-100 focus:border-pink-500 dark:border-slate-700 dark:focus:border-pink-500'
-                  }`}
-                />
-                {deleteErrors.password && (
-                  <p className="text-xs font-bold text-red-500">{deleteErrors.password.message}</p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 rounded-2xl border border-gray-200 py-3.5 text-sm font-black text-gray-500 hover:bg-gray-50 active:scale-95 transition-all dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={deletingAccount || !isPasswordEntered}
-                  className="flex-1 rounded-2xl bg-red-600 py-3.5 text-sm font-black text-white hover:bg-red-700 active:scale-95 transition-all disabled:opacity-40"
-                >
-                  {deletingAccount ? 'Deleting...' : 'Delete Account'}
-                </button>
-              </div>
-            </form>
-          </section>
-        </div>
+          </form>
+        </ModalFrame>
       ) : null}
     </>
   )

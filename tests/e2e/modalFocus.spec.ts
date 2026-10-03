@@ -130,14 +130,14 @@ test.describe('transaction and monitoring forms', () => {
   })
 
   for (const [tab, dialogName] of [
-    ['budgets', 'New Budget'],
-    ['goals', 'New Goal'],
+    ['budgets', 'New budget'],
+    ['goals', 'New goal'],
   ] as const) {
     test(`contains and restores focus for the ${dialogName} form`, async ({ page }) => {
       await page.goto(`/monitoring?tab=${tab}`)
       await expect(page.getByRole('heading', { name: 'Budgets & Goals' })).toBeVisible()
 
-      const opener = page.getByRole('button', { name: dialogName })
+      const opener = page.locator('main header').getByRole('button', { name: dialogName })
       const { anchorBefore, dialog } = await openWithKeyboard(page, opener, dialogName)
 
       expect(await rootIsInert(page)).toBe(true)

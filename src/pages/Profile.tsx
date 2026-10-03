@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/ui'
+import { appChoice, appChoiceActive, appChoiceIdle } from '@/sections/shared/appDesignStyles'
 import { KeyRound, ShieldAlert, User } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
@@ -43,49 +45,20 @@ export default function ProfilePage() {
   const tabs = [
     { id: 'general', label: 'General', icon: User },
     { id: 'security', label: 'Security', icon: KeyRound },
-    { id: 'danger', label: 'Danger Zone', icon: ShieldAlert },
+    { id: 'danger', label: 'Danger', icon: ShieldAlert },
   ] as const
 
   return (
     <Layout>
-      {/* Header */}
-      <header className="mb-10">
-        <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-pink-500">
-          Settings
-        </p>
-        <h1 className="text-3xl font-black tracking-tight text-gray-950 dark:text-white sm:text-4xl">
-          Profile & Account
-        </h1>
-        <p className="mt-2 max-w-2xl text-sm font-medium italic text-gray-500 dark:text-slate-400 sm:text-base">
-          Update your display name, avatars, safety settings, and login credentials.
-        </p>
-      </header>
-
-      {/* Tabs */}
-      <div className="mb-10 flex gap-2 border-b border-pink-100 dark:border-slate-800 pb-px">
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          const isActive = activeTab === tab.id
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-black transition-all ${
-                isActive
-                  ? 'border-pink-500 text-pink-600 dark:border-pink-400 dark:text-pink-400'
-                  : 'border-transparent text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
-            >
-              <Icon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          )
-        })}
+      <div className="app-design min-w-0">
+      <PageHeader title="Settings" description="Update your display name, avatar, and account security." />
+      <div className="my-8 flex flex-wrap gap-2" aria-label="Settings views">
+        {tabs.map(tab => <button key={tab.id} type="button" onClick={() => setActiveTab(tab.id)} aria-pressed={activeTab === tab.id} className={`${appChoice} ${activeTab === tab.id ? appChoiceActive : appChoiceIdle}`}>
+          <tab.icon className="h-4 w-4 shrink-0" aria-hidden="true" />{tab.label}
+        </button>)}
       </div>
-
       {/* Content */}
-      <div className="max-w-3xl">
+      <div className="min-w-0 max-w-3xl">
         {activeTab === 'general' && <GeneralSection />}
         {activeTab === 'security' && <SecuritySection />}
         {activeTab === 'danger' && (
@@ -96,6 +69,7 @@ export default function ProfilePage() {
             }
           />
         )}
+      </div>
       </div>
     </Layout>
   )

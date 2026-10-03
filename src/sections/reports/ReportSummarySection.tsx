@@ -1,3 +1,4 @@
+import { FormattedFigure } from '@/components/ui/FormattedFigure'
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -33,7 +34,7 @@ export function ReportSummarySection({
       accent: 'pink' as const,
       detail: report.netCashflow >= 0 ? 'Positive cash flow' : 'Negative cash flow',
       icon: Landmark,
-      label: 'Net Cash Flow',
+      label: 'Net cash flow',
       value: compactReportCurrency.format(report.netCashflow),
     },
     {
@@ -68,27 +69,27 @@ function SummaryCard({
   value: string
 }) {
   const styles = {
-    emerald: 'bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-400',
-    pink: 'bg-pink-50 text-pink-500 dark:bg-pink-950/30 dark:text-pink-400',
-    rose: 'bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-400',
-    violet: 'bg-violet-50 text-violet-500 dark:bg-violet-950/30 dark:text-violet-400',
+    emerald: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400',
+    pink: 'bg-pink-50 text-pink-700 dark:bg-pink-950/30 dark:text-pink-400',
+    rose: 'bg-rose-50 text-rose-700 dark:text-rose-300 dark:bg-rose-950/30 dark:text-rose-400',
+    violet: 'bg-pink-50 text-pink-700 dark:bg-slate-800 dark:text-pink-400',
   }
 
   return (
-    <article className="flex min-h-36 items-center gap-4 rounded-[2rem] border border-pink-50 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
+    <article className="flex min-h-36 flex-col items-start gap-3 sm:flex-row sm:items-center rounded-[2rem] border border-pink-100 bg-white shadow-wing dark:shadow-none p-5 dark:border-slate-800 dark:bg-slate-900">
       <span
-        className={`flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl ${styles[accent]}`}
+        className={`flex h-13 w-13 shrink-0 items-center justify-center rounded-[1.25rem] ${styles[accent]}`}
       >
         <Icon className="h-6 w-6" aria-hidden="true" />
       </span>
-      <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-gray-400 dark:text-slate-500">
+      <div className="min-w-0 w-full">
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
           {label}
         </p>
-        <p className="mt-1 truncate text-2xl font-black tracking-tight text-gray-950 dark:text-slate-100">
-          {value}
+        <p className="mt-1 min-w-0 max-w-full [overflow-wrap:anywhere] text-2xl font-semibold tracking-tight text-slate-950 dark:text-slate-100">
+          <FormattedFigure value={value} />
         </p>
-        <p className="mt-1 truncate text-xs font-bold text-gray-400 dark:text-slate-500">{detail}</p>
+        <p className="mt-1 min-w-0 max-w-full [overflow-wrap:anywhere] text-xs font-medium text-slate-600 dark:text-slate-400">{detail}</p>
       </div>
     </article>
   )

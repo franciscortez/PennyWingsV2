@@ -1,3 +1,4 @@
+import { fieldInput, fieldLabel, fieldError } from '@/components/ui/fieldStyles'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Eye, EyeOff, KeyRound } from 'lucide-react'
 import { useState } from 'react'
@@ -48,14 +49,14 @@ export default function SecuritySection() {
 
   if (isGoogleUser) {
     return (
-      <article className="rounded-3xl border border-pink-100 bg-linear-to-br from-white to-pink-50/20 p-6 dark:border-slate-800 dark:from-slate-900 dark:to-slate-900/60 sm:p-8">
+      <article className="rounded-[2rem] border border-pink-100 bg-white shadow-wing dark:shadow-none p-6 dark:border-slate-800 dark:bg-slate-900 sm:p-8">
         <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-500 dark:bg-blue-950/40 dark:text-blue-400">
-            <FcGoogle className="h-7 w-7" />
+          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.25rem] bg-pink-50 dark:bg-slate-800">
+            <FcGoogle className="h-7 w-7" aria-hidden="true" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-gray-800 dark:text-slate-200">OAuth Security</h3>
-            <p className="mt-1 text-sm font-medium leading-relaxed text-gray-500 dark:text-slate-400">
+            <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 tracking-tighter">OAuth Security</h2>
+            <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-400">
               Your account is protected using Google authentication. Passwords and sign-in credentials are managed entirely by Google.
             </p>
           </div>
@@ -65,75 +66,76 @@ export default function SecuritySection() {
   }
 
   return (
-    <article className="rounded-3xl border border-pink-100 bg-white p-6 dark:border-slate-800 dark:bg-slate-900 sm:p-8">
+    <article className="rounded-[2rem] border border-pink-100 bg-white shadow-wing dark:shadow-none p-6 dark:border-slate-800 dark:bg-slate-900 sm:p-8">
       <form onSubmit={handleSubmitPassword(onChangePassword)} className="space-y-6">
         <div className="flex items-center gap-3">
-          <KeyRound className="h-5 w-5 text-pink-500 dark:text-pink-400" />
-          <h3 className="text-lg font-black text-gray-800 dark:text-slate-200">Change Password</h3>
+          <KeyRound className="h-5 w-5 text-pink-700 dark:text-pink-400" aria-hidden="true" />
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200 tracking-tighter">Change password</h2>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-              New Password
+            <label htmlFor="profile-password" className={fieldLabel}>
+              New password
             </label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="••••••••"
-                {...registerPassword('password')}
-                className={`w-full rounded-2xl border-2 pl-4 pr-11 py-3 text-sm font-bold text-gray-800 outline-none transition-all dark:bg-slate-800 dark:text-slate-200 ${
-                  passwordErrors.password
-                    ? 'border-red-300 focus:border-red-500 dark:border-red-900/50'
-                    : 'border-pink-100 focus:border-pink-500 dark:border-slate-700 dark:focus:border-pink-500'
-                }`}
+                id="profile-password"
+                autoComplete="new-password"
+              aria-invalid={!!passwordErrors.password}
+              aria-describedby={passwordErrors.password ? 'profile-password-error' : undefined}
+              {...registerPassword('password')}
+                className={fieldInput(!!passwordErrors.password, 'pr-14 min-w-0')}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pink-500 transition dark:text-slate-500 dark:hover:text-pink-400"
-                aria-label="Toggle password visibility"
+                className="absolute right-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 hover:bg-pink-50 focus-visible:outline-2 focus-visible:outline-pink-800 dark:text-slate-300 dark:focus-visible:outline-pink-300"
+                aria-label={showPassword ? "Hide new password" : "Show new password"}
+                aria-pressed={showPassword}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
               </button>
             </div>
             {passwordErrors.password && (
-              <p className="text-xs font-bold text-red-500">{passwordErrors.password.message}</p>
+              <p id="profile-password-error" aria-live="polite" className={fieldError}>{passwordErrors.password.message}</p>
             )}
           </div>
 
           <div className="space-y-2">
-            <label className="block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-              Confirm New Password
+            <label htmlFor="profile-password-confirm" className={fieldLabel}>
+              Confirm new password
             </label>
             <div className="relative">
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="••••••••"
-                {...registerPassword('confirm')}
-                className={`w-full rounded-2xl border-2 pl-4 pr-11 py-3 text-sm font-bold text-gray-800 outline-none transition-all dark:bg-slate-800 dark:text-slate-200 ${
-                  passwordErrors.confirm
-                    ? 'border-red-300 focus:border-red-500 dark:border-red-900/50'
-                    : 'border-pink-100 focus:border-pink-500 dark:border-slate-700 dark:focus:border-pink-500'
-                }`}
+                id="profile-password-confirm"
+                autoComplete="new-password"
+              aria-invalid={!!passwordErrors.confirm}
+              aria-describedby={passwordErrors.confirm ? 'profile-password-confirm-error' : undefined}
+              {...registerPassword('confirm')}
+                className={fieldInput(!!passwordErrors.confirm, 'pr-14 min-w-0')}
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pink-500 transition dark:text-slate-500 dark:hover:text-pink-400"
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-600 hover:text-pink-700 transition dark:text-slate-400 dark:hover:text-pink-400"
                 aria-label="Toggle password visibility"
               >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showConfirmPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
               </button>
             </div>
             {passwordErrors.confirm && (
-              <p className="text-xs font-bold text-red-500">{passwordErrors.confirm.message}</p>
+              <p id="profile-password-confirm-error" aria-live="polite" className={fieldError}>{passwordErrors.confirm.message}</p>
             )}
           </div>
         </div>
 
         <AppButton type="submit" disabled={updatingPassword} className="w-full sm:w-auto">
-          {updatingPassword ? 'Changing Password...' : 'Change Password'}
+          {updatingPassword ? 'Changing...' : 'Change password'}
         </AppButton>
       </form>
     </article>

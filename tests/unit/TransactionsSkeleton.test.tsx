@@ -12,12 +12,10 @@ describe('TransactionsSkeleton UI Component', () => {
 
   it('renders skeleton items for both mobile and desktop views', () => {
     const { container } = render(<TransactionsSkeleton />)
-    // Check that pulsing elements exist
-    const pulseContainer = container.querySelector('.animate-pulse')
-    expect(pulseContainer).not.toBeNull()
-
-    // Verify 5 skeleton rows are rendered
-    const skeletonCards = container.querySelectorAll('.space-y-3 > div')
-    expect(skeletonCards.length).toBe(5)
+    expect(container.querySelector('.animate-pulse')).toBeNull()
+    expect(container.querySelector('[class~="motion-safe:animate-pulse"]')).not.toBeNull()
+    const rows = container.querySelector('section:last-child > div')
+    expect(rows?.children).toHaveLength(5)
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   })
 })

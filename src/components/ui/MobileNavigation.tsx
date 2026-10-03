@@ -18,9 +18,7 @@ import { Link, useLocation } from 'react-router'
 
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useScrollLock } from '@/hooks/useScrollLock'
-import { useCurrentMobileAction } from '@/hooks/useMobilePrimaryAction'
 import { useMobileKeyboard } from '@/hooks/useMobileKeyboard'
-import { AppButton } from '@/components/ui/Button'
 import { useTheme } from '@/context/ThemeContext'
 import type { SidebarInfo } from '@/types'
 
@@ -54,8 +52,6 @@ export function MobileNavigation({
   const [moreOpen, setMoreOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 768px)')
   const keyboardOpen = useMobileKeyboard()
-  const primaryAction = useCurrentMobileAction()
-  const ActionIcon = primaryAction?.icon
   const dialogRef = useRef<HTMLDialogElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
   const navRef = useRef<HTMLElement | null>(null)
@@ -175,23 +171,6 @@ export function MobileNavigation({
   return (
     <>
       <div className="mobile-navigation-shell md:hidden" hidden={keyboardOpen}>
-        {primaryAction && ActionIcon && !moreOpen && (
-          <AppButton
-            type="button"
-            onClick={(event) => {
-              // Safari does not focus a pointer-clicked button automatically.
-              // The existing modal can now capture and restore this opener.
-              event.currentTarget.focus({ preventScroll: true })
-              primaryAction.onSelect()
-            }}
-            tabIndex={0}
-            className="mobile-primary-action motion-reduce:transform-none motion-reduce:transition-none"
-            data-mobile-primary-action
-          >
-            <ActionIcon size={20} strokeWidth={1.75} aria-hidden="true" />
-            <span>{primaryAction.label}</span>
-          </AppButton>
-        )}
         <nav
           ref={navRef}
           aria-label="Primary mobile navigation"

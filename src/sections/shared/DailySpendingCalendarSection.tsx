@@ -19,6 +19,8 @@ import {
   quietStep,
   weekdays,
 } from '@/sections/shared/dailySpendingCalendar'
+import { FormattedFigure } from '@/components/ui/FormattedFigure'
+import { figure, surface, surfaceNested } from '@/components/ui/surfaces'
 import type { CalendarCell } from '@/sections/shared/dailySpendingCalendar'
 import type { DailySpendingCalendar } from '@/types'
 
@@ -39,15 +41,15 @@ function CalendarStat({
   value: string
 }) {
   return (
-    <div className="rounded-2xl border border-pink-50 bg-pink-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
-      <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+    <div className={`${surfaceNested} min-w-0 p-4`}>
+      <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
         {label}
       </p>
-      <p className="mt-1 truncate text-base font-black text-gray-900 dark:text-slate-200">
-        {value}
+      <p className="mt-1 text-base font-semibold text-slate-950 dark:text-slate-100">
+        <FormattedFigure value={value} />
       </p>
       {hint ? (
-        <p className="mt-0.5 truncate text-[10px] font-bold text-gray-500 dark:text-slate-400">
+        <p className="mt-1 text-xs font-medium text-slate-600 dark:text-slate-400">
           {hint}
         </p>
       ) : null}
@@ -58,14 +60,14 @@ function CalendarStat({
 function CalendarGridSkeleton() {
   return (
     <div
-      className="animate-pulse grid grid-cols-7 gap-1.5 sm:gap-2"
+      className="motion-safe:animate-pulse grid grid-cols-7 gap-1.5 sm:gap-2"
       aria-busy="true"
       aria-label="Loading daily spending"
     >
       {Array.from({ length: 42 }, (_, cell) => (
         <div
           key={cell}
-          className="min-h-12 rounded-xl bg-pink-50 sm:min-h-16 sm:rounded-2xl dark:bg-slate-950"
+          className="min-h-12 rounded-xl bg-pink-50 sm:min-h-16 dark:bg-slate-800"
         />
       ))}
     </div>
@@ -83,11 +85,11 @@ function CalendarNotice({
 }) {
   return (
     <div className="flex min-h-56 flex-col items-center justify-center text-center">
-      <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pink-50 text-pink-200 dark:bg-slate-950 dark:text-slate-800">
+      <span className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-pink-50 text-pink-700 dark:bg-slate-800 dark:text-pink-400">
         <Icon className="h-8 w-8" aria-hidden="true" />
       </span>
-      <p className="font-bold text-gray-700 dark:text-slate-300">{title}</p>
-      <p className="mt-1 max-w-xs text-sm font-medium text-gray-400 dark:text-slate-500">
+      <p className="font-medium text-slate-700 dark:text-slate-300">{title}</p>
+      <p className="mt-1 max-w-xs text-sm leading-relaxed text-slate-600 dark:text-slate-400">
         {description}
       </p>
     </div>
@@ -98,14 +100,14 @@ function CalendarNotice({
 // reflows the grid, and says what the column is for.
 function DayDetailPlaceholder() {
   return (
-    <div className="hidden rounded-3xl border border-dashed border-pink-100 p-5 xl:flex xl:col-span-2 xl:flex-col xl:items-center xl:justify-center xl:text-center dark:border-slate-800">
-      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-50 text-pink-300 dark:bg-slate-950 dark:text-slate-700">
+    <div className="hidden rounded-[1.25rem] border border-dashed border-pink-200 p-5 xl:col-span-2 xl:flex xl:flex-col xl:items-center xl:justify-center xl:text-center dark:border-slate-700">
+      <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-[1.25rem] bg-pink-50 text-pink-700 dark:bg-slate-800 dark:text-pink-400">
         <CalendarDays className="h-6 w-6" aria-hidden="true" />
       </span>
-      <p className="text-sm font-bold text-gray-500 dark:text-slate-400">
+      <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
         Select a day
       </p>
-      <p className="mt-1 max-w-[16rem] text-xs font-medium text-gray-400 dark:text-slate-500">
+      <p className="mt-1 max-w-[16rem] text-xs leading-relaxed text-slate-600 dark:text-slate-400">
         Its categories and transactions appear here.
       </p>
     </div>
@@ -154,25 +156,25 @@ function DayDetailPanel({
       tabIndex={-1}
       role="region"
       aria-label={`Spending on ${headline}`}
-      className="rounded-3xl border border-pink-50 bg-pink-50/40 p-5 xl:col-span-2 dark:border-slate-800 dark:bg-slate-950/40"
+      className={`${surfaceNested} min-w-0 p-4 outline-pink-800 xl:col-span-2 dark:outline-pink-300`}
     >
-      <div className="mb-5 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+      <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1 basis-full sm:basis-0">
+          <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
             Day detail
           </p>
-          <h3 className="mt-1 truncate text-lg font-black tracking-tight text-gray-950 dark:text-white">
+          <h3 className="mt-1 text-lg font-semibold tracking-tight text-slate-950 dark:text-white">
             {headline}
           </h3>
-          <p className="mt-1 text-2xl font-black tracking-tight text-pink-600 dark:text-pink-400">
-            {reportCurrency.format(day.total)}
+          <p className="mt-2 text-xl font-semibold text-pink-800 dark:text-pink-400">
+            <FormattedFigure value={reportCurrency.format(day.total)} />
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
           aria-label="Close day details"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-white text-gray-400 transition hover:bg-pink-100 hover:text-pink-600 dark:bg-slate-900 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-pink-400"
+          className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-white text-pink-700 hover:bg-pink-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800 dark:bg-slate-900 dark:text-pink-400 dark:hover:bg-slate-700 dark:focus-visible:outline-pink-300 motion-reduce:transition-none"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -183,12 +185,12 @@ function DayDetailPanel({
           <div className="space-y-4">
             {categories.map((category, index) => (
               <div key={category.name}>
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <span className="truncate text-sm font-bold text-gray-700 dark:text-slate-300">
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
+                  <span className="truncate text-sm font-medium text-slate-700 dark:text-slate-300">
                     {category.name}
                   </span>
-                  <span className="shrink-0 text-sm font-black text-gray-950 dark:text-slate-100">
-                    {compactReportCurrency.format(category.total)}
+                  <span className="font-geist-mono tabular-nums text-sm font-semibold text-slate-950 dark:text-slate-100">
+                    <FormattedFigure value={compactReportCurrency.format(category.total)} />
                   </span>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-white dark:bg-slate-950">
@@ -205,22 +207,22 @@ function DayDetailPanel({
             {day.transactions.map((transaction) => (
               <li
                 key={transaction.id}
-                className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2.5 dark:bg-slate-900"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-[1.25rem] bg-white px-3 py-3 dark:bg-slate-900"
               >
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold text-gray-800 dark:text-slate-200">
+                  <span className="block break-words text-sm font-medium text-slate-800 [overflow-wrap:anywhere] dark:text-slate-200">
                     {transaction.description ||
                       transaction.categoryName ||
                       'Transaction'}
                   </span>
-                  <span className="block truncate text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+                  <span className="block truncate text-xs font-medium text-slate-600 dark:text-slate-400">
                     {[transaction.categoryName, transaction.accountName]
                       .filter(Boolean)
                       .join(' · ') || 'No category'}
                   </span>
                 </span>
-                <span className="shrink-0 text-sm font-black text-gray-950 dark:text-slate-100">
-                  {reportCurrency.format(transaction.amount)}
+                <span className="font-geist-mono tabular-nums text-sm font-semibold text-slate-950 dark:text-slate-100">
+                  <FormattedFigure value={reportCurrency.format(transaction.amount)} />
                 </span>
               </li>
             ))}
@@ -228,13 +230,13 @@ function DayDetailPanel({
         </>
       ) : (
         <div className="flex min-h-40 flex-col items-center justify-center text-center">
-          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-pink-200 dark:bg-slate-900 dark:text-slate-700">
+          <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-white text-pink-700 dark:bg-slate-900 dark:text-pink-400">
             <Receipt className="h-7 w-7" aria-hidden="true" />
           </span>
-          <p className="font-bold text-gray-700 dark:text-slate-300">
+          <p className="font-medium text-slate-700 dark:text-slate-300">
             No spending on this day
           </p>
-          <p className="mt-1 max-w-xs text-sm font-medium text-gray-400 dark:text-slate-500">
+          <p className="mt-1 max-w-xs text-sm leading-relaxed text-slate-600 dark:text-slate-400">
             Nothing left your accounts on {headline}.
           </p>
         </div>
@@ -249,6 +251,7 @@ export function DailySpendingCalendarSection({
   loading,
   month,
 }: DailySpendingCalendarSectionProps) {
+  const selectedButtonRef = useRef<HTMLButtonElement | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const today = toDateInputValue()
   const cells = buildCells(month, calendar)
@@ -272,6 +275,7 @@ export function DailySpendingCalendarSection({
   // than torn down and rebuilt on every parent render.
   const closeDay = useCallback(() => {
     setSelectedDate(null)
+    selectedButtonRef.current?.focus()
   }, [])
 
   const toggleDay = (date: string) => {
@@ -279,17 +283,17 @@ export function DailySpendingCalendarSection({
   }
 
   return (
-    <article className="rounded-[2.5rem] border border-pink-50 bg-white p-4 sm:p-6 md:p-8 dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-7 flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-pink-50 text-pink-500 dark:bg-slate-800 dark:text-pink-400">
+    <article className={`${surface} dashboard-calendar min-w-0 p-4 sm:p-6 md:p-8`}>
+      <div className="mb-7 flex items-center gap-[12px]">
+        <span className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-[1.25rem] bg-pink-50 text-pink-700 dark:bg-slate-800 dark:text-pink-400">
           <CalendarDays className="h-5 w-5" aria-hidden="true" />
         </span>
-        <div>
-          <h2 className="text-xl font-black tracking-tight text-gray-950 dark:text-white">
+        <div className="min-w-0">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-950 dark:text-white">
             Daily Spending
           </h2>
-          <p className="text-xs font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
-            {compactReportCurrency.format(calendar.totalSpent)} this month
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+            <span className={figure}>{compactReportCurrency.format(calendar.totalSpent)}</span> this month
           </p>
         </div>
       </div>
@@ -347,13 +351,13 @@ export function DailySpendingCalendarSection({
           description="Every day is clear. Expenses will fill the calendar as you record them."
         />
       ) : (
-        <div className="grid gap-7 xl:grid-cols-5">
-          <div className="xl:col-span-3">
+        <div className="grid min-w-0 gap-6 xl:grid-cols-5">
+          <div className="min-w-0 xl:col-span-3">
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
               {weekdays.map((weekday) => (
                 <span
                   key={weekday}
-                  className="pb-1 text-center text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400"
+                  className="pb-1 text-center text-xs font-medium text-slate-600 dark:text-slate-400"
                 >
                   {weekday}
                 </span>
@@ -371,32 +375,32 @@ export function DailySpendingCalendarSection({
                   <button
                     key={cell.date}
                     type="button"
-                    onClick={() => toggleDay(cell.date)}
+                    onClick={event => { selectedButtonRef.current = event.currentTarget; toggleDay(cell.date) }}
                     disabled={cell.date > today}
-                    className={`flex min-h-12 flex-col items-start justify-between rounded-xl p-1.5 text-left transition sm:min-h-16 sm:rounded-2xl sm:p-2 ${getIntensity(
+                    className={`calendar-day flex min-h-12 min-w-0 flex-col items-start justify-between rounded-xl p-1.5 text-left sm:min-h-16 sm:p-2 ${getIntensity(
                       cell.total,
                       calendar.maxDailyTotal,
                     )} ${
                       selected
-                        ? 'ring-2 ring-gray-900 ring-offset-2 ring-offset-white dark:ring-white dark:ring-offset-slate-900'
+                        ? ''
                         : isToday
-                          ? 'ring-2 ring-pink-400 ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                          ? 'ring-2 ring-pink-700 ring-offset-2 ring-offset-white dark:ring-pink-400 dark:ring-offset-slate-900'
                           : ''
-                    } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-gray-200 disabled:ring-0 dark:disabled:text-slate-700`}
+                    } disabled:cursor-not-allowed disabled:bg-transparent disabled:text-slate-600 disabled:ring-0 dark:disabled:text-slate-400`}
                     aria-label={getCellLabel(cell)}
                     aria-pressed={selected}
                   >
-                    <span className="text-xs font-bold leading-none">
+                    <span className="font-geist-mono tabular-nums text-xs font-medium leading-none">
                       {cell.day}
                     </span>
                     {cell.total > 0 ? (
                       <>
                         {/* Compact notation below `sm`, where a cell is about
                             36px wide and the full amount does not fit. */}
-                        <span className="w-full truncate text-[10px] font-bold leading-none sm:hidden">
+                        <span className="w-full truncate font-geist-mono tabular-nums text-[10px] font-medium leading-none sm:hidden">
                           {microReportCurrency.format(cell.total)}
                         </span>
-                        <span className="hidden w-full truncate text-[10px] font-bold leading-none sm:block">
+                        <span className="hidden w-full truncate font-geist-mono tabular-nums text-[10px] font-medium leading-none sm:block">
                           {compactReportCurrency.format(cell.total)}
                         </span>
                       </>
@@ -407,7 +411,7 @@ export function DailySpendingCalendarSection({
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 Less
               </span>
               <span className="flex items-center gap-1" aria-hidden="true">
@@ -416,7 +420,7 @@ export function DailySpendingCalendarSection({
                   <span key={step} className={`h-3 w-3 rounded-sm ${step}`} />
                 ))}
               </span>
-              <span className="text-[10px] font-bold uppercase tracking-wide text-gray-500 dark:text-slate-400">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                 More
               </span>
             </div>

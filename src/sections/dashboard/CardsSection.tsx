@@ -1,156 +1,51 @@
-import {
-  Building2,
-  Clock,
-  CreditCard,
-  TrendingDown,
-  TrendingUp,
-  type LucideIcon,
-} from 'lucide-react'
-import { Link } from 'react-router'
-
+import { Building2, Clock, CreditCard, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react'
+import { AppButton } from '@/components/ui/Button'
+import { FormattedFigure } from '@/components/ui/FormattedFigure'
+import { figure, sectionTitle, surface, surfaceNested, textMuted } from '@/components/ui/surfaces'
 import type { DashboardMonthlyStats } from '@/types/dashboard'
 
-type CardsSectionProps = {
-  loading: boolean
-  monthlyStats: DashboardMonthlyStats
-  savingsRate: number
-  totalBalance: number
-}
+type CardsSectionProps = { loading: boolean; monthlyStats: DashboardMonthlyStats; savingsRate: number; totalBalance: number }
+const currency = new Intl.NumberFormat('en-PH', { currency: 'PHP', minimumFractionDigits: 2, style: 'currency' })
+const compactCurrency = new Intl.NumberFormat('en-PH', { currency: 'PHP', maximumFractionDigits: 0, style: 'currency' })
 
-const currency = new Intl.NumberFormat('en-PH', {
-  currency: 'PHP',
-  minimumFractionDigits: 2,
-  style: 'currency',
-})
-
-const compactCurrency = new Intl.NumberFormat('en-PH', {
-  currency: 'PHP',
-  maximumFractionDigits: 0,
-  style: 'currency',
-})
-
-export function CardsSection({
-  loading,
-  monthlyStats,
-  savingsRate,
-  totalBalance,
-}: CardsSectionProps) {
+export function CardsSection({ loading, monthlyStats, savingsRate, totalBalance }: CardsSectionProps) {
   return (
-    <section className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-      <article className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-pink-500 to-pink-700 p-6 text-white sm:p-8 md:p-10 lg:col-span-2">
-        <div className="absolute right-0 top-0 h-64 w-64 translate-x-12 -translate-y-8 rounded-full bg-white/10 blur-3xl" />
-        <div className="relative">
-          <div className="mb-8 flex items-center gap-3">
-            <div className="rounded-2xl border border-white/25 bg-white/20 p-3 backdrop-blur-sm">
-              <Building2 className="h-8 w-8" aria-hidden="true" />
-            </div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] opacity-80 sm:text-sm">
-              Total Net Worth
-            </p>
-          </div>
-          <h2 className="mb-10 break-words text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-            {loading ? 'Loading...' : currency.format(totalBalance)}
-          </h2>
-          <div className="grid gap-6 sm:grid-cols-2">
-            <MoneyMetric
-              icon={TrendingUp}
-              iconClassName="text-emerald-200"
-              label="Monthly Income"
-              loading={loading}
-              value={monthlyStats.income}
-            />
-            <MoneyMetric
-              icon={TrendingDown}
-              iconClassName="text-pink-200"
-              label="Monthly Expenses"
-              loading={loading}
-              value={monthlyStats.expenses}
-            />
-          </div>
+    <section aria-label="Financial overview" className="grid min-w-0 grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+      <article className="min-w-0 rounded-[2rem] bg-[linear-gradient(160deg,var(--color-pink-700),var(--color-pink-900))] p-5 text-white shadow-wing-lg sm:p-8 lg:col-span-2">
+        <div className="mb-6 flex items-center gap-3">
+          <Building2 className="h-5 w-5 shrink-0" aria-hidden="true" /><h2 className="text-base font-medium">Total Net Worth</h2>
+        </div>
+        <p data-dashboard-balance className="mb-8 min-w-0 text-[clamp(1.5rem,5vw,3.5rem)] font-semibold leading-tight tracking-[-0.03em]">
+          <FormattedFigure value={loading ? 'Loading...' : currency.format(totalBalance)} />
+        </p>
+        <div className="grid gap-6 border-t border-white/30 pt-6 sm:grid-cols-2">
+          <MoneyMetric icon={TrendingUp} iconSurface="bg-emerald-100 text-emerald-900" label="Monthly Income" loading={loading} value={monthlyStats.income} />
+          <MoneyMetric icon={TrendingDown} iconSurface="bg-pink-100 text-pink-900" label="Monthly Expenses" loading={loading} value={monthlyStats.expenses} />
         </div>
       </article>
-
-      <article className="flex flex-col rounded-[2.5rem] border border-pink-50 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-900">
-        <h3 className="mb-6 flex items-center gap-2 text-xl font-black text-gray-800 dark:text-slate-200">
-          <span className="h-8 w-2 rounded-full bg-pink-500" />
-          Pulse Report
-        </h3>
-        <div className="flex-1 space-y-6">
-          <div className="rounded-3xl border border-pink-100/70 bg-pink-50/60 p-5 dark:border-slate-800/80 dark:bg-slate-950/40">
-            <div className="mb-3 flex items-end justify-between">
-              <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-                Savings Rate
-              </p>
-              <p className="text-lg font-black text-pink-600 dark:text-pink-400">
-                {loading ? '...' : `${savingsRate}%`}
-              </p>
-            </div>
-            <div className="h-3 overflow-hidden rounded-full border border-pink-100 bg-white dark:border-slate-800 dark:bg-slate-800">
-              <div
-                className="h-full rounded-full bg-pink-500 transition-all duration-500"
-                style={{
-                  width: `${Math.min(100, Math.max(0, savingsRate))}%`,
-                }}
-              />
-            </div>
+      <article className={`${surface} flex min-w-0 flex-col p-5 sm:p-6`}>
+        <h2 className={`${sectionTitle} mb-6`}>Pulse Report</h2>
+        <div className={`${surfaceNested} mb-6 p-4 sm:p-5`}>
+          <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+            <p className={`text-sm ${textMuted}`}>Savings Rate</p>
+            <p className={`${figure} text-2xl font-semibold text-pink-800 dark:text-pink-400`}>{loading ? '...' : `${savingsRate}%`}</p>
           </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <DashboardAction icon={CreditCard} label="Accounts" to="/accounts" />
-            <DashboardAction icon={Clock} label="Activity" to="/transactions" />
+          <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-pink-100 dark:bg-slate-700">
+            <div className="h-full rounded-full bg-pink-700 dark:bg-pink-400" style={{ width: `${Math.min(100, Math.max(0, savingsRate))}%` }} />
           </div>
+        </div>
+        <div className="mt-auto grid gap-3 min-[360px]:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+          <AppButton to="/accounts" variant="secondary" className="min-w-0 transition-[border-color] gap-[8px] px-[8px] sm:px-4 motion-reduce:transform-none motion-reduce:transition-none"><CreditCard className="h-[16px] w-[16px] shrink-0" aria-hidden="true" />Accounts</AppButton>
+          <AppButton to="/transactions" variant="secondary" className="min-w-0 transition-[border-color] gap-[8px] px-[8px] sm:px-4 motion-reduce:transform-none motion-reduce:transition-none"><Clock className="h-[16px] w-[16px] shrink-0" aria-hidden="true" />Activity</AppButton>
         </div>
       </article>
     </section>
   )
 }
 
-function MoneyMetric({
-  icon: Icon,
-  iconClassName,
-  label,
-  loading,
-  value,
-}: {
-  icon: LucideIcon
-  iconClassName: string
-  label: string
-  loading: boolean
-  value: number
-}) {
-  return (
-    <div>
-      <div className="mb-1 flex items-center gap-2 opacity-85">
-        <Icon className={`h-4 w-4 ${iconClassName}`} aria-hidden="true" />
-        <p className="text-xs font-bold uppercase tracking-widest">{label}</p>
-      </div>
-      <p className="text-3xl font-black">
-        {loading ? 'Loading...' : compactCurrency.format(value)}
-      </p>
-    </div>
-  )
-}
-
-function DashboardAction({
-  icon: Icon,
-  label,
-  to,
-}: {
-  icon: LucideIcon
-  label: string
-  to: string
-}) {
-  return (
-    <Link
-      to={to}
-      className="group flex flex-col items-center justify-center gap-3 rounded-[2rem] border border-pink-100 bg-white p-6 transition hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900"
-    >
-      <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-100 text-pink-600 transition group-hover:bg-pink-500 group-hover:text-white dark:bg-slate-800 dark:text-pink-400 dark:group-hover:bg-pink-500 dark:group-hover:text-white">
-        <Icon className="h-6 w-6" aria-hidden="true" />
-      </span>
-      <span className="text-xs font-black uppercase tracking-tight text-gray-800 dark:text-slate-200">
-        {label}
-      </span>
-    </Link>
-  )
+function MoneyMetric({ icon: Icon, iconSurface, label, loading, value }: { icon: LucideIcon; iconSurface: string; label: string; loading: boolean; value: number }) {
+  return <div className="min-w-0">
+    <div className="mb-2 flex items-center gap-2"><span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${iconSurface}`}><Icon className="h-4 w-4" aria-hidden="true" /></span><p className="text-sm font-medium">{label}</p></div>
+    <p className="text-2xl font-semibold leading-tight"><FormattedFigure value={loading ? 'Loading...' : compactCurrency.format(value)} /></p>
+  </div>
 }

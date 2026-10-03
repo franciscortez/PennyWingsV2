@@ -15,7 +15,6 @@ import { useArchivedAccountsData } from '@/hooks/useArchivedAccountsData'
 import { useAccountMembership } from '@/hooks/useJointAccountData'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
-import { useMobilePrimaryAction } from '@/hooks/useMobilePrimaryAction'
 import { alerts } from '@/lib/alert'
 import {
   AccountCreationWizard,
@@ -177,9 +176,6 @@ export default function Accounts() {
   const openWizard = useCallback(() => {
     setWizardOpen(true)
   }, [])
-  useMobilePrimaryAction(loading ? null : {
-    label: 'Add account', icon: Plus, onSelect: openWizard,
-  })
 
   if (loading) {
     return (

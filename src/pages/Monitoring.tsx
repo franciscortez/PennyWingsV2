@@ -1,4 +1,3 @@
-import { Plus } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
@@ -6,7 +5,6 @@ import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useMonitoringData } from '@/hooks/useMonitoringData'
-import { useMobilePrimaryAction } from '@/hooks/useMobilePrimaryAction'
 import { alerts } from '@/lib/alert'
 import {
   BudgetModal,
@@ -74,11 +72,6 @@ export default function Monitoring() {
   const openCreateGoalModal = useCallback(() => {
     setGoalModal({ mode: 'create', goal: null })
   }, [])
-  useMobilePrimaryAction(loading ? null : {
-    label: activeTab === 'budgets' ? 'New budget' : 'New goal',
-    icon: Plus,
-    onSelect: activeTab === 'budgets' ? openCreateBudgetModal : openCreateGoalModal,
-  })
 
   if (loading) {
     return (

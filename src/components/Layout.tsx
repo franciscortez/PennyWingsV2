@@ -3,7 +3,6 @@ import { useState, type ReactNode } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAssistant } from '@/hooks/useAssistant'
 import { useSidebarInfo } from '@/hooks/useSidebarInfo'
-import { useCurrentMobileAction } from '@/hooks/useMobilePrimaryAction'
 import { alerts } from '@/lib/alert'
 import { AssistantWidget } from '@/sections/assistant'
 import { Sidebar } from '@/components/ui'
@@ -13,7 +12,6 @@ type LayoutProps = {
 }
 
 export default function Layout({ children }: LayoutProps) {
-  const mobileAction = useCurrentMobileAction()
   const { loading, profile, signOut, user } = useAuth()
   const { openAssistant } = useAssistant()
   const sidebarInfo = useSidebarInfo(loading, user?.email, profile)
@@ -39,7 +37,7 @@ export default function Layout({ children }: LayoutProps) {
   }
 
   return (
-    <div data-mobile-action={Boolean(mobileAction)} className="app-layout min-h-[100dvh] overflow-x-hidden bg-paper font-geist text-slate-950 antialiased md:flex dark:bg-slate-950 dark:text-slate-100">
+    <div className="app-layout min-h-[100dvh] overflow-x-hidden bg-paper font-geist text-slate-950 antialiased md:flex dark:bg-slate-950 dark:text-slate-100">
       <Sidebar
         onOpenAssistant={openAssistant}
         onSignOut={handleSignOut}

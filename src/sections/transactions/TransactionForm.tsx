@@ -8,6 +8,7 @@ import {
   type Resolver,
 } from 'react-hook-form'
 
+import { AppButton, fieldError, fieldHint, fieldInput, fieldLabel, surfaceNested } from '@/components/ui'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { toDateInputValue } from '@/lib/date'
 import type {
@@ -52,7 +53,7 @@ const accountBalanceFormatter = new Intl.NumberFormat('en-PH', {
 })
 
 const accountOptionLabel = (account: Account) =>
-  `${account.name} — ${accountBalanceFormatter.format(account.balance)}`
+  `${account.name}: ${accountBalanceFormatter.format(account.balance)}`
 
 const defaultFormState = (): TransactionFormState => ({
   amount: '',
@@ -279,11 +280,11 @@ export function TransactionForm({
   return (
     <ModalFrame
       actions={
-        <button
+        <AppButton
           disabled={saving}
           form={formId}
           type="submit"
-          className="w-full rounded-[1.5rem] bg-gradient-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition disabled:opacity-50 md:rounded-[2rem] md:py-5 md:text-xl"
+          className="w-full"
         >
           {saving
             ? transaction
@@ -292,12 +293,13 @@ export function TransactionForm({
             : transaction
               ? 'Update Transaction'
               : 'Save Transaction'}
-        </button>
+        </AppButton>
       }
       closeDisabled={dismissDisabled}
       closeLabel="Close transaction form"
       onClose={onClose}
-      panelClassName="md:max-w-lg md:rounded-[2.5rem]"
+      panelClassName="font-geist motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none md:max-w-lg shadow-wing-lg dark:shadow-none focus-visible:ring-pink-800 dark:focus-visible:ring-pink-300"
+      headerClassName="[&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-slate-950 dark:[&_h2]:text-slate-100 [&_button]:h-11 [&_button]:w-11 [&_button]:text-slate-600 dark:[&_button]:text-slate-300 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-pink-800 dark:[&_button]:focus-visible:outline-pink-300"
       title={transaction ? 'Edit Transaction' : 'New Transaction'}
       titleId="transaction-form-title"
     >
@@ -311,7 +313,7 @@ export function TransactionForm({
 
           <div className="text-center">
             <div className="relative">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-xl font-black text-pink-300 md:left-6 md:text-2xl dark:text-slate-650">
+              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-600 dark:text-slate-400">
                 PHP
               </span>
               <input
@@ -322,11 +324,11 @@ export function TransactionForm({
                 placeholder="0.00"
                 value={form.amount}
                 onChange={(event) => updateField('amount', event.target.value)}
-                className="w-full rounded-xl border-2 border-pink-100 bg-pink-50/50 py-3 pl-20 pr-4 text-xl font-black text-gray-800 outline-none transition placeholder:text-pink-300 focus:border-pink-500 md:rounded-2xl md:py-4 md:pl-24 md:pr-6 md:text-2xl dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+                className={fieldInput(Boolean(errors.amount), 'pl-16 font-geist-mono tabular-nums text-xl')}
               />
             </div>
             {errors.amount ? (
-              <p id="transaction-amount-error" className="mt-2 text-left text-xs font-bold text-red-500">
+              <p id="transaction-amount-error" className={`mt-2 text-left ${fieldError}`}>
                 {errors.amount.message}
               </p>
             ) : null}
@@ -368,7 +370,7 @@ export function TransactionForm({
             <div className="min-w-0 space-y-1 md:space-y-2">
               <label
                 htmlFor="transaction-category"
-                className="ml-1 block truncate text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+                className={`${fieldLabel} ml-1 block`}
               >
                 Category
               </label>
@@ -380,7 +382,7 @@ export function TransactionForm({
                 onChange={(event) =>
                   updateField('category_id', event.target.value)
                 }
-                className="w-full rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+                className={fieldInput(Boolean(errors.category_id))}
               >
                 <option value="" className="dark:bg-slate-900">Choose a category</option>
                 {filteredCategories.map((category) => (
@@ -390,7 +392,7 @@ export function TransactionForm({
                 ))}
               </select>
               {errors.category_id ? (
-                <p id="transaction-category-error" className="text-xs font-bold text-red-500">
+                <p id="transaction-category-error" className={fieldError}>
                   {errors.category_id.message}
                 </p>
               ) : null}
@@ -399,11 +401,11 @@ export function TransactionForm({
             <div className="min-w-0 space-y-1 md:space-y-2">
               <label
                 htmlFor="transaction-date"
-                className="ml-1 block text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+                className={`${fieldLabel} ml-1 block`}
               >
                 Date
               </label>
-              <div className="flex w-full min-w-0 items-center rounded-xl border border-pink-100 bg-pink-50/50 px-4 py-3 transition focus-within:border-pink-500 focus-within:ring-2 focus-within:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-950/40 dark:focus-within:border-pink-500">
+              <div className="min-w-0">
                 <input
                   aria-describedby={errors.transaction_date ? 'transaction-date-error' : undefined}
                   aria-invalid={Boolean(errors.transaction_date)}
@@ -413,11 +415,11 @@ export function TransactionForm({
                   onChange={(event) =>
                     updateField('transaction_date', event.target.value)
                   }
-                  className="block w-full min-w-0 max-w-full border-0 bg-transparent p-0 text-xs font-bold text-gray-700 outline-none dark:text-slate-200"
+                  className={fieldInput(Boolean(errors.transaction_date), 'min-w-0 max-w-full appearance-none')}
                 />
               </div>
               {errors.transaction_date ? (
-                <p id="transaction-date-error" className="text-xs font-bold text-red-500">
+                <p id="transaction-date-error" className={fieldError}>
                   {errors.transaction_date.message}
                 </p>
               ) : null}
@@ -431,7 +433,7 @@ export function TransactionForm({
             onChange={(event) =>
               updateField('description', event.target.value)
             }
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-3.5 text-sm font-bold text-gray-700 outline-none transition placeholder:text-pink-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 md:py-4 md:text-base dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(false)}
           />
 
       </form>
@@ -460,10 +462,11 @@ function TransactionTypePicker({
               key={type}
               type="button"
               onClick={() => onChange(type)}
-              className={`relative flex-1 rounded-xl py-2.5 text-[10px] font-black uppercase tracking-[0.15em] transition md:rounded-2xl md:py-3 ${
+              aria-pressed={value === type}
+              className={`relative min-h-11 min-w-0 flex-1 rounded-full px-3 py-2.5 [overflow-wrap:anywhere] text-sm font-semibold capitalize transition-[border-color] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800 dark:focus-visible:outline-pink-300 ${
                 value === type
-                  ? 'bg-pink-500 text-white dark:bg-pink-600'
-                  : 'bg-pink-50 text-gray-400 hover:text-pink-500 dark:bg-slate-950 dark:text-slate-450 dark:hover:text-pink-400'
+                  ? 'bg-pink-700 text-white'
+                  : 'border border-slate-500 bg-white text-slate-600 hover:bg-pink-50 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
             >
               {type === 'transfer' ? 'Transfer/Deposit' : type}
@@ -504,8 +507,8 @@ function AccountSourcePanel({
     errors.wallet_id?.message
 
   return (
-    <div className="space-y-4 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
-      <p className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+    <div className={`${surfaceNested} space-y-4 p-4 sm:p-5`}>
+      <p className={`${fieldLabel} ml-1 block`}>
         {form.type === 'transfer' ? 'From Account' : 'Payment Method'}
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
@@ -516,7 +519,7 @@ function AccountSourcePanel({
           onChange={(event) =>
             onPaymentMethodChange(event.target.value as FormPaymentMethod)
           }
-          className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+          className={fieldInput(Boolean(errors.payment_method))}
         >
           {form.type !== 'withdrawal' ? <option value="cash" className="dark:bg-slate-900">Cash</option> : null}
           <option value="card" className="dark:bg-slate-900">Bank Card</option>
@@ -530,7 +533,7 @@ function AccountSourcePanel({
             aria-invalid={Boolean(errors.card_id)}
             value={form.card_id}
             onChange={(event) => onUpdate('card_id', event.target.value)}
-            className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(Boolean(errors.card_id))}
           >
             <option value="" className="dark:bg-slate-900">Select Card</option>
             {cardAccounts.map((account) => (
@@ -545,7 +548,7 @@ function AccountSourcePanel({
             aria-invalid={Boolean(errors.wallet_id)}
             value={form.wallet_id}
             onChange={(event) => onUpdate('wallet_id', event.target.value)}
-            className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(Boolean(errors.wallet_id))}
           >
             <option value="" className="dark:bg-slate-900">
               {form.payment_method === 'lent' ? 'Select Lent' : 'Select Wallet'}
@@ -557,7 +560,7 @@ function AccountSourcePanel({
             ))}
           </select>
         ) : (
-          <div className="flex items-center rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold text-gray-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
+          <div className={`${fieldHint} flex min-h-12 min-w-0 items-center rounded-[1.25rem] bg-white px-5 py-3 [overflow-wrap:anywhere] dark:bg-slate-900`}>
             {cashAccount
               ? accountOptionLabel(cashAccount)
               : 'No cash account available'}
@@ -565,7 +568,7 @@ function AccountSourcePanel({
         )}
       </div>
       {sourceError ? (
-        <p id="transaction-source-error" className="text-xs font-bold text-red-500">
+        <p id="transaction-source-error" className={fieldError}>
           {sourceError}
         </p>
       ) : null}
@@ -602,8 +605,8 @@ function DestinationPanel({
     errors.to_wallet_id?.message
 
   return (
-    <div className="space-y-4 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
-      <p className="ml-1 text-left text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+    <div className={`${surfaceNested} space-y-4 p-4 sm:p-5`}>
+      <p className={`${fieldLabel} ml-1 block`}>
         To Account
       </p>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
@@ -616,7 +619,7 @@ function DestinationPanel({
               event.target.value as DestinationPaymentMethod,
             )
           }
-          className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+          className={fieldInput(Boolean(errors.to_payment_method))}
         >
           {canTransferToCash ? <option value="cash" className="dark:bg-slate-900">Cash</option> : null}
           <option value="card" className="dark:bg-slate-900">Bank Card</option>
@@ -630,7 +633,7 @@ function DestinationPanel({
             aria-invalid={Boolean(errors.to_card_id)}
             value={form.to_card_id}
             onChange={(event) => onUpdate('to_card_id', event.target.value)}
-            className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(Boolean(errors.to_card_id))}
           >
             <option value="" className="dark:bg-slate-900">Select Card</option>
             {cardAccounts
@@ -642,7 +645,7 @@ function DestinationPanel({
               ))}
           </select>
         ) : form.to_payment_method === 'cash' ? (
-          <div className="flex items-center rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-[10px] font-bold text-gray-400 dark:border-slate-800 dark:bg-slate-950/50 dark:text-slate-400">
+          <div className={`${fieldHint} flex min-h-12 min-w-0 items-center rounded-[1.25rem] bg-white px-5 py-3 [overflow-wrap:anywhere] dark:bg-slate-900`}>
             {cashAccount
               ? accountOptionLabel(cashAccount)
               : 'No cash account available'}
@@ -653,7 +656,7 @@ function DestinationPanel({
             aria-invalid={Boolean(errors.to_wallet_id)}
             value={form.to_wallet_id}
             onChange={(event) => onUpdate('to_wallet_id', event.target.value)}
-            className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(Boolean(errors.to_wallet_id))}
           >
             <option value="" className="dark:bg-slate-900">
               {form.to_payment_method === 'lent' ? 'Select Lent' : 'Select Wallet'}
@@ -669,7 +672,7 @@ function DestinationPanel({
         ) : null}
       </div>
       {destinationError ? (
-        <p id="transaction-destination-error" className="text-xs font-bold text-red-500">
+        <p id="transaction-destination-error" className={fieldError}>
           {destinationError}
         </p>
       ) : null}
@@ -693,24 +696,25 @@ function TransactionFeePanel({
   const currentFee = Number(form.fee_amount || '0')
 
   return (
-    <div className="space-y-3 rounded-[1.5rem] border border-pink-50 bg-pink-50/30 p-4 md:rounded-[2rem] md:p-5 dark:border-slate-800 dark:bg-slate-950/20">
-      <div className="flex items-center justify-between">
+    <div className={`${surfaceNested} space-y-3 p-4 sm:p-5`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <label
           htmlFor="transaction-fee"
-          className="ml-1 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+          className={`${fieldLabel} ml-1 block`}
         >
           {form.type === 'withdrawal' ? 'Withdrawal' : 'Transfer'} Fee (PHP)
         </label>
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {presets.map((preset) => (
             <button
               key={preset}
               type="button"
               onClick={() => onUpdate('fee_amount', String(preset))}
-              className={`rounded-lg px-2.5 py-1 text-[10px] font-black transition ${
+              aria-pressed={currentFee === preset}
+              className={`min-h-11 min-w-11 rounded-full px-3 py-2 text-sm font-semibold transition-[border-color] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800 dark:focus-visible:outline-pink-300 ${
                 currentFee === preset
-                  ? 'bg-pink-500 text-white dark:bg-pink-600'
-                  : 'bg-white text-gray-600 hover:bg-pink-100 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
+                  ? 'bg-pink-700 text-white'
+                  : 'border border-slate-500 bg-white text-slate-600 hover:bg-pink-50 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
               }`}
             >
               ₱{preset}
@@ -727,10 +731,10 @@ function TransactionFeePanel({
         placeholder="0.00"
         value={form.fee_amount}
         onChange={(event) => onUpdate('fee_amount', event.target.value)}
-        className="w-full rounded-xl border border-pink-100 bg-white px-4 py-3 text-xs font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-pink-500"
+        className={fieldInput(Boolean(errors.fee_amount), 'font-geist-mono tabular-nums')}
       />
       {errors.fee_amount ? (
-        <p id="transaction-fee-error" className="text-xs font-bold text-red-500">
+        <p id="transaction-fee-error" className={fieldError}>
           {errors.fee_amount.message}
         </p>
       ) : null}

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import Layout from '@/components/Layout'
+import { AppButton, PageHeader } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useTransactionsData } from '@/hooks/useTransactionsData'
@@ -178,25 +179,18 @@ export default function Transactions() {
 
   return (
     <Layout>
-      <div className="space-y-6 sm:space-y-8 pb-20">
-        <header className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="mb-1 text-3xl font-black tracking-tight text-gray-900 sm:mb-2 sm:text-4xl dark:text-white">
-              Transaction History
-            </h1>
-            <p className="text-sm font-bold text-gray-500 sm:text-base dark:text-slate-400">
-              Manage your cashflow with precision.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={openCreateForm}
-            className="flex items-center justify-center gap-2 rounded-2xl bg-pink-500 px-5 py-3 text-sm font-black text-white transition hover:bg-pink-600 active:scale-[0.99] shrink-0 sm:rounded-4xl sm:px-8 sm:py-4 sm:text-base"
-          >
-            <Plus className="h-5 w-5 shrink-0" aria-hidden="true" />
-            <span>New Transaction</span>
-          </button>
-        </header>
+      <div className="activity-design space-y-6 lg:space-y-8 motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none">
+        <PageHeader
+          className="min-w-0 [&_h1]:[overflow-wrap:anywhere]"
+          title="Transaction History"
+          description="Manage your cashflow with precision."
+          actions={
+            <AppButton type="button" onClick={openCreateForm} className="min-w-0 max-w-full">
+              <Plus className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span className="min-w-0 [overflow-wrap:anywhere]">New Transaction</span>
+            </AppButton>
+          }
+        />
 
         <TransactionsTable
           currentUserId={user?.id}

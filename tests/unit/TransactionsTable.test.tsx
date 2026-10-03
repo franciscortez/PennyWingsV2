@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { TransactionsTable } from '@/sections/transactions/TransactionsTable'
 import type { Transaction } from '@/types'
@@ -79,5 +79,58 @@ describe('TransactionsTable UI Component', () => {
     const searchInput = screen.getByPlaceholderText(/description, category\.\.\./i)
     fireEvent.change(searchInput, { target: { value: 'coffee' } })
     expect(defaultProps.onSearchChange).toHaveBeenCalledWith('coffee')
+  })
+
+  it.each([
+    ['income', '+'], ['expense', '-'], ['withdrawal', '-'], ['transfer', ''],
+  ] as const)('preserves %s amount, type and fee text in both presentations', (type, prefix) => {
+    const transaction = { ...mockTransactions[0], type, amount: 999999999999.99, fee_amount: 12.34 }
+    render(<TransactionsTable {...defaultProps} transactions={[transaction]} />)
+    const expected = prefix + new Intl.NumberFormat('en-PH', { currency: 'PHP', maximumFractionDigits: 2, style: 'currency' }).format(transaction.amount)
+    for (const presentation of [screen.getByRole('article'), screen.getByRole('table')]) {
+      expect(presentation.querySelector('[data-transaction-amount]')).toHaveTextContent(expected)
+      expect(presentation.querySelector('[data-transaction-fee]')).toHaveTextContent('+ ₱12.34 fee')
+      expect(within(presentation).getByText(type)).toBeInTheDocument()
+    }
+  })
+
+  it('keeps non-owner rows view-only and disables both actions during deletion', () => {
+    const { rerender } = render(<TransactionsTable {...defaultProps} currentUserId="someone-else" />)
+    expect(screen.queryByRole('button', { name: 'Edit transaction' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Delete transaction' })).toBeNull()
+    expect(screen.getAllByText('View only')).toHaveLength(2)
+    rerender(<TransactionsTable {...defaultProps} deletingId="tx-1" />)
+    for (const button of screen.getAllByRole('button', { name: /^(Edit|Delete) transaction$/ })) {
+      expect(button).toBeDisabled()
+    }
+  })
+
+  it('announces selected filter and keeps pagination boundaries and callbacks', () => {
+    const { rerender } = render(<TransactionsTable {...defaultProps} filterType="income" totalCount={70} totalPages={7} />)
+    expect(screen.getByRole('button', { name: /^income/i })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: /^all$/i })).toHaveAttribute('aria-pressed', 'false')
+    const pagination = within(screen.getByRole('navigation', { name: 'Transaction pagination' }))
+    expect(pagination.getByRole('button', { name: 'Previous page' })).toBeDisabled()
+    expect(pagination.getByRole('button', { name: /^1$/ })).toHaveAttribute('aria-current', 'page')
+    fireEvent.click(pagination.getByRole('button', { name: 'Next page' }))
+    expect(defaultProps.onPageChange).toHaveBeenCalledWith(2)
+    fireEvent.click(pagination.getByRole('button', { name: /^7$/ }))
+    expect(defaultProps.onPageChange).toHaveBeenCalledWith(7)
+    rerender(<TransactionsTable {...defaultProps} page={7} totalCount={70} totalPages={7} />)
+    expect(pagination.getByRole('button', { name: 'Next page' })).toBeDisabled()
+  })
+
+  it('keeps edit and delete callbacks wired to the same transaction in both views', () => {
+    const onEdit = vi.fn()
+    const onDelete = vi.fn()
+    render(<TransactionsTable {...defaultProps} onEdit={onEdit} onDelete={onDelete} />)
+    for (const presentation of [screen.getByRole('article'), screen.getByRole('table')]) {
+      fireEvent.click(within(presentation).getByRole('button', { name: 'Edit transaction' }))
+      fireEvent.click(within(presentation).getByRole('button', { name: 'Delete transaction' }))
+    }
+    expect(onEdit).toHaveBeenCalledTimes(2)
+    expect(onDelete).toHaveBeenCalledTimes(2)
+    expect(onEdit).toHaveBeenCalledWith(mockTransactions[0])
+    expect(onDelete).toHaveBeenCalledWith(mockTransactions[0])
   })
 })

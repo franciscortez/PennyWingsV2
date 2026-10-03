@@ -10,7 +10,7 @@ export async function mockAccountsDesign(page: Page, options: { extreme?: boolea
     color: index === 0 ? '#F472B6' : card.color,
     balance: options.extreme ? 999999999999.99 : index === 0 ? -123.45 : card.balance,
   }))
-  cards.push(...(options.empty ? [] : [{ ...fixtureBankCards(1)[0], id: 'hidden-card', card_name: 'Hidden Shared', user_id: 'another-owner' }, { ...fixtureBankCards(1)[0], id: 'archived-card', card_name: 'Archived Reserve', is_active: false }]))
+  cards.push(...(options.empty ? [] : [{ ...fixtureBankCards(1)[0], id: 'hidden-card', card_name: 'Hidden Shared', user_id: 'another-owner' }, { ...fixtureBankCards(1)[0], id: 'archived-card', card_name: 'Archived Reserve', is_active: false, status: 'archived' }]))
   const wallets: Record<string, unknown>[] = options.empty ? [] : fixtureEWallets(1).filter(row => !options.withoutCash || row.wallet_type !== 'cash')
   const memberships = options.empty ? [] : [
     { id: 'viewer-membership', resource_type: 'bank_card', resource_id: 'card-fixture-2', role: 'viewer', is_hidden: false },
@@ -24,8 +24,14 @@ export async function mockAccountsDesign(page: Page, options: { extreme?: boolea
       const method = route.request().method(), query = new URL(route.request().url()).searchParams
       const id = query.get('id')?.replace('eq.', '')
       if (method === 'GET') {
-        const active = query.get('is_active') !== 'eq.false'
-        await route.fulfill({ json: rows.filter(row => Boolean(row.is_active) === active) })
+        const isArchived = query.get('status') === 'eq.archived' || query.get('is_active') === 'eq.false'
+        await route.fulfill({
+          json: rows.filter((row) =>
+            isArchived
+              ? row.status === 'archived' || row.is_active === false
+              : (row.status ?? 'active') === 'active' && row.is_active !== false,
+          ),
+        })
       } else {
         const body = route.request().postDataJSON() as Record<string, unknown> | null
         requests.push({ table, method, body: body ?? {} })

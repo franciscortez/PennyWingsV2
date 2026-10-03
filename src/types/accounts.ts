@@ -1,5 +1,7 @@
 export type AccountKind = 'card' | 'wallet' | 'cash' | 'lent'
 
+export type AccountStatus = 'active' | 'archived' | 'deleted'
+
 export type ResourceType = 'bank_card' | 'e_wallet'
 
 export type AccountMemberRole = 'viewer' | 'transactor'
@@ -29,6 +31,7 @@ export type Account = {
   lastFour?: string
   membershipId?: string
   name: string
+  status?: AccountStatus
   textColor: string
   userId: string
 }

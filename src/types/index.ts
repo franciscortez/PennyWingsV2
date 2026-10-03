@@ -15,6 +15,7 @@ export type {
   AccountKind,
   AccountMember,
   AccountMemberRole,
+  AccountStatus,
   AccountUpdateValues,
   AccountsData,
   ResourceType,

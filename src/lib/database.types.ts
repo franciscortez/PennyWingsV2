@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -57,6 +57,7 @@ export type Database = {
           id: string
           is_active: boolean
           last_four: string | null
+          status: string
           text_color: string | null
           updated_at: string
           user_id: string
@@ -70,6 +71,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_four?: string | null
+          status?: string
           text_color?: string | null
           updated_at?: string
           user_id: string
@@ -83,6 +85,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           last_four?: string | null
+          status?: string
           text_color?: string | null
           updated_at?: string
           user_id?: string
@@ -94,6 +97,7 @@ export type Database = {
           category_id: string
           created_at: string
           id: string
+          last_alert_percent: number
           limit_amount: number
           period: string
           updated_at: string
@@ -103,6 +107,7 @@ export type Database = {
           category_id: string
           created_at?: string
           id?: string
+          last_alert_percent?: number
           limit_amount: number
           period?: string
           updated_at?: string
@@ -112,6 +117,7 @@ export type Database = {
           category_id?: string
           created_at?: string
           id?: string
+          last_alert_percent?: number
           limit_amount?: number
           period?: string
           updated_at?: string
@@ -168,6 +174,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          status: string
           text_color: string | null
           updated_at: string
           user_id: string
@@ -181,6 +188,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          status?: string
           text_color?: string | null
           updated_at?: string
           user_id: string
@@ -194,6 +202,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          status?: string
           text_color?: string | null
           updated_at?: string
           user_id?: string
@@ -207,6 +216,7 @@ export type Database = {
           created_at: string
           current_amount: number
           id: string
+          last_alert_percent: number
           linked_card_id: string | null
           linked_wallet_id: string | null
           name: string
@@ -219,6 +229,7 @@ export type Database = {
           created_at?: string
           current_amount?: number
           id?: string
+          last_alert_percent?: number
           linked_card_id?: string | null
           linked_wallet_id?: string | null
           name: string
@@ -231,6 +242,7 @@ export type Database = {
           created_at?: string
           current_amount?: number
           id?: string
+          last_alert_percent?: number
           linked_card_id?: string | null
           linked_wallet_id?: string | null
           name?: string
@@ -267,8 +279,8 @@ export type Database = {
           owner_id: string
           resource_id: string
           resource_type: string
-          role: string
           revoked_at: string | null
+          role: string
         }
         Insert: {
           accepted_at?: string | null
@@ -280,8 +292,8 @@ export type Database = {
           owner_id: string
           resource_id: string
           resource_type: string
-          role?: string
           revoked_at?: string | null
+          role?: string
         }
         Update: {
           accepted_at?: string | null
@@ -293,8 +305,8 @@ export type Database = {
           owner_id?: string
           resource_id?: string
           resource_type?: string
-          role?: string
           revoked_at?: string | null
+          role?: string
         }
         Relationships: []
       }
@@ -492,37 +504,74 @@ export type Database = {
         Returns: string
       }
       map_share_user_id: { Args: never; Returns: undefined }
-      process_transaction: {
-        Args: {
-          p_amount: number
-          p_card_id?: string
-          p_category_id: string
-          p_description: string
-          p_fee_amount?: number
-          p_payment_method: string
-          p_to_card_id?: string
-          p_to_wallet_id?: string
-          p_transaction_date: string
-          p_type: string
-          p_user_id?: string
-          p_wallet_id?: string
-        }
-        Returns: Json
-      }
-      process_transaction_checked: {
-        Args: {
-          p_amount: number
-          p_card_id: string
-          p_category_id: string
-          p_description: string
-          p_fee_amount?: number
-          p_payment_method: string
-          p_to_card_id: string
-          p_to_wallet_id: string
-          p_transaction_date: string
-          p_type: string
-          p_wallet_id: string
-        }
+      process_transaction:
+        | {
+            Args: {
+              p_amount: number
+              p_card_id?: string
+              p_category_id: string
+              p_description: string
+              p_payment_method: string
+              p_to_card_id?: string
+              p_to_wallet_id?: string
+              p_transaction_date: string
+              p_type: string
+              p_user_id?: string
+              p_wallet_id?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_card_id?: string
+              p_category_id: string
+              p_description: string
+              p_fee_amount?: number
+              p_payment_method: string
+              p_to_card_id?: string
+              p_to_wallet_id?: string
+              p_transaction_date: string
+              p_type: string
+              p_user_id?: string
+              p_wallet_id?: string
+            }
+            Returns: Json
+          }
+      process_transaction_checked:
+        | {
+            Args: {
+              p_amount: number
+              p_card_id: string
+              p_category_id: string
+              p_description: string
+              p_payment_method: string
+              p_to_card_id: string
+              p_to_wallet_id: string
+              p_transaction_date: string
+              p_type: string
+              p_wallet_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_card_id: string
+              p_category_id: string
+              p_description: string
+              p_fee_amount?: number
+              p_payment_method: string
+              p_to_card_id: string
+              p_to_wallet_id: string
+              p_transaction_date: string
+              p_type: string
+              p_wallet_id: string
+            }
+            Returns: undefined
+          }
+      revoke_joint_account_invite: {
+        Args: { p_invite_id: string }
         Returns: undefined
       }
       save_monthly_report: {
@@ -550,15 +599,11 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      revoke_joint_account_invite: {
-        Args: { p_invite_id: string }
-        Returns: undefined
-      }
-      sync_monthly_reports: { Args: never; Returns: undefined }
       set_account_membership_hidden: {
         Args: { p_hidden: boolean; p_membership_id: string }
         Returns: undefined
       }
+      sync_monthly_reports: { Args: never; Returns: undefined }
       update_account_member_role: {
         Args: { p_membership_id: string; p_role: string }
         Returns: undefined
@@ -583,23 +628,40 @@ export type Database = {
         }
         Returns: undefined
       }
-      update_transaction_checked: {
-        Args: {
-          p_amount: number
-          p_card_id: string
-          p_category_id: string
-          p_description: string
-          p_fee_amount?: number
-          p_id: string
-          p_payment_method: string
-          p_to_card_id: string
-          p_to_wallet_id: string
-          p_transaction_date: string
-          p_type: string
-          p_wallet_id: string
-        }
-        Returns: undefined
-      }
+      update_transaction_checked:
+        | {
+            Args: {
+              p_amount: number
+              p_card_id: string
+              p_category_id: string
+              p_description: string
+              p_id: string
+              p_payment_method: string
+              p_to_card_id: string
+              p_to_wallet_id: string
+              p_transaction_date: string
+              p_type: string
+              p_wallet_id: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_amount: number
+              p_card_id: string
+              p_category_id: string
+              p_description: string
+              p_fee_amount?: number
+              p_id: string
+              p_payment_method: string
+              p_to_card_id: string
+              p_to_wallet_id: string
+              p_transaction_date: string
+              p_type: string
+              p_wallet_id: string
+            }
+            Returns: undefined
+          }
       update_transaction_legacy: {
         Args: {
           p_amount: number
@@ -638,12 +700,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -667,11 +729,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -692,11 +754,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -717,11 +779,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -734,11 +796,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }

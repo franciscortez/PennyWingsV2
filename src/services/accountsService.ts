@@ -5,6 +5,7 @@ import type {
   Account,
   AccountCreateValues,
   AccountKind,
+  AccountStatus,
   AccountsData,
   AccountUpdateValues,
 } from '@/types'
@@ -19,6 +20,7 @@ type CardRow = Pick<
   | 'id'
   | 'is_active'
   | 'last_four'
+  | 'status'
   | 'text_color'
   | 'user_id'
 >
@@ -31,6 +33,7 @@ type WalletRow = Pick<
   | 'created_at'
   | 'id'
   | 'is_active'
+  | 'status'
   | 'text_color'
   | 'user_id'
   | 'wallet_name'
@@ -95,6 +98,7 @@ const mapCardAccount = (
   lastFour: card.last_four ?? undefined,
   membershipId: membership?.id,
   name: card.card_name,
+  status: (card.status as AccountStatus) ?? (card.is_active ? 'active' : 'archived'),
   textColor: card.text_color ?? '#ffffff',
   userId: card.user_id,
 })
@@ -121,6 +125,7 @@ const mapWalletAccount = (
         : 'wallet',
   membershipId: membership?.id,
   name: wallet.wallet_name,
+  status: (wallet.status as AccountStatus) ?? (wallet.is_active ? 'active' : 'archived'),
   textColor: wallet.text_color ?? '#ffffff',
   userId: wallet.user_id,
 })
@@ -134,16 +139,18 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
     supabase
       .from('bank_cards')
       .select(
-        'id, card_name, card_type, balance, color, text_color, last_four, is_active, created_at, user_id',
+        'id, card_name, card_type, balance, color, text_color, last_four, is_active, status, created_at, user_id',
       )
       .eq('is_active', true)
+      .eq('status', 'active')
       .order('created_at', { ascending: false }),
     supabase
       .from('e_wallets')
       .select(
-        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, created_at, user_id',
+        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, status, created_at, user_id',
       )
       .eq('is_active', true)
+      .eq('status', 'active')
       .order('created_at', { ascending: false }),
     supabase
       .from('account_memberships')
@@ -217,18 +224,20 @@ export const fetchArchivedAccounts = async (
     supabase
       .from('bank_cards')
       .select(
-        'id, card_name, card_type, balance, color, text_color, last_four, is_active, created_at, user_id',
+        'id, card_name, card_type, balance, color, text_color, last_four, is_active, status, created_at, user_id',
       )
       .eq('user_id', userId)
       .eq('is_active', false)
+      .eq('status', 'archived')
       .order('updated_at', { ascending: false }),
     supabase
       .from('e_wallets')
       .select(
-        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, created_at, user_id',
+        'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, status, created_at, user_id',
       )
       .eq('user_id', userId)
       .eq('is_active', false)
+      .eq('status', 'archived')
       .order('updated_at', { ascending: false }),
   ])
 
@@ -269,6 +278,7 @@ export const createCardAccount = async (
     color: values.color,
     is_active: true,
     last_four: values.lastFour || null,
+    status: 'active',
     text_color: values.textColor,
     user_id: userId,
   })
@@ -285,6 +295,7 @@ export const createWalletAccount = async (
     balance: values.balance,
     color: values.color,
     is_active: true,
+    status: 'active',
     text_color: values.textColor,
     user_id: userId,
     wallet_name: values.name,
@@ -354,7 +365,7 @@ export const archiveAccount = async (
   if (kind === 'card') {
     const { error } = await supabase
       .from('bank_cards')
-      .update({ is_active: false, updated_at: updatedAt })
+      .update({ is_active: false, status: 'archived', updated_at: updatedAt })
       .eq('id', accountId)
       .eq('user_id', userId)
 
@@ -364,7 +375,7 @@ export const archiveAccount = async (
 
   const { error } = await supabase
     .from('e_wallets')
-    .update({ is_active: false, updated_at: updatedAt })
+    .update({ is_active: false, status: 'archived', updated_at: updatedAt })
     .eq('id', accountId)
     .eq('user_id', userId)
 
@@ -381,7 +392,7 @@ export const restoreAccount = async (
   if (kind === 'card') {
     const { error } = await supabase
       .from('bank_cards')
-      .update({ is_active: true, updated_at: updatedAt })
+      .update({ is_active: true, status: 'active', updated_at: updatedAt })
       .eq('id', accountId)
       .eq('user_id', userId)
 
@@ -391,7 +402,7 @@ export const restoreAccount = async (
 
   const { error } = await supabase
     .from('e_wallets')
-    .update({ is_active: true, updated_at: updatedAt })
+    .update({ is_active: true, status: 'active', updated_at: updatedAt })
     .eq('id', accountId)
     .eq('user_id', userId)
 
@@ -425,13 +436,14 @@ export const deleteArchivedAccount = async (
     throw AppError.from(cleanupError)
   }
 
+  const updatedAt = new Date().toISOString()
+
   if (kind === 'card') {
     const { error } = await supabase
       .from('bank_cards')
-      .delete()
+      .update({ is_active: false, status: 'deleted', updated_at: updatedAt })
       .eq('id', accountId)
       .eq('user_id', userId)
-      .eq('is_active', false)
 
     if (error) throw AppError.from(error)
     return
@@ -439,10 +451,9 @@ export const deleteArchivedAccount = async (
 
   const { error } = await supabase
     .from('e_wallets')
-    .delete()
+    .update({ is_active: false, status: 'deleted', updated_at: updatedAt })
     .eq('id', accountId)
     .eq('user_id', userId)
-    .eq('is_active', false)
 
   if (error) throw AppError.from(error)
 }

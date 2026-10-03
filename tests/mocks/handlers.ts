@@ -24,6 +24,7 @@ export const handlers = [
         last_four: '1234',
         balance: 1000,
         is_active: true,
+        status: 'active',
       },
     ])
   }),
@@ -38,6 +39,7 @@ export const handlers = [
           last_four: '4321',
           balance: 10000,
           is_active: true,
+          status: 'active',
         },
       ],
       { status: 201 },
@@ -61,6 +63,7 @@ export const handlers = [
         account_identifier: '09123456789',
         balance: 500,
         is_active: true,
+        status: 'active',
       },
     ])
   }),

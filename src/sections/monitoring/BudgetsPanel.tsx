@@ -1,3 +1,4 @@
+import { surface } from '@/components/ui/surfaces'
 import { ReceiptText } from 'lucide-react'
 
 import {
@@ -36,7 +37,7 @@ export function BudgetsPanel({
   if (!budgets.length) {
     return (
       <EmptyPanel
-        actionLabel="Create Budget"
+        actionLabel="New budget"
         description="Choose expense categories and set limits to monitor spending."
         icon={ReceiptText}
         title="No budgets yet"
@@ -72,24 +73,23 @@ function BudgetCard({
   onEdit: (budget: Budget) => void
 }) {
   const overBudget = budget.remainingAmount < 0
-  const progressColor = overBudget ? 'bg-rose-500' : 'bg-pink-500'
-  const categoryColor = budget.category?.color ?? '#ec4899'
+  const progressColor = overBudget ? 'bg-rose-700 dark:bg-rose-300' : 'bg-pink-700 dark:bg-pink-400'
 
   return (
-    <article className="rounded-[2rem] border border-pink-50 bg-white p-6 transition hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900">
-      <div className="mb-6 flex items-start justify-between gap-4">
+    <article className={`${surface} min-w-0 p-4 sm:p-6`}>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <span
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white"
-            style={{ backgroundColor: categoryColor }}
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1.25rem] bg-pink-50 text-pink-700 dark:bg-slate-800 dark:text-pink-400"
+
           >
             <ReceiptText className="h-6 w-6" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <h3 className="truncate text-xl font-black text-gray-900 dark:text-slate-100">
+            <h3 className="min-w-0 max-w-full [overflow-wrap:anywhere] text-xl font-semibold text-slate-950 dark:text-slate-100 tracking-tighter">
               {budget.category?.name ?? 'Uncategorized'}
             </h3>
-            <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500">
+            <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
               {formatPeriod(budget.period)} limit
             </p>
           </div>
@@ -103,33 +103,33 @@ function BudgetCard({
         />
       </div>
 
-      <div className="mb-4 grid grid-cols-2 gap-3">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <MetricBox label="Spent" value={currency.format(budget.spentAmount)} />
         <MetricBox label="Limit" value={currency.format(budget.limitAmount)} />
       </div>
 
-      <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">
           Usage
         </p>
         <p
-          className={`text-sm font-black ${
-            overBudget ? 'text-rose-500' : 'text-pink-600 dark:text-pink-400'
+          className={`text-sm font-semibold ${
+            overBudget ? 'text-rose-700 dark:text-rose-300' : 'text-pink-800 dark:text-pink-400'
           }`}
         >
           {budget.progress}%
         </p>
       </div>
-      <div className="h-3 overflow-hidden rounded-full border border-pink-100 bg-pink-50 dark:border-slate-850 dark:bg-slate-950">
+      <div role="progressbar" aria-label={`${budget.category?.name ?? 'Uncategorized'} budget usage`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={budget.progress} className="h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
         <div
-          className={`h-full rounded-full transition-all duration-500 ${progressColor}`}
+          className={`h-full rounded-full motion-safe:transition-[width] motion-safe:duration-200 ${progressColor}`}
           style={{ width: `${budget.progress}%` }}
         />
       </div>
 
       <p
-        className={`mt-4 text-sm font-bold ${
-          overBudget ? 'text-rose-500' : 'text-gray-500 dark:text-slate-400'
+        className={`mt-4 text-sm font-medium ${
+          overBudget ? 'text-rose-700 dark:text-rose-300' : 'text-slate-600 dark:text-slate-400'
         }`}
       >
         {overBudget

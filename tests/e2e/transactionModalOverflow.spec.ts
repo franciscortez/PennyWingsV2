@@ -339,9 +339,9 @@ test.describe('Transaction Date Field Overflow & Modal Containment', () => {
       await page.goto('/monitoring?tab=goals')
       await page.waitForLoadState('domcontentloaded')
 
-      // Click Create Goal from empty panel
-      await page.getByRole('button', { name: 'Create Goal' }).click()
-      const dialog = page.getByRole('dialog', { name: 'New Goal' })
+      // Open the goal form from the empty panel
+      await page.locator('main header').getByRole('button', { name: 'New goal' }).click()
+      const dialog = page.getByRole('dialog', { name: 'New goal' })
       await expect(dialog).toBeVisible()
 
       const goalDateInput = dialog.locator('#goal-date')

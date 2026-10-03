@@ -179,7 +179,7 @@ export default function Monitoring() {
 
   return (
     <Layout>
-      <div className="space-y-8 pb-20">
+      <div className="app-design min-w-0 space-y-8 pb-20">
         <MonitoringHeader
           activeTab={activeTab}
           onCreateBudget={openCreateBudgetModal}

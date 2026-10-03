@@ -1,183 +1,72 @@
 import { Pencil, Plus, Trash2, type LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
-
-import { ModalFrame } from '@/components/ui/ModalFrame'
+import { AppButton, ModalFrame } from '@/components/ui'
+import { FormattedFigure } from '@/components/ui/FormattedFigure'
+import { surface, surfaceNested, textMuted } from '@/components/ui/surfaces'
+import { appModalPanel } from '@/sections/shared/appDesignStyles'
 
 export type ModalMode = 'create' | 'edit'
 
-export function ActionButtons({
-  deleteLabel,
-  deleting,
-  editLabel,
-  light = false,
-  onDelete,
-  onEdit,
-}: {
+export function ActionButtons({ deleteLabel, deleting, editLabel, onDelete, onEdit }: {
   deleteLabel: string
   deleting: boolean
   editLabel: string
-  light?: boolean
   onDelete: () => void
   onEdit: () => void
 }) {
-  const buttonClass = light
-    ? 'bg-white/15 text-white hover:bg-white/25 disabled:opacity-40'
-    : 'border border-pink-50 bg-white text-gray-300 hover:bg-pink-50 hover:text-pink-600 disabled:opacity-40 dark:border-slate-800 dark:bg-slate-800 dark:text-slate-500 dark:hover:bg-slate-750 dark:hover:text-pink-400'
-
-  return (
-    <div className="flex shrink-0 gap-1">
-      <button
-        type="button"
-        onClick={onEdit}
-        disabled={deleting}
-        className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${buttonClass}`}
-        aria-label={editLabel}
-        title={editLabel}
-      >
-        <Pencil className="h-4 w-4" aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        onClick={onDelete}
-        disabled={deleting}
-        className={`flex h-10 w-10 items-center justify-center rounded-xl transition ${buttonClass}`}
-        aria-label={deleteLabel}
-        title={deleteLabel}
-      >
-        <Trash2 className="h-4 w-4" aria-hidden="true" />
-      </button>
-    </div>
-  )
+  return <div className="flex shrink-0 gap-1">
+    <AppButton type="button" size="icon" variant="ghost" onClick={onEdit} disabled={deleting} className="h-11 w-11 motion-reduce:transform-none motion-reduce:transition-none" aria-label={editLabel} title={editLabel}><Pencil className="h-4 w-4" aria-hidden="true" /></AppButton>
+    <AppButton type="button" size="icon" variant="danger" onClick={onDelete} disabled={deleting} className="h-11 w-11 motion-reduce:transform-none motion-reduce:transition-none" aria-label={deleteLabel} title={deleteLabel}><Trash2 className="h-4 w-4" aria-hidden="true" /></AppButton>
+  </div>
 }
 
 export function MetricBox({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-2xl border border-pink-50 bg-pink-50/50 p-4 dark:border-slate-800 dark:bg-slate-950/45">
-      <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-base font-black text-gray-900 dark:text-slate-200">{value}</p>
-    </div>
-  )
+  return <div className={`${surfaceNested} min-w-0 p-4`}>
+    <p className={`text-sm ${textMuted}`}>{label}</p>
+    <p className="mt-1 text-base font-semibold text-slate-950 dark:text-slate-100"><FormattedFigure value={value} /></p>
+  </div>
 }
 
-export function EmptyPanel({
-  actionLabel,
-  description,
-  icon: Icon,
-  onAction,
-  title,
-}: {
+export function EmptyPanel({ actionLabel, description, icon: Icon, onAction, title }: {
   actionLabel: string
   description: string
   icon: LucideIcon
   onAction: () => void
   title: string
 }) {
-  return (
-    <section className="rounded-[2.5rem] border-2 border-dashed border-pink-200/70 bg-white px-6 py-20 text-center dark:border-slate-800 dark:bg-slate-900">
-      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-pink-50 text-pink-500 dark:bg-slate-850 dark:text-pink-400">
-        <Icon className="h-10 w-10" aria-hidden="true" />
-      </div>
-      <h2 className="text-lg font-black uppercase tracking-widest text-gray-500 dark:text-slate-400">
-        {title}
-      </h2>
-      <p className="mx-auto mt-2 max-w-md text-sm font-medium text-gray-400 dark:text-slate-500">
-        {description}
-      </p>
-      <button
-        type="button"
-        onClick={onAction}
-        className="mt-8 inline-flex items-center justify-center gap-2 rounded-[2rem] bg-pink-500 px-7 py-4 font-black text-white transition hover:bg-pink-600 dark:hover:bg-pink-600"
-      >
-        <Plus className="h-5 w-5" aria-hidden="true" />
-        {actionLabel}
-      </button>
-    </section>
-  )
+  return <section className={`${surface} px-4 py-12 text-center sm:px-6`}>
+    <Icon className="mx-auto mb-5 h-10 w-10 text-pink-700 dark:text-pink-400" aria-hidden="true" />
+    <h2 className="text-xl font-semibold tracking-tighter text-slate-950 dark:text-white">{title}</h2>
+    <p className={`mx-auto mt-2 max-w-md text-base ${textMuted}`}>{description}</p>
+    <AppButton type="button" onClick={onAction} className="mt-6 motion-reduce:transform-none motion-reduce:transition-none"><Plus className="h-5 w-5" aria-hidden="true" />{actionLabel}</AppButton>
+  </section>
 }
 
 export function CardSkeletonGrid() {
-  return (
-    <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">
-      {[1, 2, 3, 4].map((item) => (
-        <div
-          key={item}
-          className="h-72 animate-pulse rounded-[2rem] border border-pink-50 bg-white p-6 dark:border-slate-800 dark:bg-slate-900"
-        >
-          <div className="mb-8 h-12 w-2/3 rounded-2xl bg-pink-50 dark:bg-slate-800" />
-          <div className="mb-4 h-20 rounded-2xl bg-pink-50/70 dark:bg-slate-850/70" />
-          <div className="h-3 rounded-full bg-pink-50 dark:bg-slate-800" />
-        </div>
-      ))}
-    </section>
-  )
+  return <section className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-2" aria-label="Loading monitoring plans" aria-busy="true">
+    {[1, 2, 3, 4].map(item => <div key={item} className={`${surface} h-72 p-6 motion-safe:animate-pulse`} aria-hidden="true"><div className="mb-8 h-12 w-2/3 rounded-full bg-slate-200 dark:bg-slate-700" /><div className="mb-4 h-20 rounded-[1.25rem] bg-slate-100 dark:bg-slate-800" /><div className="h-3 rounded-full bg-slate-200 dark:bg-slate-700" /></div>)}
+  </section>
 }
 
-/**
- * Compatibility wrapper over the shared `ModalFrame` (issue #35), so budget and
- * goal forms inherit the page scroll lock and the bounded scroll region without
- * each one re-implementing the overlay.
- */
-export function ModalShell({
-  actions,
-  children,
-  onClose,
-  saving,
-  title,
-}: {
+export function ModalShell({ actions, children, onClose, saving, title }: {
   actions?: ReactNode
   children: ReactNode
   onClose: () => void
   saving: boolean
   title: string
 }) {
-  return (
-    <ModalFrame
-      actions={actions}
-      closeDisabled={saving}
-      closeLabel="Close monitoring form"
-      onClose={onClose}
-      panelClassName="max-w-lg rounded-[2.5rem]"
-      title={title}
-      titleId="monitoring-modal-title"
-    >
-      {children}
-    </ModalFrame>
-  )
+  return <ModalFrame actions={actions} closeDisabled={saving} closeLabel="Close monitoring form" onClose={onClose} panelClassName={`${appModalPanel} max-w-lg`} title={title} titleId="monitoring-modal-title">{children}</ModalFrame>
 }
 
-export function ModalActions({
-  formId,
-  onClose,
-  saving,
-  submitLabel,
-  waitingLabel,
-}: {
+export function ModalActions({ formId, onClose, saving, submitLabel, waitingLabel }: {
   formId: string
   onClose: () => void
   saving: boolean
   submitLabel: string
   waitingLabel: string
 }) {
-  return (
-    <div className="flex items-center justify-end gap-3">
-      <button
-        type="button"
-        onClick={onClose}
-        disabled={saving}
-        className="rounded-2xl border border-pink-100 px-6 py-3 text-sm font-black text-gray-500 transition hover:bg-pink-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
-      >
-        Cancel
-      </button>
-      <button
-        type="submit"
-        form={formId}
-        disabled={saving}
-        className="rounded-2xl bg-pink-500 px-7 py-3 text-sm font-black text-white transition hover:bg-pink-600 disabled:opacity-50"
-      >
-        {saving ? waitingLabel : submitLabel}
-      </button>
-    </div>
-  )
+  return <div className="flex flex-wrap items-center justify-end gap-3">
+    <AppButton type="button" variant="secondary" onClick={onClose} disabled={saving} className="motion-reduce:transform-none motion-reduce:transition-none">Cancel</AppButton>
+    <AppButton type="submit" form={formId} disabled={saving} className="motion-reduce:transform-none motion-reduce:transition-none">{saving ? waitingLabel : submitLabel}</AppButton>
+  </div>
 }

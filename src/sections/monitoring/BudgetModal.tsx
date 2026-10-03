@@ -1,3 +1,4 @@
+import { fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
 import { useState, type FormEvent } from 'react'
 
 import {
@@ -69,28 +70,30 @@ export function BudgetModal({
         <ModalActions
           formId={formId}
           saving={saving}
-          submitLabel={mode === 'edit' ? 'Save Budget' : 'Create Budget'}
+          submitLabel={mode === 'edit' ? 'Save budget' : 'Create budget'}
           waitingLabel={mode === 'edit' ? 'Saving...' : 'Creating...'}
           onClose={onClose}
         />
       }
       saving={saving}
-      title={mode === 'edit' ? 'Edit Budget' : 'New Budget'}
+      title={mode === 'edit' ? 'Edit budget' : 'New budget'}
       onClose={onClose}
     >
       <form id={formId} onSubmit={handleSubmit} className="space-y-5">
         <div>
           <label
             htmlFor="budget-category"
-            className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+            className={`mb-2 block ${fieldLabel}`}
           >
             Category
           </label>
           <select
             id="budget-category"
+              name="budget-category"
+              autoComplete="off"
             value={categoryId}
             onChange={(event) => setCategoryId(event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(false, "min-w-0")}
           >
             <option value="" className="dark:bg-slate-900">Choose expense category</option>
             {categories.map((category) => (
@@ -104,33 +107,38 @@ export function BudgetModal({
           <div>
             <label
               htmlFor="budget-limit"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+              className={`mb-2 block ${fieldLabel}`}
             >
               Limit
             </label>
             <input
               id="budget-limit"
+              name="budget-limit"
+              autoComplete="off"
               type="number"
+              inputMode="decimal"
               min="0"
               step="0.01"
               value={limitAmount}
               onChange={(event) => setLimitAmount(event.target.value)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+              className={fieldInput(false, "min-w-0")}
               placeholder="0.00"
             />
           </div>
           <div>
             <label
               htmlFor="budget-period"
-              className="mb-2 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+              className={`mb-2 block ${fieldLabel}`}
             >
               Period
             </label>
             <select
               id="budget-period"
+              name="budget-period"
+              autoComplete="off"
               value={period}
               onChange={(event) => setPeriod(event.target.value as BudgetPeriod)}
-              className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 text-sm font-bold text-gray-700 outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+              className={fieldInput(false, "min-w-0")}
             >
               {periodOptions.map((option) => (
                 <option key={option.value} value={option.value} className="dark:bg-slate-900">

@@ -1,3 +1,4 @@
+import { StrictMode } from 'react'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -94,6 +95,15 @@ describe('JoinAccountModal scroll lock and lifecycle', () => {
     await waitFor(() => {
       expect(onJoined).toHaveBeenCalledTimes(1)
     })
+  })
+
+  it('keeps success callbacks active after StrictMode effect replay', async () => {
+    mockJoinAccount.mockResolvedValueOnce({ error: null })
+    const onJoined = vi.fn()
+    render(<StrictMode><JoinAccountModal onClose={vi.fn()} onJoined={onJoined} /></StrictMode>)
+    fireEvent.change(screen.getByLabelText('Invitation Code'), { target: { value: 'WING-123456' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Join Account' }))
+    await waitFor(() => expect(onJoined).toHaveBeenCalledTimes(1))
   })
 
   it('does not re-acquire or call callbacks if unmounted while request is pending', async () => {

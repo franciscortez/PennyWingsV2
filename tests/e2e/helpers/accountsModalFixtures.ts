@@ -225,14 +225,14 @@ export async function captureBackgroundBaseline(page: Page) {
 }
 
 export async function openAddWizard(page: Page) {
-  await page.getByRole('button', { name: 'Add', exact: true }).dispatchEvent('click')
+  await page.getByRole('button', { name: 'Add account', exact: true }).dispatchEvent('click')
   const dialog = page.getByRole('dialog', { name: 'Step 1 of 3' })
   await expect(dialog).toBeVisible()
   return dialog
 }
 
 export async function openJoinModal(page: Page) {
-  await page.getByRole('button', { name: 'Join', exact: true }).dispatchEvent('click')
+  await page.getByRole('button', { name: 'Join account', exact: true }).dispatchEvent('click')
   const dialog = page.getByRole('dialog', { name: 'Join Shared Account' })
   await expect(dialog).toBeVisible()
   return dialog

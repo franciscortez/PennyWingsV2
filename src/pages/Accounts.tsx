@@ -10,6 +10,11 @@ import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import Layout from '@/components/Layout'
+import { AppButton } from '@/components/ui/Button'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { fieldInput } from '@/components/ui/fieldStyles'
+import { surface, textMuted } from '@/components/ui/surfaces'
+import { accountChoice, accountChoiceActive, accountChoiceIdle } from '@/sections/accounts/accountStyles'
 import { useAccountsData } from '@/hooks/useAccountsData'
 import { useArchivedAccountsData } from '@/hooks/useArchivedAccountsData'
 import { useAccountMembership } from '@/hooks/useJointAccountData'
@@ -339,40 +344,24 @@ export default function Accounts() {
 
   return (
     <Layout>
-      <div className="space-y-6 pb-20 sm:space-y-8">
-        <header className="flex flex-col gap-5 rounded-[2rem] border border-pink-100 bg-white p-5 dark:border-slate-800 dark:bg-slate-900 sm:p-6 xl:flex-row xl:items-center xl:justify-between">
-          <div className="min-w-0">
-            <p className="mb-2 text-xs font-black uppercase tracking-[0.24em] text-pink-500 dark:text-pink-400">
-              Accounts
-            </p>
-            <h1 className="text-3xl font-black tracking-tight text-gray-950 dark:text-white sm:text-4xl">
-              My Accounts
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm font-semibold leading-relaxed text-gray-500 dark:text-slate-400">
-              Track cards, wallets, cash, and lent money from one responsive
-              command center.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:w-auto">
-            <button
-              type="button"
-              onClick={openWizard}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-pink-500 px-5 py-3 text-sm font-black text-white transition hover:bg-pink-600 active:scale-95"
-            >
-              <Plus className="h-4 w-4" aria-hidden="true" />
-              Add
-            </button>
-            <button
-              type="button"
-              onClick={() => setJoinModalOpen(true)}
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-pink-100 bg-pink-50 px-5 py-3 text-sm font-black text-pink-600 transition hover:border-pink-200 hover:bg-pink-100 dark:border-slate-800 dark:bg-slate-950 dark:text-pink-400 dark:hover:bg-slate-800"
-            >
-              <UsersRound className="h-4 w-4" aria-hidden="true" />
-              Join
-            </button>
-          </div>
-        </header>
+      <div className="accounts-design space-y-6 font-geist sm:space-y-8 motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none motion-reduce:[&_.animate-fade-in]:animate-none">
+        <PageHeader
+          title="My Accounts"
+          description="Track cards, wallets, cash, and lent money from one responsive command center."
+          actions={
+            <>
+              <AppButton type="button" onClick={openWizard} className="min-w-0 whitespace-normal">
+                <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="min-w-0">Add account</span>
+              </AppButton>
+              <AppButton type="button" variant="secondary" onClick={() => setJoinModalOpen(true)} className="min-w-0 whitespace-normal">
+                <UsersRound className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span className="min-w-0">Join account</span>
+              </AppButton>
+            </>
+          }
+          className="flex-col sm:flex-col sm:items-stretch xl:flex-row xl:items-end [&_h1]:break-words [&_h1]:text-wrap [&>div:last-child]:min-w-0"
+        />
 
         <section className="space-y-4">
           <TotalBalanceSection
@@ -393,9 +382,9 @@ export default function Accounts() {
           />
         </section>
 
-        <section className="rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+        <section className={`${surface} min-w-0 p-4`}>
           <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap xl:w-auto">
+            <div className="flex min-w-0 flex-wrap gap-2">
               {tabs.map((tab) => {
                 const Icon = tab.icon
                 const active = activeTab === tab.id
@@ -405,19 +394,16 @@ export default function Accounts() {
                     key={tab.id}
                     type="button"
                     onClick={() => handleTabChange(tab.id)}
-                    className={`flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-2xl px-3 text-sm font-black transition sm:min-w-fit sm:px-5 ${
-                      active
-                        ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20'
-                        : 'bg-pink-50 text-gray-500 hover:bg-pink-100 hover:text-pink-600 dark:bg-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-pink-400'
-                    }`}
+                    aria-pressed={active}
+                    className={`${accountChoice} flex items-center justify-center gap-2 ${active ? accountChoiceActive : accountChoiceIdle}`}
                   >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    <span>{tab.label}</span>
+                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <span className="min-w-0 break-words">{tab.label}</span>
                     <span
-                      className={`flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-[10px] ${
+                      className={`flex min-h-6 min-w-6 shrink-0 items-center justify-center rounded-full px-2 text-[10px] ${
                         active
-                          ? 'bg-white/20 text-white'
-                          : 'bg-white text-gray-400 dark:bg-slate-900 dark:text-slate-500'
+                          ? 'bg-pink-800 text-white'
+                          : 'bg-white text-slate-600 dark:bg-slate-900 dark:text-slate-300'
                       }`}
                     >
                       {tabCounts[tab.id]}
@@ -429,26 +415,30 @@ export default function Accounts() {
 
             <div className="relative w-full xl:w-80">
               <Search
-                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-pink-300 dark:text-slate-500"
+                className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500 dark:text-slate-400"
                 aria-hidden="true"
               />
+              <label htmlFor="account-search" className="sr-only">Search accounts</label>
               <input
+                id="account-search"
                 type="search"
                 placeholder="Search accounts"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                className="min-h-12 w-full rounded-2xl border border-pink-100 bg-pink-50/60 py-3 pl-11 pr-4 text-sm font-bold text-gray-700 outline-none transition focus:border-pink-500 focus:bg-white focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 dark:focus:border-pink-500 dark:focus:bg-slate-900"
+                className={fieldInput(false, "pl-11")}
               />
             </div>
           </div>
         </section>
 
         {hiddenAccounts.length > 0 ? (
-          <section className="rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+          <section className={`${surface} min-w-0 p-4`}>
             <button
               type="button"
+              aria-expanded={showHidden}
+              aria-controls="hidden-accounts"
               onClick={() => setShowHidden((value) => !value)}
-              className="flex min-h-12 w-full items-center justify-between gap-2 rounded-2xl px-3 text-sm font-black text-gray-500 transition hover:text-pink-600 dark:text-slate-400 dark:hover:text-pink-400"
+              className={`${accountChoice} ${textMuted} flex w-full items-center justify-between gap-3 text-left`}
             >
               <span>Hidden shared accounts ({hiddenAccounts.length})</span>
               <ChevronDown
@@ -458,7 +448,7 @@ export default function Accounts() {
             </button>
 
             {showHidden ? (
-              <div className="px-1 pb-1 pt-3">
+              <div id="hidden-accounts" className="pt-4">
                 <AccountsListSection
                   accounts={hiddenAccounts}
                   currentUserId={user?.id}
@@ -474,11 +464,13 @@ export default function Accounts() {
         ) : null}
 
         {archivedAccounts.length > 0 ? (
-          <section className="rounded-[2rem] border border-pink-100 bg-white/95 p-3 shadow-sm shadow-pink-100/50 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/95 dark:shadow-none">
+          <section className={`${surface} min-w-0 p-4`}>
             <button
               type="button"
+              aria-expanded={showArchived}
+              aria-controls="archived-accounts"
               onClick={() => setShowArchived((value) => !value)}
-              className="flex min-h-12 w-full items-center justify-between gap-2 rounded-2xl px-3 text-sm font-black text-gray-500 transition hover:text-pink-600 dark:text-slate-400 dark:hover:text-pink-400"
+              className={`${accountChoice} ${textMuted} flex w-full items-center justify-between gap-3 text-left`}
             >
               <span>Archived accounts ({archivedAccounts.length})</span>
               <ChevronDown
@@ -488,7 +480,7 @@ export default function Accounts() {
             </button>
 
             {showArchived ? (
-              <div className="px-1 pb-1 pt-3">
+              <div id="archived-accounts" className="pt-4">
                 <AccountsListSection
                   accounts={archivedAccounts}
                   archivedView

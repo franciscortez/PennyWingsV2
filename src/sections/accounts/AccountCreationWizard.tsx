@@ -17,6 +17,11 @@ import {
 } from 'react-hook-form'
 import { z } from 'zod'
 
+import { AccountColorChoices } from '@/sections/accounts/AccountColorChoices'
+import { AppButton } from '@/components/ui/Button'
+import { fieldInput, fieldLabel, fieldError } from '@/components/ui/fieldStyles'
+import { textMuted } from '@/components/ui/surfaces'
+import { accountModalPanel, accountChoice, accountChoiceActive, accountChoiceIdle } from '@/sections/accounts/accountStyles'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 
 import type { AccountColor, AccountCreateValues } from '@/types'
@@ -294,7 +299,7 @@ export function AccountCreationWizard({
       <button
         type="button"
         onClick={handleBack}
-        className="rounded-full p-2 text-gray-400 transition-colors hover:bg-pink-50 active:scale-90 dark:hover:bg-slate-800"
+        className={`${accountChoice} ${textMuted} flex h-11 w-11 shrink-0 items-center justify-center p-0`}
         aria-label="Back"
       >
         <FaArrowLeft className="h-5 w-5" aria-hidden="true" />
@@ -308,7 +313,7 @@ export function AccountCreationWizard({
       closeLabel="Close account setup"
       headerLeading={backButton}
       onClose={onClose}
-      panelClassName="max-w-md rounded-[2.5rem]"
+      panelClassName={`${accountModalPanel} max-w-md`}
       title={title}
       titleId="account-creation-title"
     >
@@ -319,7 +324,7 @@ export function AccountCreationWizard({
             className="relative h-2 flex-1 overflow-hidden rounded-full bg-pink-100 dark:bg-slate-800"
           >
             <div
-              className="absolute inset-0 bg-pink-500 transition-all duration-200 ease-out"
+              className="absolute inset-0 bg-pink-700 transition-all duration-200 ease-out"
               style={{
                 width:
                   item <= step || isDirectSetupType(form.setupType)
@@ -381,10 +386,10 @@ const StepOne = memo(function StepOne({
 }) {
   return (
     <div className="space-y-6">
-      <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+      <label className={`mb-3 block ${fieldLabel}`}>
         What kind of account?
       </label>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-3">
         {accountTypes
           .filter(
             (type) =>
@@ -399,23 +404,16 @@ const StepOne = memo(function StepOne({
                 key={type.id}
                 type="button"
                 onClick={() => onSelectType(type.id)}
-                className={`flex flex-col items-center justify-center gap-2 rounded-4xl border-2 p-4 text-center transition-all duration-200 active:scale-95 sm:gap-3 sm:p-6 ${
-                  active
-                    ? 'scale-[1.02] border-pink-500 bg-pink-50 dark:border-pink-600 dark:bg-pink-950/20'
-                    : 'border-transparent bg-pink-50/50 hover:border-pink-200 hover:bg-white dark:bg-slate-850/50 dark:hover:border-slate-700 dark:hover:bg-slate-800'
-                }`}
+                aria-pressed={active}
+                className={`${accountChoice} flex flex-col items-center justify-center gap-3 ${active ? accountChoiceActive : accountChoiceIdle}`}
               >
                 <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-transform sm:h-14 sm:w-14 ${
-                    active ? 'bg-pink-500 text-white dark:bg-pink-600' : 'bg-white text-pink-500 dark:bg-slate-900 dark:text-pink-400'
-                  }`}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center"
                 >
                   <Icon className="h-6 w-6 sm:h-8 sm:w-8" aria-hidden="true" />
                 </span>
                 <span
-                  className={`text-xs font-bold sm:text-base ${
-                    active ? 'text-pink-700 dark:text-pink-400' : 'text-gray-700 dark:text-slate-300'
-                  }`}
+                  className="break-words text-sm"
                 >
                   {type.label}
                 </span>
@@ -424,15 +422,15 @@ const StepOne = memo(function StepOne({
           })}
       </div>
       {errors.setupType ? (
-        <p className="text-xs font-bold text-red-500">{errors.setupType.message}</p>
+        <p className={`mt-2 ${fieldError}`}>{errors.setupType.message}</p>
       ) : null}
-      <button
+      <AppButton
         type="button"
         onClick={() => void onNext()}
-        className="mt-2 w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5"
+        className="w-full min-w-0 whitespace-normal"
       >
         Continue
-      </button>
+      </AppButton>
     </div>
   )
 })
@@ -456,15 +454,16 @@ const StepTwo = memo(function StepTwo({
   return (
     <div className="space-y-6">
       <div>
-        <label className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+        <label htmlFor="account-provider" className={`mb-3 block ${fieldLabel}`}>
           Select Provider
         </label>
         <select
+          id="account-provider"
           aria-describedby={errors.provider ? 'account-provider-error' : undefined}
           aria-invalid={Boolean(errors.provider)}
           value={form.provider}
           onChange={(event) => onChange('provider', event.target.value)}
-          className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+          className={fieldInput(false, "min-w-0")}
         >
           <option value="" className="dark:bg-slate-900">Choose a bank/wallet...</option>
           {providers.map((provider) => (
@@ -474,32 +473,33 @@ const StepTwo = memo(function StepTwo({
           ))}
         </select>
         {errors.provider ? (
-          <p id="account-provider-error" className="mt-2 text-xs font-bold text-red-500">
+          <p id="account-provider-error" className={`mt-2 ${fieldError}`}>
             {errors.provider.message}
           </p>
         ) : null}
       </div>
 
       <div>
-        <label className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+        <label htmlFor="account-custom-name" className={`mb-3 block ${fieldLabel}`}>
           Custom Name (Optional)
         </label>
         <input
+          id="account-custom-name"
           type="text"
           placeholder="e.g. My Savings"
           value={form.accountName}
           onChange={(event) => onChange('accountName', event.target.value)}
-          className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+          className={fieldInput(false, "min-w-0")}
         />
       </div>
 
-      <button
+      <AppButton
         type="button"
         onClick={() => void onNext()}
-        className="w-full rounded-2xl bg-linear-to-r from-pink-500 to-pink-600 py-4 text-lg font-black text-white transition-all hover:-translate-y-0.5"
+        className="w-full min-w-0 whitespace-normal"
       >
         Continue
-      </button>
+      </AppButton>
     </div>
   )
 })
@@ -541,7 +541,7 @@ const StepThree = memo(function StepThree({
         <div>
           <label
             htmlFor="lent-account-name"
-            className="mb-3 ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500"
+            className={`mb-3 block ${fieldLabel}`}
           >
             Person or Lending Label
           </label>
@@ -553,28 +553,29 @@ const StepThree = memo(function StepThree({
             placeholder="e.g. Juan's utang"
             value={form.accountName}
             onChange={(event) => onChange('accountName', event.target.value)}
-            className="w-full rounded-2xl border border-pink-100 bg-pink-50/50 px-5 py-4 font-bold text-gray-700 outline-none transition-all focus:border-pink-500 focus:ring-4 focus:ring-pink-500/10 dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(false, "min-w-0")}
           />
           {errors.accountName ? (
-            <p id="lent-account-name-error" className="mt-2 text-xs font-bold text-red-500">
+            <p id="lent-account-name-error" className={`mt-2 ${fieldError}`}>
               {errors.accountName.message}
             </p>
           ) : null}
-          <p className="mt-2 text-xs font-medium text-gray-400 dark:text-slate-500">
+          <p className={`mt-2 text-xs ${textMuted}`}>
             Use a name that identifies who owes you this money.
           </p>
         </div>
       ) : null}
 
       <div className="text-center">
-        <label className="mb-4 block text-xs font-black uppercase tracking-[0.2em] text-gray-400 dark:text-slate-500">
+        <label htmlFor="account-initial-balance" className={`mb-3 block ${fieldLabel}`}>
           Initial Balance
         </label>
         <div className="relative inline-block w-full">
-          <span className="absolute left-6 top-1/2 -translate-y-1/2 text-3xl font-black text-pink-300 sm:text-4xl dark:text-slate-650">
+          <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-base text-slate-600 dark:text-slate-400">
             PHP
           </span>
           <input
+            id="account-initial-balance"
             aria-describedby={errors.balance ? 'account-balance-error' : undefined}
             aria-invalid={Boolean(errors.balance)}
             type="number"
@@ -582,11 +583,11 @@ const StepThree = memo(function StepThree({
             placeholder="0.00"
             value={form.balance}
             onChange={(event) => onChange('balance', event.target.value)}
-            className="w-full rounded-[2.5rem] border-2 border-pink-100 bg-pink-50/50 py-6 pl-24 pr-6 text-center text-3xl font-black text-gray-800 outline-none transition-all placeholder:text-pink-300 focus:border-pink-500 sm:py-8 sm:text-4xl dark:border-slate-800 dark:bg-slate-950/40 dark:text-slate-200 dark:focus:border-pink-500"
+            className={fieldInput(Boolean(errors.balance), "pl-16 font-geist-mono")}
           />
         </div>
         {errors.balance ? (
-          <p id="account-balance-error" className="mt-2 text-left text-xs font-bold text-red-500">
+          <p id="account-balance-error" className={`mt-2 ${fieldError}`}>
             {errors.balance.message}
           </p>
         ) : null}
@@ -594,45 +595,29 @@ const StepThree = memo(function StepThree({
 
       {isCardAccount && !design ? (
         <div className="space-y-2">
-          <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
-            Card Color
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {accountColors.map((color) => (
-              <button
-                key={color.value}
-                type="button"
-                onClick={() => handleColorClick(color)}
-                className={`h-8 w-8 rounded-xl transition-transform ${
-                  form.color.value === color.value
-                    ? 'scale-110 ring-2 ring-pink-500 ring-offset-2 dark:ring-offset-slate-900'
-                    : 'border border-gray-200 hover:scale-105 dark:border-slate-700'
-                }`}
-                style={{ backgroundColor: color.value }}
-                aria-label={color.label}
-              />
-            ))}
-          </div>
+          <AccountColorChoices label="Card Color" value={form.color.value} onChange={handleColorClick} />
           {errors.color ? (
-            <p className="text-xs font-bold text-red-500">{errors.color.message}</p>
+            <p className={`mt-2 ${fieldError}`}>{errors.color.message}</p>
           ) : null}
         </div>
       ) : null}
 
       {isCardAccount ? (
         <div className="space-y-3">
-          <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+          <label className={`mb-3 block ${fieldLabel}`}>
             {design ? 'Official Card Design' : 'Card Preview'}
           </label>
-          <BankCardFace
-            className="aspect-[8/5] w-full"
-            design={design ?? buildCustomCardDesign(form.color.value, form.color.text)}
-            holderName={form.accountName.trim() || form.provider}
-            numberLine="••••  ••••  ••••  ••••"
-            typeLabel={previewTypeLabel}
-          />
+          <div data-account-artwork>
+            <BankCardFace
+              className="aspect-[8/5] w-full"
+              design={design ?? buildCustomCardDesign(form.color.value, form.color.text)}
+              holderName={form.accountName.trim() || form.provider}
+              numberLine="••••  ••••  ••••  ••••"
+              typeLabel={previewTypeLabel}
+            />
+          </div>
           {design ? (
-            <p className="ml-1 text-xs font-medium text-gray-400 dark:text-slate-500">
+            <p className={`ml-1 text-xs ${textMuted}`}>
               {design.wordmark}&rsquo;s official card design is applied
               automatically.
             </p>
@@ -640,37 +625,39 @@ const StepThree = memo(function StepThree({
         </div>
       ) : (
         <div className="space-y-3">
-          <label className="ml-1 block text-xs font-black uppercase tracking-widest text-gray-400 dark:text-slate-500">
+          <label className={`mb-3 block ${fieldLabel}`}>
             Note Preview
           </label>
-          <MoneyNoteFace
-            className="aspect-[8/5] w-full"
-            serial={form.setupType === 'lent' ? 'IOU 00000000' : 'PW 00000000'}
-            subtitle={
-              form.setupType === 'lent' ? 'Money lent out' : 'Cash on hand'
-            }
-            title={
-              form.setupType === 'lent'
-                ? form.accountName.trim() || 'Lent Money'
-                : 'Cash on Hand'
-            }
-            variant={form.setupType === 'lent' ? 'lent' : 'cash'}
-          />
-          <p className="ml-1 text-xs font-medium text-gray-400 dark:text-slate-500">
+          <div data-account-artwork>
+            <MoneyNoteFace
+              className="aspect-[8/5] w-full"
+              serial={form.setupType === 'lent' ? 'IOU 00000000' : 'PW 00000000'}
+              subtitle={
+                form.setupType === 'lent' ? 'Money lent out' : 'Cash on hand'
+              }
+              title={
+                form.setupType === 'lent'
+                  ? form.accountName.trim() || 'Lent Money'
+                  : 'Cash on Hand'
+              }
+              variant={form.setupType === 'lent' ? 'lent' : 'cash'}
+            />
+          </div>
+          <p className={`ml-1 text-xs ${textMuted}`}>
             {form.setupType === 'lent' ? 'Lent money' : 'Cash'} accounts use
             this fixed banknote design.
           </p>
         </div>
       )}
 
-      <button
+      <AppButton
         type="button"
         onClick={onSubmit}
         disabled={saving}
-        className="w-full rounded-3xl bg-linear-to-r from-pink-500 to-pink-600 py-5 text-xl font-black text-white transition-all hover:-translate-y-1 disabled:opacity-50"
+        className="w-full min-w-0 whitespace-normal"
       >
         {saving ? 'Creating...' : 'Finalize Account'}
-      </button>
+      </AppButton>
     </div>
   )
 })

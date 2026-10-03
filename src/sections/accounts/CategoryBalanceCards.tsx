@@ -1,11 +1,6 @@
-import {
-  FaBuildingColumns,
-  FaHandHoldingDollar,
-  FaMoneyBillWave,
-  FaWallet,
-} from 'react-icons/fa6'
-import type { IconType } from 'react-icons'
-
+import { Building2, HandCoins, Banknote, Wallet } from 'lucide-react'
+import { FormattedFigure } from '@/components/ui/FormattedFigure'
+import { surface, textMuted } from '@/components/ui/surfaces'
 import type { AccountKind } from '@/types'
 
 type CategoryBalanceCardsProps = {
@@ -22,55 +17,14 @@ const currency = new Intl.NumberFormat('en-PH', {
   style: 'currency',
 })
 
-const categories: Array<{
-  color: string
-  gradient: string
-  icon: IconType
-  id: AccountKind
-  label: string
-  shadowColor: string
-}> = [
-  {
-    color: '#3b82f6',
-    gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-    icon: FaBuildingColumns,
-    id: 'card',
-    label: 'Banks',
-    shadowColor: '#3b82f620',
-  },
-  {
-    color: '#8b5cf6',
-    gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-    icon: FaWallet,
-    id: 'wallet',
-    label: 'E-Wallets',
-    shadowColor: '#8b5cf620',
-  },
-  {
-    color: '#10b981',
-    gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    icon: FaMoneyBillWave,
-    id: 'cash',
-    label: 'Cash',
-    shadowColor: '#10b98120',
-  },
-  {
-    color: '#f59e0b',
-    gradient: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-    icon: FaHandHoldingDollar,
-    id: 'lent',
-    label: 'Lent',
-    shadowColor: '#f59e0b20',
-  },
-]
+const categories = [
+  { icon: Building2, id: 'card', label: 'Banks' },
+  { icon: Wallet, id: 'wallet', label: 'E-Wallets' },
+  { icon: Banknote, id: 'cash', label: 'Cash' },
+  { icon: HandCoins, id: 'lent', label: 'Lent' },
+] as const
 
-export function CategoryBalanceCards({
-  bankBalance,
-  cashBalance,
-  lentBalance,
-  loading,
-  walletBalance,
-}: CategoryBalanceCardsProps) {
+export function CategoryBalanceCards({ bankBalance, cashBalance, lentBalance, loading, walletBalance }: CategoryBalanceCardsProps) {
   const balanceMap: Record<AccountKind, number> = {
     card: bankBalance,
     cash: cashBalance,
@@ -79,36 +33,18 @@ export function CategoryBalanceCards({
   }
 
   return (
-    <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {categories.map((cat) => {
-        const Icon = cat.icon
-        const balance = balanceMap[cat.id]
-
-        return (
-          <article
-            key={cat.id}
-            className="group min-h-28 rounded-[2rem] border border-pink-100 bg-white p-5 transition hover:border-pink-200 hover:shadow-sm hover:shadow-pink-100/70 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:shadow-none lg:min-h-32"
-          >
-            <div className="grid h-full min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-4">
-              <div
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white transition-transform duration-300 group-hover:scale-105"
-                style={{ background: cat.gradient }}
-              >
-                <Icon className="h-6 w-6" aria-hidden="true" />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-slate-500">
-                  {cat.label}
-                </p>
-                <p className="break-words text-lg font-black tracking-tight text-gray-900 dark:text-slate-100 sm:text-xl">
-                  {loading ? '...' : currency.format(balance)}
-                </p>
-              </div>
-            </div>
-          </article>
-        )
-      })}
+    <section aria-label="Balances by account category" className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {categories.map(({ icon: Icon, id, label }) => (
+        <article key={id} className={`${surface} min-w-0 p-5`}>
+          <div className="flex items-center gap-3">
+            <Icon className="h-5 w-5 shrink-0 text-pink-700 dark:text-pink-400" aria-hidden="true" />
+            <h3 className={`min-w-0 break-words text-sm font-medium ${textMuted}`}>{label}</h3>
+          </div>
+          <p className="mt-3 text-xl font-semibold leading-snug text-slate-950 dark:text-white" data-account-category={id}>
+            {loading ? '...' : <FormattedFigure value={currency.format(balanceMap[id])} />}
+          </p>
+        </article>
+      ))}
     </section>
   )
 }

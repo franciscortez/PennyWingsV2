@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  addDebtCharge,
   archiveDebt,
   createDebt,
   fetchDebtById,
+  fetchDebtCharges,
+  voidDebtCharge,
   fetchDebtPayments,
   fetchDebts,
   payDebt,
@@ -32,6 +35,33 @@ describe('debtsService', () => {
     expect(payments[0].amount).toBe(1500)
     expect(payments[0].accountName).toBe('Main Debit')
     expect(payments[0].status).toBe('completed')
+  })
+
+  it('fetches debt charges and maps fields correctly', async () => {
+    const charges = await fetchDebtCharges('debt-1')
+    expect(charges).toHaveLength(2)
+    expect(charges[0]).toMatchObject({
+      amount: 50,
+      chargeDate: '2026-10-05',
+      debtId: 'debt-1',
+      status: 'active',
+    })
+    expect(charges.reduce((sum, c) => sum + c.amount, 0)).toBe(70)
+  })
+
+  it('adds a purchase via checked RPC and returns the new balance', async () => {
+    const result = await addDebtCharge({
+      amount: 50,
+      charge_date: '2026-10-05',
+      debt_id: 'debt-1',
+      note: 'Second purchase',
+    })
+    expect(result.id).toBe('charge-new-1')
+    expect(result.outstanding_amount).toBe(70)
+  })
+
+  it('voids a purchase via checked RPC', async () => {
+    await expect(voidDebtCharge('charge-2', 'Cancelled order')).resolves.toBeUndefined()
   })
 
   it('creates debt via checked RPC', async () => {

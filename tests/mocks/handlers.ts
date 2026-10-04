@@ -240,6 +240,48 @@ export const handlers = [
       },
     ])
   }),
+  http.get('*/rest/v1/debt_charges*', () => {
+    return HttpResponse.json([
+      {
+        id: 'charge-2',
+        debt_id: 'debt-1',
+        user_id: 'test-user-id',
+        amount: 50,
+        charge_date: '2026-10-05',
+        note: 'Second purchase',
+        status: 'active',
+        voided_at: null,
+        void_reason: null,
+        created_at: '2026-10-05T09:00:00Z',
+      },
+      {
+        id: 'charge-1',
+        debt_id: 'debt-1',
+        user_id: 'test-user-id',
+        amount: 20,
+        charge_date: '2026-10-04',
+        note: null,
+        status: 'active',
+        voided_at: null,
+        void_reason: null,
+        created_at: '2026-10-04T09:00:00Z',
+      },
+    ])
+  }),
+  http.post('*/rest/v1/rpc/add_debt_charge_checked', () => {
+    return HttpResponse.json(
+      {
+        id: 'charge-new-1',
+        debt_id: 'debt-1',
+        amount: 50,
+        outstanding_amount: 70,
+      },
+      { status: 200 },
+    )
+  }),
+  http.post('*/rest/v1/rpc/void_debt_charge_checked', () => {
+    return HttpResponse.json(null, { status: 200 })
+  }),
   http.post('*/rest/v1/rpc/create_debt_checked', () => {
     return HttpResponse.json({ id: 'debt-new-1' }, { status: 200 })
   }),

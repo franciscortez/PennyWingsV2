@@ -54,6 +54,20 @@ export const debtUpdateSchema = z.object({
     .transform((val) => (val ? val : null)),
 })
 
+export const debtChargeSchema = z.object({
+  amount: z
+    .number({ message: 'Enter a valid purchase amount.' })
+    .positive('Purchase amount must be greater than zero.'),
+  charge_date: z.string().trim().min(1, 'Purchase date is required.'),
+  note: z
+    .string()
+    .trim()
+    .max(500, 'Note is too long.')
+    .optional()
+    .nullable()
+    .transform((val) => (val ? val : null)),
+})
+
 export const debtPaySchema = z
   .object({
     amount: z

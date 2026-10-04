@@ -294,6 +294,52 @@ export async function setupAuthenticatedMocks(page: Page) {
     })
   })
 
+  await page.route('**/rest/v1/debt_charges*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 'charge-2',
+          debt_id: 'debt-1',
+          user_id: 'test-user-id',
+          amount: 2000,
+          charge_date: '2026-10-05',
+          note: 'Second purchase',
+          status: 'active',
+          voided_at: null,
+          void_reason: null,
+          created_at: '2026-10-05T09:00:00Z',
+        },
+        {
+          id: 'charge-1',
+          debt_id: 'debt-1',
+          user_id: 'test-user-id',
+          amount: 3000,
+          charge_date: '2026-10-01',
+          note: null,
+          status: 'active',
+          voided_at: null,
+          void_reason: null,
+          created_at: '2026-10-01T09:00:00Z',
+        },
+      ]),
+    })
+  })
+
+  await page.route('**/rest/v1/rpc/add_debt_charge_checked*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'charge-new-1',
+        debt_id: 'debt-1',
+        amount: 50,
+        outstanding_amount: 2550,
+      }),
+    })
+  })
+
   await page.route('**/rest/v1/rpc/create_debt_checked*', async (route) => {
     await route.fulfill({
       status: 200,

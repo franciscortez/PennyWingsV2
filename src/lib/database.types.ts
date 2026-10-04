@@ -166,6 +166,53 @@ export type Database = {
         }
         Relationships: []
       }
+      debt_charges: {
+        Row: {
+          amount: number
+          charge_date: string
+          created_at: string
+          debt_id: string
+          id: string
+          note: string | null
+          status: string
+          user_id: string
+          void_reason: string | null
+          voided_at: string | null
+        }
+        Insert: {
+          amount: number
+          charge_date?: string
+          created_at?: string
+          debt_id: string
+          id?: string
+          note?: string | null
+          status?: string
+          user_id: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Update: {
+          amount?: number
+          charge_date?: string
+          created_at?: string
+          debt_id?: string
+          id?: string
+          note?: string | null
+          status?: string
+          user_id?: string
+          void_reason?: string | null
+          voided_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_charges_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       debt_payments: {
         Row: {
           amount: number
@@ -605,6 +652,15 @@ export type Database = {
         Args: { p_code: string }
         Returns: undefined
       }
+      add_debt_charge_checked: {
+        Args: {
+          p_amount: number
+          p_charge_date?: string
+          p_debt_id: string
+          p_note?: string
+        }
+        Returns: Json
+      }
       archive_debt_checked: { Args: { p_id: string }; Returns: undefined }
       can_transact_account: {
         Args: { p_resource_id: string; p_resource_type: string }
@@ -833,6 +889,10 @@ export type Database = {
       }
       update_wallet_balance: {
         Args: { p_delta: number; p_id: string }
+        Returns: undefined
+      }
+      void_debt_charge_checked: {
+        Args: { p_charge_id: string; p_reason?: string }
         Returns: undefined
       }
     }

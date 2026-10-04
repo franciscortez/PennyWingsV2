@@ -1,3 +1,4 @@
+export * from '@/sections/debts/AddChargeModal'
 export * from '@/sections/debts/AddDebtModal'
 export * from '@/sections/debts/DebtCard'
 export * from '@/sections/debts/DebtPaymentHistoryModal'

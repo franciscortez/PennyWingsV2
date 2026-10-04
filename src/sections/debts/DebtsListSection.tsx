@@ -5,11 +5,13 @@ import { AppButton } from '@/components/ui/Button'
 import { fieldInput } from '@/components/ui/fieldStyles'
 import { textMuted } from '@/components/ui/surfaces'
 import { DebtCard } from '@/sections/debts/DebtCard'
-import type { Debt, DebtStatus, DebtType } from '@/types'
+import type { Debt, DebtCharge, DebtStatus, DebtType } from '@/types'
 
 type DebtsListSectionProps = {
+  charges?: DebtCharge[]
   debts: Debt[]
   onAddDebt: () => void
+  onAddPurchase?: (debt: Debt) => void
   onArchive: (debt: Debt) => void
   onEdit: (debt: Debt) => void
   onHistory: (debt: Debt) => void
@@ -18,8 +20,10 @@ type DebtsListSectionProps = {
 }
 
 export function DebtsListSection({
+  charges = [],
   debts,
   onAddDebt,
+  onAddPurchase,
   onArchive,
   onEdit,
   onHistory,
@@ -29,6 +33,16 @@ export function DebtsListSection({
   const [activeTab, setActiveTab] = useState<DebtStatus>('outstanding')
   const [searchQuery, setSearchQuery] = useState('')
   const [typeFilter, setTypeFilter] = useState<DebtType | 'all'>('all')
+
+  const purchaseCounts = useMemo(() => {
+    const byDebt: Record<string, number> = {}
+    for (const charge of charges) {
+      if (charge.status === 'active') {
+        byDebt[charge.debtId] = (byDebt[charge.debtId] ?? 0) + 1
+      }
+    }
+    return byDebt
+  }, [charges])
 
   const counts = useMemo(() => {
     return {
@@ -213,6 +227,8 @@ export function DebtsListSection({
             <DebtCard
               key={debt.id}
               debt={debt}
+              onAddPurchase={onAddPurchase}
+              purchaseCount={purchaseCounts[debt.id]}
               onPay={onPay}
               onHistory={onHistory}
               onEdit={onEdit}

@@ -7,6 +7,7 @@ import {
   Edit2,
   History,
   MoreVertical,
+  Plus,
 } from 'lucide-react'
 
 import { AppButton } from '@/components/ui/Button'
@@ -15,11 +16,13 @@ import type { Debt, DebtType } from '@/types'
 
 type DebtCardProps = {
   debt: Debt
+  onAddPurchase?: (debt: Debt) => void
   onArchive?: (debt: Debt) => void
   onEdit?: (debt: Debt) => void
   onHistory: (debt: Debt) => void
   onPay?: (debt: Debt) => void
   onUnarchive?: (debt: Debt) => void
+  purchaseCount?: number
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-PH', {
@@ -44,11 +47,13 @@ const debtTypeStyles: Record<DebtType, string> = {
 
 export function DebtCard({
   debt,
+  onAddPurchase,
   onArchive,
   onEdit,
   onHistory,
   onPay,
   onUnarchive,
+  purchaseCount,
 }: DebtCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -222,8 +227,13 @@ export function DebtCard({
 
           <div className="mt-2 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
             <span>Paid: {currencyFormatter.format(paidAmount)}</span>
-            <span>Total: {currencyFormatter.format(debt.originalAmount)}</span>
+            <span>Total charged: {currencyFormatter.format(debt.originalAmount)}</span>
           </div>
+          {purchaseCount !== undefined && purchaseCount > 1 && (
+            <p className={`mt-1 text-xs ${textMuted}`}>
+              {purchaseCount} purchases
+            </p>
+          )}
         </div>
 
         {/* Note */}
@@ -236,6 +246,18 @@ export function DebtCard({
 
       {/* Action CTA buttons */}
       <div className="mt-6 flex items-center gap-2 border-t border-slate-100 pt-4 dark:border-slate-800">
+        {debt.status !== 'archived' && onAddPurchase ? (
+          <AppButton
+            variant="secondary"
+            onClick={() => onAddPurchase(debt)}
+            className="px-3"
+            title="Add purchase"
+          >
+            <Plus size={16} aria-hidden="true" />
+            <span className="sr-only">Add purchase</span>
+          </AppButton>
+        ) : null}
+
         {debt.status === 'outstanding' && onPay ? (
           <AppButton
             variant="primary"
@@ -250,7 +272,7 @@ export function DebtCard({
           variant="secondary"
           onClick={() => onHistory(debt)}
           className={debt.status === 'outstanding' ? 'px-3' : 'flex-1'}
-          title="Payment history"
+          title="Activity history"
         >
           <History size={16} aria-hidden="true" />
           <span className={debt.status === 'outstanding' ? 'sr-only' : 'ml-1.5'}>History</span>

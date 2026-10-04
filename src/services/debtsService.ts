@@ -3,6 +3,9 @@ import type { Tables } from '@/lib/database.types'
 import { AppError } from '@/lib/errors'
 import type {
   Debt,
+  DebtCharge,
+  DebtChargeStatus,
+  DebtChargeValues,
   DebtCreateValues,
   DebtPayment,
   DebtPaymentStatus,
@@ -14,6 +17,8 @@ import type {
 } from '@/types'
 
 type RawDebtRow = Tables<'debts'>
+
+type RawDebtChargeRow = Tables<'debt_charges'>
 
 type AccountRelation = { card_name?: string | null; wallet_name?: string | null }
 
@@ -38,6 +43,19 @@ const mapDebt = (row: RawDebtRow): Debt => ({
   paidAt: row.paid_at,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
+})
+
+const mapDebtCharge = (row: RawDebtChargeRow): DebtCharge => ({
+  id: row.id,
+  debtId: row.debt_id,
+  userId: row.user_id,
+  amount: Number(row.amount),
+  chargeDate: row.charge_date,
+  note: row.note,
+  status: row.status as DebtChargeStatus,
+  voidedAt: row.voided_at,
+  voidReason: row.void_reason,
+  createdAt: row.created_at,
 })
 
 const mapDebtPayment = (row: RawDebtPaymentRow): DebtPayment => {
@@ -78,6 +96,12 @@ const checkedDebtError = (error: { code?: string; message?: string }) => {
       cause: error,
       code: error.code,
     })
+  }
+  if (
+    error.code === '22023' &&
+    error.message === 'Purchase has already been repaid. Reverse a payment first.'
+  ) {
+    return new AppError(error.message, { cause: error, code: error.code })
   }
   return AppError.from(error)
 }
@@ -132,6 +156,56 @@ export const fetchDebtPayments = async (debtId?: string): Promise<DebtPayment[]>
   if (error) throw AppError.from(error)
 
   return (data ?? []).map(mapDebtPayment)
+}
+
+export const fetchDebtCharges = async (debtId?: string): Promise<DebtCharge[]> => {
+  let query = supabase
+    .from('debt_charges')
+    .select('*')
+    .order('charge_date', { ascending: false })
+    .order('created_at', { ascending: false })
+
+  if (debtId) {
+    query = query.eq('debt_id', debtId)
+  }
+
+  const { data, error } = await query
+
+  if (error) throw AppError.from(error)
+
+  return (data ?? []).map(mapDebtCharge)
+}
+
+export const addDebtCharge = async (
+  values: DebtChargeValues,
+): Promise<{ id: string; outstanding_amount: number }> => {
+  const { data, error } = await supabase.rpc('add_debt_charge_checked', {
+    p_debt_id: values.debt_id,
+    p_amount: values.amount,
+    p_charge_date: values.charge_date ?? new Date().toISOString().slice(0, 10),
+    p_note: values.note ?? undefined,
+  })
+
+  if (error) throw checkedDebtError(error)
+
+  const parsed = data as { id?: string; outstanding_amount?: number } | null
+
+  return {
+    id: parsed?.id ?? '',
+    outstanding_amount: Number(parsed?.outstanding_amount ?? 0),
+  }
+}
+
+export const voidDebtCharge = async (
+  chargeId: string,
+  reason?: string,
+): Promise<void> => {
+  const { error } = await supabase.rpc('void_debt_charge_checked', {
+    p_charge_id: chargeId,
+    p_reason: reason ?? undefined,
+  })
+
+  if (error) throw checkedDebtError(error)
 }
 
 export const createDebt = async (values: DebtCreateValues): Promise<{ id: string }> => {

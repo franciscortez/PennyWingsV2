@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(19);
 
 -- Fixture users
 insert into auth.users (
@@ -117,7 +117,7 @@ select public.pay_debt_checked(
 );
 
 reset role;
-select is((select balance from public.bank_cards where id = '00000000-0000-0000-0000-0000000000911'), 2000::numeric, 'source card balance deducted 2000');
+select is((select balance from public.bank_cards where id = '00000000-0000-0000-0000-000000000911'), 2000::numeric, 'source card balance deducted 2000');
 select is((select outstanding_amount from public.debts where user_id = '00000000-0000-0000-0000-000000000091'), 0::numeric, 'debt outstanding is zero');
 select is((select status from public.debts where user_id = '00000000-0000-0000-0000-000000000091'), 'paid', 'debt status marked paid');
 select is((select paid_at is not null from public.debts where user_id = '00000000-0000-0000-0000-000000000091'), true, 'paid_at timestamp populated');
@@ -132,7 +132,7 @@ select public.reverse_debt_payment_checked(
 );
 
 reset role;
-select is((select balance from public.bank_cards where id = '00000000-0000-0000-0000-0000000000911'), 4000::numeric, 'source card refunded 2000');
+select is((select balance from public.bank_cards where id = '00000000-0000-0000-0000-000000000911'), 4000::numeric, 'source card refunded 2000');
 select is((select outstanding_amount from public.debts where user_id = '00000000-0000-0000-0000-000000000091'), 2000::numeric, 'debt outstanding re-incremented to 2000');
 select is((select status from public.debts where user_id = '00000000-0000-0000-0000-000000000091'), 'outstanding', 'debt reopened to outstanding status');
 select is((select status from public.debt_payments where amount = 2000 limit 1), 'reversed', 'payment marked reversed');

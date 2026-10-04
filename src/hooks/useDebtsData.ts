@@ -4,16 +4,20 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateDebtCaches } from '@/lib/queryInvalidation'
 import {
+  addDebtCharge as addDebtChargeService,
   archiveDebt as archiveDebtService,
   createDebt,
+  fetchDebtCharges,
   fetchDebtPayments,
   fetchDebts,
   payDebt as payDebtService,
   reverseDebtPayment as reverseDebtPaymentService,
   unarchiveDebt as unarchiveDebtService,
   updateDebt as updateDebtService,
+  voidDebtCharge as voidDebtChargeService,
 } from '@/services/debtsService'
 import type {
+  DebtChargeValues,
   DebtCreateValues,
   DebtPayMutationValues,
   DebtStatus,
@@ -37,6 +41,12 @@ export function useDebtsData(
     enabled: Boolean(userId),
     queryFn: () => fetchDebtPayments(),
     queryKey: queryKeys.debtPayments(userId ?? 'anonymous'),
+  })
+
+  const chargesQuery = useQuery({
+    enabled: Boolean(userId),
+    queryFn: () => fetchDebtCharges(),
+    queryKey: queryKeys.debtCharges(userId ?? 'anonymous'),
   })
 
   const refreshDebtCaches = useCallback(async () => {
@@ -81,7 +91,19 @@ export function useDebtsData(
     onSuccess: refreshDebtCaches,
   })
 
+  const addChargeMutation = useMutation({
+    mutationFn: (values: DebtChargeValues) => addDebtChargeService(values),
+    onSuccess: refreshDebtCaches,
+  })
+
+  const voidChargeMutation = useMutation({
+    mutationFn: ({ chargeId, reason }: { chargeId: string; reason?: string }) =>
+      voidDebtChargeService(chargeId, reason),
+    onSuccess: refreshDebtCaches,
+  })
+
   const debts = useMemo(() => debtsQuery.data ?? [], [debtsQuery.data])
+  const charges = useMemo(() => chargesQuery.data ?? [], [chargesQuery.data])
   const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data])
 
   const stats = useMemo<DebtSummaryStats>(() => {
@@ -193,7 +215,31 @@ export function useDebtsData(
     [reverseMutation],
   )
 
-  const queryError = debtsQuery.error ?? paymentsQuery.error
+  const addCharge = useCallback(
+    async (values: DebtChargeValues): Promise<boolean> => {
+      try {
+        await addChargeMutation.mutateAsync(values)
+        return true
+      } catch {
+        return false
+      }
+    },
+    [addChargeMutation],
+  )
+
+  const voidCharge = useCallback(
+    async (chargeId: string, reason?: string): Promise<boolean> => {
+      try {
+        await voidChargeMutation.mutateAsync({ chargeId, reason })
+        return true
+      } catch {
+        return false
+      }
+    },
+    [voidChargeMutation],
+  )
+
+  const queryError = debtsQuery.error ?? paymentsQuery.error ?? chargesQuery.error
   const error =
     queryError instanceof Error
       ? queryError.message
@@ -202,13 +248,16 @@ export function useDebtsData(
         : null
 
   return {
+    addCharge,
     addDebt,
     archiveDebt,
+    charges,
     debts,
     dueSoonCount: stats.dueSoonCount,
     editDebt,
     error: userId ? error : null,
-    loading: debtsQuery.isLoading || paymentsQuery.isLoading,
+    loading:
+      debtsQuery.isLoading || paymentsQuery.isLoading || chargesQuery.isLoading,
     overdueCount: stats.overdueCount,
     payDebt,
     payments,
@@ -220,9 +269,12 @@ export function useDebtsData(
       archiveMutation.isPending ||
       unarchiveMutation.isPending ||
       payMutation.isPending ||
-      reverseMutation.isPending,
+      reverseMutation.isPending ||
+      addChargeMutation.isPending ||
+      voidChargeMutation.isPending,
     totalOutstanding: stats.totalOutstanding,
     totalSettled: stats.totalSettled,
     unarchiveDebt,
+    voidCharge,
   }
 }

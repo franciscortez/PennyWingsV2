@@ -79,6 +79,43 @@ test.describe('Debts Page & Workflows', () => {
     await expect(dialog).not.toBeVisible()
   })
 
+  test('adds a purchase to an existing provider and shows the new balance preview', async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name.startsWith('Mobile'),
+      'Desktop interactions use desktop browser projects.',
+    )
+
+    await page.goto('/debts')
+    await page.getByRole('button', { name: 'Add purchase' }).first().click()
+
+    const dialog = page.getByRole('dialog', { name: /Add Purchase: Atome/i })
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toContainText('₱2,500.00')
+
+    await dialog.getByLabel('Purchase Amount (PHP)').fill('50')
+    await expect(dialog).toContainText('₱2,550.00')
+
+    await dialog.getByRole('button', { name: 'Add Purchase', exact: true }).click()
+    await expect(dialog).not.toBeVisible()
+  })
+
+  test('shows purchases in the activity history', async ({ page }, testInfo) => {
+    test.skip(
+      testInfo.project.name.startsWith('Mobile'),
+      'Desktop interactions use desktop browser projects.',
+    )
+
+    await page.goto('/debts')
+    await page.getByRole('button', { name: 'History', exact: true }).first().click()
+
+    const dialog = page.getByRole('dialog', { name: /Activity: Atome/i })
+    await expect(dialog).toBeVisible()
+    await expect(dialog).toContainText('+₱2,000.00')
+    await expect(dialog).toContainText('+₱3,000.00')
+  })
+
   test('navigates to /debts via mobile More sheet', async ({ page }, testInfo) => {
     test.skip(
       !testInfo.project.name.startsWith('Mobile'),

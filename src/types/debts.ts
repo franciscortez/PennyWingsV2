@@ -38,6 +38,38 @@ export type DebtPayment = {
   accountName?: string | null
 }
 
+export type DebtChargeStatus = 'active' | 'voided'
+
+export type DebtCharge = {
+  id: string
+  debtId: string
+  userId: string
+  amount: number
+  chargeDate: string
+  note: string | null
+  status: DebtChargeStatus
+  voidedAt: string | null
+  voidReason: string | null
+  createdAt: string
+}
+
+export type DebtChargeValues = {
+  debt_id: string
+  amount: number
+  charge_date?: string
+  note?: string | null
+}
+
+export type DebtChargeFormValues = {
+  amount: number
+  charge_date: string
+  note?: string | null
+}
+
+export type DebtActivityItem =
+  | { kind: 'charge'; date: string; createdAt: string; charge: DebtCharge }
+  | { kind: 'payment'; date: string; createdAt: string; payment: DebtPayment }
+
 export type DebtCreateValues = {
   provider_name: string
   debt_type: DebtType

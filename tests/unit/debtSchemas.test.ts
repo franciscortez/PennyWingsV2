@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  debtChargeSchema,
   debtCreateSchema,
   debtPaySchema,
   debtUpdateSchema,
@@ -53,6 +54,42 @@ describe('debtSchemas', () => {
       })
 
       expect(result.success).toBe(false)
+    })
+  })
+
+  describe('debtChargeSchema', () => {
+    it('accepts a valid purchase and normalizes a blank note', () => {
+      const result = debtChargeSchema.safeParse({
+        amount: 50,
+        charge_date: '2026-10-05',
+        note: '',
+      })
+
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.amount).toBe(50)
+        expect(result.data.note).toBeNull()
+      }
+    })
+
+    it('rejects zero or negative amounts', () => {
+      expect(
+        debtChargeSchema.safeParse({ amount: 0, charge_date: '2026-10-05' }).success,
+      ).toBe(false)
+      expect(
+        debtChargeSchema.safeParse({ amount: -5, charge_date: '2026-10-05' }).success,
+      ).toBe(false)
+    })
+
+    it('rejects a missing date and an overly long note', () => {
+      expect(debtChargeSchema.safeParse({ amount: 20, charge_date: '  ' }).success).toBe(false)
+      expect(
+        debtChargeSchema.safeParse({
+          amount: 20,
+          charge_date: '2026-10-05',
+          note: 'x'.repeat(501),
+        }).success,
+      ).toBe(false)
     })
   })
 

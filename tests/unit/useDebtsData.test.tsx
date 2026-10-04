@@ -4,7 +4,8 @@ import type { PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useDebtsData } from '@/hooks/useDebtsData'
-import type { Debt, DebtPayment } from '@/types'
+import { addDebtCharge, voidDebtCharge } from '@/services/debtsService'
+import type { Debt, DebtCharge, DebtPayment } from '@/types'
 
 const mockDebts: Debt[] = [
   {
@@ -69,9 +70,29 @@ const mockPayments: DebtPayment[] = [
   },
 ]
 
+const mockCharges: DebtCharge[] = [
+  {
+    id: 'charge-1',
+    debtId: 'debt-1',
+    userId: 'user-1',
+    amount: 10000,
+    chargeDate: '2026-09-01',
+    note: null,
+    status: 'active',
+    voidedAt: null,
+    voidReason: null,
+    createdAt: '2026-09-01T00:00:00Z',
+  },
+]
+
 vi.mock('@/services/debtsService', () => ({
+  addDebtCharge: vi
+    .fn()
+    .mockResolvedValue({ id: 'charge-new', outstanding_amount: 4050 }),
   archiveDebt: vi.fn().mockResolvedValue(undefined),
   createDebt: vi.fn().mockResolvedValue({ id: 'debt-new' }),
+  fetchDebtCharges: vi.fn().mockImplementation(() => Promise.resolve(mockCharges)),
+  voidDebtCharge: vi.fn().mockResolvedValue(undefined),
   fetchDebtPayments: vi.fn().mockImplementation(() => Promise.resolve(mockPayments)),
   fetchDebts: vi.fn().mockImplementation(() => Promise.resolve(mockDebts)),
   payDebt: vi.fn().mockResolvedValue({ id: 'payment-new', is_paid: false, remaining_balance: 2000 }),
@@ -138,6 +159,51 @@ describe('useDebtsData', () => {
     })
 
     expect(success).toBe(true)
+  })
+
+  it('exposes charges and sends add and void charge mutations', async () => {
+    const { result } = renderHook(() => useDebtsData('user-1'), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.charges).toHaveLength(1)
+
+    let added = false
+    let voided = false
+    await act(async () => {
+      added = await result.current.addCharge({
+        amount: 50,
+        charge_date: '2026-10-05',
+        debt_id: 'debt-1',
+      })
+      voided = await result.current.voidCharge('charge-1', 'Cancelled order')
+    })
+
+    expect(added).toBe(true)
+    expect(voided).toBe(true)
+    expect(addDebtCharge).toHaveBeenCalledWith({
+      amount: 50,
+      charge_date: '2026-10-05',
+      debt_id: 'debt-1',
+    })
+    expect(voidDebtCharge).toHaveBeenCalledWith('charge-1', 'Cancelled order')
+  })
+
+  it('returns false when add charge fails', async () => {
+    vi.mocked(addDebtCharge).mockRejectedValueOnce(new Error('Debt not found'))
+    const { result } = renderHook(() => useDebtsData('user-1'), {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    let success = true
+    await act(async () => {
+      success = await result.current.addCharge({ amount: 50, debt_id: 'missing' })
+    })
+
+    expect(success).toBe(false)
   })
 
   it('executes payDebt mutation successfully', async () => {

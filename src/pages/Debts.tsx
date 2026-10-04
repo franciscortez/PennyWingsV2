@@ -7,6 +7,7 @@ import { useDebtsData } from '@/hooks/useDebtsData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { alerts } from '@/lib/alert'
 import {
+  AddChargeModal,
   AddDebtModal,
   DebtPaymentHistoryModal,
   DebtsHeader,
@@ -18,6 +19,7 @@ import {
 } from '@/sections/debts'
 import type {
   Debt,
+  DebtChargeValues,
   DebtCreateValues,
   DebtPayMutationValues,
   DebtUpdateValues,
@@ -26,8 +28,10 @@ import type {
 export default function Debts() {
   const { user } = useAuth()
   const {
+    addCharge,
     addDebt,
     archiveDebt,
+    charges,
     debts,
     dueSoonCount,
     editDebt,
@@ -41,6 +45,7 @@ export default function Debts() {
     totalOutstanding,
     totalSettled,
     unarchiveDebt,
+    voidCharge,
   } = useDebtsData(user?.id)
 
   const { accounts } = useAccountsData(user?.id)
@@ -50,6 +55,7 @@ export default function Debts() {
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null)
   const [payingDebt, setPayingDebt] = useState<Debt | null>(null)
   const [historyDebt, setHistoryDebt] = useState<Debt | null>(null)
+  const [chargingDebt, setChargingDebt] = useState<Debt | null>(null)
 
   const handleAddDebt = async (values: DebtCreateValues) => {
     const success = await addDebt(values)
@@ -97,6 +103,22 @@ export default function Debts() {
     return success
   }
 
+  const handleAddCharge = async (values: DebtChargeValues) => {
+    const success = await addCharge(values)
+    if (success) {
+      alerts.success('Purchase added to your balance.')
+    }
+    return success
+  }
+
+  const handleVoidCharge = async (chargeId: string, reason?: string) => {
+    const success = await voidCharge(chargeId, reason)
+    if (success) {
+      alerts.success('Purchase voided and balance updated.')
+    }
+    return success
+  }
+
   const handleReverse = async (paymentId: string, reason?: string) => {
     const success = await reversePayment(paymentId, reason)
     if (success) {
@@ -122,8 +144,10 @@ export default function Debts() {
             />
 
             <DebtsListSection
+              charges={charges}
               debts={debts}
               onAddDebt={() => setAddModalOpen(true)}
+              onAddPurchase={(debt) => setChargingDebt(debt)}
               onArchive={handleArchive}
               onEdit={(debt) => setEditingDebt(debt)}
               onHistory={(debt) => setHistoryDebt(debt)}
@@ -136,8 +160,22 @@ export default function Debts() {
         {/* Modals */}
         {addModalOpen && (
           <AddDebtModal
+            existingDebts={debts}
+            onAddPurchaseInstead={(debt) => {
+              setAddModalOpen(false)
+              setChargingDebt(debt)
+            }}
             onClose={() => setAddModalOpen(false)}
             onSubmit={handleAddDebt}
+            saving={saving}
+          />
+        )}
+
+        {chargingDebt && (
+          <AddChargeModal
+            debt={chargingDebt}
+            onClose={() => setChargingDebt(null)}
+            onSubmit={handleAddCharge}
             saving={saving}
           />
         )}
@@ -163,10 +201,12 @@ export default function Debts() {
 
         {historyDebt && (
           <DebtPaymentHistoryModal
+            charges={charges}
             debt={historyDebt}
             payments={payments}
             onClose={() => setHistoryDebt(null)}
             onReverse={handleReverse}
+            onVoidCharge={handleVoidCharge}
             saving={saving}
           />
         )}

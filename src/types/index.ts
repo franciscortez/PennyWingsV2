@@ -82,6 +82,11 @@ export type {
 } from '@/types/transactions'
 export type {
   Debt,
+  DebtActivityItem,
+  DebtCharge,
+  DebtChargeFormValues,
+  DebtChargeStatus,
+  DebtChargeValues,
   DebtCreateValues,
   DebtPayment,
   DebtPaymentStatus,

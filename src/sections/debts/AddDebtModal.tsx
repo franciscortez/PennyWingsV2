@@ -17,9 +17,11 @@ import {
   debtModalPanel,
 } from '@/sections/debts/debtStyles'
 import { debtCreateSchema } from '@/validation/debtSchemas'
-import type { DebtCreateValues, DebtType } from '@/types'
+import type { Debt, DebtCreateValues, DebtType } from '@/types'
 
 type AddDebtModalProps = {
+  existingDebts?: Debt[]
+  onAddPurchaseInstead?: (debt: Debt) => void
   onClose: () => void
   onSubmit: (values: DebtCreateValues) => Promise<boolean>
   saving: boolean
@@ -50,7 +52,19 @@ const debtTypes: Array<{ id: DebtType; label: string }> = [
   { id: 'other', label: 'Other' },
 ]
 
-export function AddDebtModal({ onClose, onSubmit, saving }: AddDebtModalProps) {
+const currencyFormatter = new Intl.NumberFormat('en-PH', {
+  currency: 'PHP',
+  minimumFractionDigits: 2,
+  style: 'currency',
+})
+
+export function AddDebtModal({
+  existingDebts = [],
+  onAddPurchaseInstead,
+  onClose,
+  onSubmit,
+  saving,
+}: AddDebtModalProps) {
   const {
     formState: { errors },
     handleSubmit,
@@ -69,6 +83,15 @@ export function AddDebtModal({ onClose, onSubmit, saving }: AddDebtModalProps) {
   })
 
   const selectedType = watch('debt_type')
+  const typedProvider = (watch('provider_name') ?? '').trim().toLowerCase()
+  const matchingDebt =
+    typedProvider && onAddPurchaseInstead
+      ? existingDebts.find(
+          (debt) =>
+            debt.status !== 'archived' &&
+            debt.providerName.trim().toLowerCase() === typedProvider,
+        )
+      : undefined
 
   const handleFormSubmit = async (values: AddDebtFormValues) => {
     const success = await onSubmit({
@@ -134,6 +157,28 @@ export function AddDebtModal({ onClose, onSubmit, saving }: AddDebtModalProps) {
           </div>
           {errors.provider_name && (
             <p className={`mt-1.5 ${fieldError}`}>{errors.provider_name.message}</p>
+          )}
+
+          {matchingDebt && onAddPurchaseInstead && (
+            <div
+              role="status"
+              className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-pink-200 bg-pink-50/70 p-3 dark:border-pink-900/60 dark:bg-pink-950/30"
+            >
+              <p className="text-xs font-medium text-slate-800 dark:text-slate-200">
+                {matchingDebt.providerName} already has{' '}
+                <span className="font-geist-mono tabular-nums">
+                  {currencyFormatter.format(matchingDebt.outstandingAmount)}
+                </span>{' '}
+                outstanding. Add this as a purchase instead?
+              </p>
+              <button
+                type="button"
+                onClick={() => onAddPurchaseInstead(matchingDebt)}
+                className="shrink-0 rounded-full bg-pink-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-pink-800 active:scale-95"
+              >
+                Add purchase
+              </button>
+            </div>
           )}
 
           {/* Suggestions */}

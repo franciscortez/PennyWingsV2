@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 import { setupAuthenticatedMocks } from './helpers/authMock'
+import { pickSource } from './helpers/paymentPicker'
 import {
   blockUnmockedBackend,
   fixtureTransactionRows,
@@ -33,10 +34,8 @@ test('create sends the entered transfer fee to the checked RPC', async ({ page }
   const dialog = page.getByRole('dialog', { name: 'New Transaction' })
   await dialog.getByRole('button', { name: 'Transfer/Deposit' }).click()
   await dialog.locator('input[type="number"]').fill('40')
-  await dialog.locator('select').nth(0).selectOption('card')
-  await dialog.locator('select').nth(1).selectOption('card-1')
-  await dialog.locator('select').nth(2).selectOption('ewallet')
-  await dialog.locator('select').nth(3).selectOption('wallet-1')
+  await pickSource(page, dialog, 'From Account', 'Bank Card', 'BDO Debit')
+  await pickSource(page, dialog, 'To Account', 'E-Wallet', 'GCash')
   await dialog.locator('#transaction-category').selectOption('cat-2')
   await dialog.locator('#transaction-fee').fill('12.34')
   await dialog.getByRole('button', { name: 'Save Transaction' }).click()

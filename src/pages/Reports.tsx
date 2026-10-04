@@ -1,7 +1,6 @@
 import { FileChartColumn } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
-import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useReportsData } from '@/hooks/useReportsData'
@@ -34,14 +33,14 @@ export default function Reports() {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <ReportsSkeleton />
-      </Layout>
+      </>
     )
   }
 
   return (
-    <Layout>
+    <>
       <div className="app-design min-w-0 space-y-8 pb-20">
         <ReportsHeader
           onMonthChange={setSelectedMonth}
@@ -65,7 +64,7 @@ export default function Reports() {
           <EmptyReport month={toReportMonth(selectedMonth)} />
         )}
       </div>
-    </Layout>
+    </>
   )
 }
 

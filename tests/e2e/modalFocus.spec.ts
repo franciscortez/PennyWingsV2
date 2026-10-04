@@ -158,6 +158,9 @@ test.describe('transaction and monitoring forms', () => {
     await page.getByRole('button', { name: 'Open PennyWings AI Assistant' }).click()
     const assistant = page.getByRole('dialog', { name: 'PennyWings AI' })
     await expect(assistant).toBeVisible()
+    // The widget moves focus to its input on the next frame after opening. Let
+    // that finish before the test moves focus, or Enter lands in the textarea.
+    await expect(assistant.getByLabel('Message PennyWings AI')).toBeFocused()
 
     const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
     const { dialog } = await openWithKeyboard(page, opener, 'New Transaction')

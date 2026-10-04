@@ -2,7 +2,6 @@ import { Plus } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
-import Layout from '@/components/Layout'
 import { AppButton, PageHeader } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
@@ -97,9 +96,9 @@ export default function Transactions() {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <TransactionsSkeleton />
-      </Layout>
+      </>
     )
   }
 
@@ -178,7 +177,7 @@ export default function Transactions() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="activity-design space-y-6 lg:space-y-8 motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none">
         <PageHeader
           className="min-w-0 [&_h1]:[overflow-wrap:anywhere]"
@@ -226,6 +225,6 @@ export default function Transactions() {
           onSubmit={handleFormSubmit}
         />
       ) : null}
-    </Layout>
+    </>
   )
 }

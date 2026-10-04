@@ -9,7 +9,6 @@ import { ChevronDown, Plus, Search, UsersRound } from 'lucide-react'
 import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
-import Layout from '@/components/Layout'
 import { AppButton } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { fieldInput } from '@/components/ui/fieldStyles'
@@ -184,9 +183,9 @@ export default function Accounts() {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <AccountsSkeleton />
-      </Layout>
+      </>
     )
   }
 
@@ -343,7 +342,7 @@ export default function Accounts() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="accounts-design space-y-6 font-geist sm:space-y-8 motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none motion-reduce:[&_.animate-fade-in]:animate-none">
         <PageHeader
           title="My Accounts"
@@ -613,6 +612,6 @@ export default function Accounts() {
           }}
         />
       ) : null}
-    </Layout>
+    </>
   )
 }

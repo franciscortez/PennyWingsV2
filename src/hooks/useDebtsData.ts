@@ -1,5 +1,10 @@
 import { useCallback, useMemo } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query'
 
 import { queryKeys } from '@/lib/queryClient'
 import { invalidateDebtCaches } from '@/lib/queryInvalidation'
@@ -33,6 +38,9 @@ export function useDebtsData(
 
   const debtsQuery = useQuery({
     enabled: Boolean(userId),
+    // Switching the status filter keeps the current list on screen until the
+    // new one arrives, instead of flashing the page skeleton.
+    placeholderData: keepPreviousData,
     queryFn: () => fetchDebts(statusFilter),
     queryKey: [...queryKeys.debts(userId ?? 'anonymous'), statusFilter],
   })

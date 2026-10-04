@@ -1,6 +1,5 @@
 import { useState } from 'react'
 
-import Layout from '@/components/Layout'
 import { useAccountsData } from '@/hooks/useAccountsData'
 import { useAuth } from '@/hooks/useAuth'
 import { useDebtsData } from '@/hooks/useDebtsData'
@@ -128,7 +127,7 @@ export default function Debts() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="space-y-8">
         <DebtsHeader onAddDebt={() => setAddModalOpen(true)} />
 
@@ -211,6 +210,6 @@ export default function Debts() {
           />
         )}
       </div>
-    </Layout>
+    </>
   )
 }

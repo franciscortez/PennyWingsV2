@@ -26,8 +26,6 @@ export type AssistantContextValue = {
   isOpen: boolean
   messages: AssistantMessage[]
   openAssistant: () => void
-  question: string
-  sendMessage: (question?: string) => Promise<void>
+  sendMessage: (question: string, onAccepted?: () => void) => Promise<void>
   sending: boolean
-  setQuestion: (question: string) => void
 }

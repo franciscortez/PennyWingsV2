@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   useForm,
   type FieldErrors,
@@ -8,8 +8,9 @@ import {
   type Resolver,
 } from 'react-hook-form'
 
-import { AppButton, fieldError, fieldHint, fieldInput, fieldLabel, surfaceNested } from '@/components/ui'
+import { AppButton, fieldError, fieldInput, fieldLabel, surfaceNested } from '@/components/ui'
 import { ModalFrame } from '@/components/ui/ModalFrame'
+import { PaymentSourcePicker } from '@/sections/transactions/PaymentSourcePicker'
 import { toDateInputValue } from '@/lib/date'
 import type {
   Account,
@@ -45,15 +46,6 @@ type TransactionFormState = Omit<TransactionFormValues, 'amount' | 'fee_amount'>
   amount: string
   fee_amount: string
 }
-
-const accountBalanceFormatter = new Intl.NumberFormat('en-PH', {
-  currency: 'PHP',
-  minimumFractionDigits: 2,
-  style: 'currency',
-})
-
-const accountOptionLabel = (account: Account) =>
-  `${account.name}: ${accountBalanceFormatter.format(account.balance)}`
 
 const defaultFormState = (): TransactionFormState => ({
   amount: '',
@@ -132,6 +124,10 @@ export function TransactionForm({
 
   // eslint-disable-next-line react-hooks/incompatible-library
   const form = watch()
+
+  // While a payment picker is open it is the only dialog on screen. The form
+  // stays mounted (and keeps its values) but is hidden underneath.
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   const filteredCategories = useMemo(
     () =>
@@ -231,37 +227,46 @@ export function TransactionForm({
     )
   }
 
-  const updatePaymentMethod = (paymentMethod: FormPaymentMethod) => {
+  const updateSource = (paymentMethod: FormPaymentMethod, accountId: string) => {
     const current = getValues()
+    const previousAccountId =
+      current.payment_method === 'card' ? current.card_id : current.wallet_id
+    const sourceChanged =
+      paymentMethod !== current.payment_method ||
+      (paymentMethod !== 'cash' && accountId !== previousAccountId)
+
     reset(
       {
         ...current,
-        card_id: '',
+        card_id: paymentMethod === 'card' ? accountId : '',
         fee_amount:
-          current.type === 'withdrawal' && paymentMethod !== current.payment_method
-            ? '0'
-            : current.fee_amount,
+          current.type === 'withdrawal' && sourceChanged ? '0' : current.fee_amount,
         payment_method: paymentMethod,
+        to_card_id: sourceChanged ? '' : current.to_card_id,
         to_payment_method:
           paymentMethod === 'cash' && current.to_payment_method === 'cash'
             ? 'card'
             : current.to_payment_method,
-        wallet_id: '',
+        to_wallet_id: sourceChanged ? '' : current.to_wallet_id,
+        wallet_id:
+          paymentMethod === 'ewallet' || paymentMethod === 'lent' ? accountId : '',
       },
       { keepDirty: true },
     )
   }
 
-  const updateDestinationMethod = (
+  const updateDestination = (
     paymentMethod: DestinationPaymentMethod,
+    accountId: string,
   ) => {
     const current = getValues()
     reset(
       {
         ...current,
-        to_card_id: '',
+        to_card_id: paymentMethod === 'card' ? accountId : '',
         to_payment_method: paymentMethod,
-        to_wallet_id: '',
+        to_wallet_id:
+          paymentMethod === 'ewallet' || paymentMethod === 'lent' ? accountId : '',
       },
       { keepDirty: true },
     )
@@ -298,6 +303,7 @@ export function TransactionForm({
       closeDisabled={dismissDisabled}
       closeLabel="Close transaction form"
       onClose={onClose}
+      overlayClassName={pickerOpen ? 'invisible' : undefined}
       panelClassName="font-geist motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none md:max-w-lg shadow-wing-lg dark:shadow-none focus-visible:ring-pink-800 dark:focus-visible:ring-pink-300"
       headerClassName="[&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-slate-950 dark:[&_h2]:text-slate-100 [&_button]:h-11 [&_button]:w-11 [&_button]:text-slate-600 dark:[&_button]:text-slate-300 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-pink-800 dark:[&_button]:focus-visible:outline-pink-300"
       title={transaction ? 'Edit Transaction' : 'New Transaction'}
@@ -340,8 +346,8 @@ export function TransactionForm({
             errors={errors}
             form={form}
             lentAccounts={lentAccounts}
-            onPaymentMethodChange={updatePaymentMethod}
-            onUpdate={updateField}
+            onPickerOpenChange={setPickerOpen}
+            onSourceChange={updateSource}
             walletAccounts={walletAccounts}
           />
 
@@ -352,8 +358,8 @@ export function TransactionForm({
               errors={errors}
               form={form}
               lentAccounts={destinationLentAccounts}
-              onDestinationMethodChange={updateDestinationMethod}
-              onUpdate={updateField}
+              onDestinationChange={updateDestination}
+              onPickerOpenChange={setPickerOpen}
               walletAccounts={destinationWalletAccounts}
             />
           ) : null}
@@ -478,14 +484,21 @@ function TransactionTypePicker({
   )
 }
 
+const sourceSheetTitles: Record<TransactionType, string> = {
+  expense: 'Pay with',
+  income: 'Deposit to',
+  transfer: 'Send from',
+  withdrawal: 'Withdraw from',
+}
+
 function AccountSourcePanel({
   cardAccounts,
   cashAccount,
   errors,
   form,
   lentAccounts,
-  onPaymentMethodChange,
-  onUpdate,
+  onPickerOpenChange,
+  onSourceChange,
   walletAccounts,
 }: {
   cardAccounts: Account[]
@@ -493,85 +506,37 @@ function AccountSourcePanel({
   errors: FieldErrors<TransactionFormState>
   form: TransactionFormState
   lentAccounts: Account[]
-  onPaymentMethodChange: (paymentMethod: FormPaymentMethod) => void
-  onUpdate: <TField extends FieldPath<TransactionFormState>>(
-    field: TField,
-    value: FieldPathValue<TransactionFormState, TField>,
-  ) => void
+  onPickerOpenChange: (open: boolean) => void
+  onSourceChange: (paymentMethod: FormPaymentMethod, accountId: string) => void
   walletAccounts: Account[]
 }) {
-  const showLentOption = form.type === 'transfer' || form.type === 'withdrawal'
   const sourceError =
     errors.payment_method?.message ??
     errors.card_id?.message ??
     errors.wallet_id?.message
 
   return (
-    <div className={`${surfaceNested} space-y-4 p-4 sm:p-5`}>
+    <div className={`${surfaceNested} space-y-3 p-4 sm:p-5`}>
       <p className={`${fieldLabel} ml-1 block`}>
         {form.type === 'transfer' ? 'From Account' : 'Payment Method'}
       </p>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
-        <select
-          aria-describedby={sourceError ? 'transaction-source-error' : undefined}
-          aria-invalid={Boolean(errors.payment_method)}
-          value={form.payment_method}
-          onChange={(event) =>
-            onPaymentMethodChange(event.target.value as FormPaymentMethod)
-          }
-          className={fieldInput(Boolean(errors.payment_method))}
-        >
-          {form.type !== 'withdrawal' ? <option value="cash" className="dark:bg-slate-900">Cash</option> : null}
-          <option value="card" className="dark:bg-slate-900">Bank Card</option>
-          <option value="ewallet" className="dark:bg-slate-900">E-Wallet</option>
-          {showLentOption ? <option value="lent" className="dark:bg-slate-900">Lent</option> : null}
-        </select>
-
-        {form.payment_method === 'card' ? (
-          <select
-            aria-describedby={sourceError ? 'transaction-source-error' : undefined}
-            aria-invalid={Boolean(errors.card_id)}
-            value={form.card_id}
-            onChange={(event) => onUpdate('card_id', event.target.value)}
-            className={fieldInput(Boolean(errors.card_id))}
-          >
-            <option value="" className="dark:bg-slate-900">Select Card</option>
-            {cardAccounts.map((account) => (
-              <option key={account.id} value={account.id} className="dark:bg-slate-900">
-                {accountOptionLabel(account)}
-              </option>
-            ))}
-          </select>
-        ) : form.payment_method === 'ewallet' || form.payment_method === 'lent' ? (
-          <select
-            aria-describedby={sourceError ? 'transaction-source-error' : undefined}
-            aria-invalid={Boolean(errors.wallet_id)}
-            value={form.wallet_id}
-            onChange={(event) => onUpdate('wallet_id', event.target.value)}
-            className={fieldInput(Boolean(errors.wallet_id))}
-          >
-            <option value="" className="dark:bg-slate-900">
-              {form.payment_method === 'lent' ? 'Select Lent' : 'Select Wallet'}
-            </option>
-            {(form.payment_method === 'lent' ? lentAccounts : walletAccounts).map((account) => (
-              <option key={account.id} value={account.id} className="dark:bg-slate-900">
-                {accountOptionLabel(account)}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <div className={`${fieldHint} flex min-h-12 min-w-0 items-center rounded-[1.25rem] bg-white px-5 py-3 [overflow-wrap:anywhere] dark:bg-slate-900`}>
-            {cashAccount
-              ? accountOptionLabel(cashAccount)
-              : 'No cash account available'}
-          </div>
-        )}
-      </div>
-      {sourceError ? (
-        <p id="transaction-source-error" className={fieldError}>
-          {sourceError}
-        </p>
-      ) : null}
+      <PaymentSourcePicker
+        allowCash={form.type !== 'withdrawal'}
+        allowLent={form.type === 'transfer' || form.type === 'withdrawal'}
+        cardAccounts={cardAccounts}
+        cardId={form.card_id ?? ''}
+        cashAccount={cashAccount}
+        error={sourceError}
+        errorId="transaction-source-error"
+        label={form.type === 'transfer' ? 'From Account' : 'Payment Method'}
+        lentAccounts={lentAccounts}
+        method={form.payment_method}
+        onChange={onSourceChange}
+        onOpenChange={onPickerOpenChange}
+        sheetTitle={sourceSheetTitles[form.type]}
+        walletAccounts={walletAccounts}
+        walletId={form.wallet_id ?? ''}
+      />
     </div>
   )
 }
@@ -582,8 +547,8 @@ function DestinationPanel({
   errors,
   form,
   lentAccounts,
-  onDestinationMethodChange,
-  onUpdate,
+  onDestinationChange,
+  onPickerOpenChange,
   walletAccounts,
 }: {
   cardAccounts: Account[]
@@ -591,11 +556,11 @@ function DestinationPanel({
   errors: FieldErrors<TransactionFormState>
   form: TransactionFormState
   lentAccounts: Account[]
-  onDestinationMethodChange: (paymentMethod: DestinationPaymentMethod) => void
-  onUpdate: <TField extends FieldPath<TransactionFormState>>(
-    field: TField,
-    value: FieldPathValue<TransactionFormState, TField>,
+  onDestinationChange: (
+    paymentMethod: DestinationPaymentMethod,
+    accountId: string,
   ) => void
+  onPickerOpenChange: (open: boolean) => void
   walletAccounts: Account[]
 }) {
   const canTransferToCash = form.payment_method !== 'cash' && Boolean(cashAccount)
@@ -605,77 +570,29 @@ function DestinationPanel({
     errors.to_wallet_id?.message
 
   return (
-    <div className={`${surfaceNested} space-y-4 p-4 sm:p-5`}>
+    <div className={`${surfaceNested} space-y-3 p-4 sm:p-5`}>
       <p className={`${fieldLabel} ml-1 block`}>
         To Account
       </p>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-4">
-        <select
-          aria-describedby={destinationError ? 'transaction-destination-error' : undefined}
-          aria-invalid={Boolean(errors.to_payment_method)}
-          value={form.to_payment_method}
-          onChange={(event) =>
-            onDestinationMethodChange(
-              event.target.value as DestinationPaymentMethod,
-            )
-          }
-          className={fieldInput(Boolean(errors.to_payment_method))}
-        >
-          {canTransferToCash ? <option value="cash" className="dark:bg-slate-900">Cash</option> : null}
-          <option value="card" className="dark:bg-slate-900">Bank Card</option>
-          <option value="ewallet" className="dark:bg-slate-900">E-Wallet</option>
-          <option value="lent" className="dark:bg-slate-900">Lent</option>
-        </select>
-
-        {form.to_payment_method === 'card' ? (
-          <select
-            aria-describedby={destinationError ? 'transaction-destination-error' : undefined}
-            aria-invalid={Boolean(errors.to_card_id)}
-            value={form.to_card_id}
-            onChange={(event) => onUpdate('to_card_id', event.target.value)}
-            className={fieldInput(Boolean(errors.to_card_id))}
-          >
-            <option value="" className="dark:bg-slate-900">Select Card</option>
-            {cardAccounts
-              .filter((account) => account.id !== form.card_id)
-              .map((account) => (
-                <option key={account.id} value={account.id} className="dark:bg-slate-900">
-                  {accountOptionLabel(account)}
-                </option>
-              ))}
-          </select>
-        ) : form.to_payment_method === 'cash' ? (
-          <div className={`${fieldHint} flex min-h-12 min-w-0 items-center rounded-[1.25rem] bg-white px-5 py-3 [overflow-wrap:anywhere] dark:bg-slate-900`}>
-            {cashAccount
-              ? accountOptionLabel(cashAccount)
-              : 'No cash account available'}
-          </div>
-        ) : form.to_payment_method === 'ewallet' || form.to_payment_method === 'lent' ? (
-          <select
-            aria-describedby={destinationError ? 'transaction-destination-error' : undefined}
-            aria-invalid={Boolean(errors.to_wallet_id)}
-            value={form.to_wallet_id}
-            onChange={(event) => onUpdate('to_wallet_id', event.target.value)}
-            className={fieldInput(Boolean(errors.to_wallet_id))}
-          >
-            <option value="" className="dark:bg-slate-900">
-              {form.to_payment_method === 'lent' ? 'Select Lent' : 'Select Wallet'}
-            </option>
-            {(form.to_payment_method === 'lent' ? lentAccounts : walletAccounts)
-              .filter((account) => account.id !== form.wallet_id)
-              .map((account) => (
-                <option key={account.id} value={account.id} className="dark:bg-slate-900">
-                  {accountOptionLabel(account)}
-                </option>
-              ))}
-          </select>
-        ) : null}
-      </div>
-      {destinationError ? (
-        <p id="transaction-destination-error" className={fieldError}>
-          {destinationError}
-        </p>
-      ) : null}
+      <PaymentSourcePicker
+        allowCash={canTransferToCash}
+        allowLent
+        cardAccounts={cardAccounts}
+        cardId={form.to_card_id ?? ''}
+        cashAccount={cashAccount}
+        error={destinationError}
+        errorId="transaction-destination-error"
+        excludeCardId={form.card_id}
+        excludeWalletId={form.wallet_id}
+        label="To Account"
+        lentAccounts={lentAccounts}
+        method={form.to_payment_method ?? 'card'}
+        onChange={onDestinationChange}
+        onOpenChange={onPickerOpenChange}
+        sheetTitle="Send to"
+        walletAccounts={walletAccounts}
+        walletId={form.to_wallet_id ?? ''}
+      />
     </div>
   )
 }

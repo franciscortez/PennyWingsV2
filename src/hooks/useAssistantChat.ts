@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 
 import { AppError } from '@/lib/errors'
@@ -21,7 +21,6 @@ const createMessage = (
 
 export function useAssistantChat() {
   const [messages, setMessages] = useState<AssistantMessage[]>([])
-  const [question, setQuestion] = useState('')
   const [error, setError] = useState<string | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -41,7 +40,6 @@ export function useAssistantChat() {
     reset()
     setError(null)
     setMessages([])
-    setQuestion('')
   }, [reset])
 
   const cancelResponse = useCallback(() => {
@@ -50,10 +48,15 @@ export function useAssistantChat() {
     setError('Response canceled.')
   }, [])
 
-  const sendMessage = useCallback(async (suggestedQuestion?: string) => {
-    const parsedQuestion = assistantQuestionSchema.safeParse(
-      suggestedQuestion ?? question,
-    )
+  // The draft lives with the composer, not here: keeping it in this shared
+  // state re-rendered the provider and every consumer on each keystroke.
+  // `onAccepted` fires once the question passes validation so the composer can
+  // clear its own draft.
+  const sendMessage = useCallback(async (
+    nextQuestion: string,
+    onAccepted?: () => void,
+  ) => {
+    const parsedQuestion = assistantQuestionSchema.safeParse(nextQuestion)
 
     if (!parsedQuestion.success) {
       setError(
@@ -74,7 +77,7 @@ export function useAssistantChat() {
       ...current,
       createMessage('user', trimmedQuestion),
     ])
-    setQuestion('')
+    onAccepted?.()
 
     try {
       const response = await mutateAsync({
@@ -99,16 +102,17 @@ export function useAssistantChat() {
         abortControllerRef.current = null
       }
     }
-  }, [messages, mutateAsync, question])
+  }, [messages, mutateAsync])
 
-  return {
-    cancelResponse,
-    clearConversation,
-    error,
-    messages,
-    question,
-    sendMessage,
-    sending: isPending,
-    setQuestion,
-  }
+  return useMemo(
+    () => ({
+      cancelResponse,
+      clearConversation,
+      error,
+      messages,
+      sendMessage,
+      sending: isPending,
+    }),
+    [cancelResponse, clearConversation, error, isPending, messages, sendMessage],
+  )
 }

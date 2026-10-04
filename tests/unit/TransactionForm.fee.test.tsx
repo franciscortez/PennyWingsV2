@@ -62,21 +62,29 @@ const renderForm = (transaction: Transaction | null = null) => {
   return { dialog: screen.getByRole('dialog'), onSubmit }
 }
 
+// The payment source is a tile that opens a sheet: pick a method, then an account.
+const chooseSource = (dialog: HTMLElement, tile: string, method: string, account?: string) => {
+  fireEvent.click(within(dialog).getByRole('button', { name: new RegExp(tile) }))
+  const sheet = screen.getAllByRole('dialog').at(-1) as HTMLElement
+  fireEvent.click(within(sheet).getByRole('button', { name: new RegExp(`^${method}`) }))
+  if (account) {
+    const accounts = screen.getAllByRole('dialog').at(-1) as HTMLElement
+    fireEvent.click(within(accounts).getByRole('button', { name: new RegExp(account) }))
+  }
+}
+
 const completeNewTransfer = (dialog: HTMLElement) => {
   fireEvent.click(within(dialog).getByRole('button', { name: 'Transfer/Deposit' }))
   fireEvent.change(within(dialog).getAllByRole('spinbutton')[0], { target: { value: '40' } })
-  fireEvent.change(within(dialog).getAllByRole('combobox')[0], { target: { value: 'card' } })
-  fireEvent.change(within(dialog).getAllByRole('combobox')[1], { target: { value: card.id } })
-  fireEvent.change(within(dialog).getAllByRole('combobox')[2], { target: { value: 'ewallet' } })
-  fireEvent.change(within(dialog).getAllByRole('combobox')[3], { target: { value: wallet.id } })
-  fireEvent.change(within(dialog).getAllByRole('combobox')[4], { target: { value: category.id } })
+  chooseSource(dialog, 'From Account', 'Bank Card', 'Source card')
+  chooseSource(dialog, 'To Account', 'E-Wallet', 'Destination wallet')
+  fireEvent.change(within(dialog).getByLabelText('Category'), { target: { value: category.id } })
 }
 
 const completeNewWithdrawal = (dialog: HTMLElement) => {
   fireEvent.click(within(dialog).getByRole('button', { name: 'withdrawal' }))
   fireEvent.change(within(dialog).getAllByRole('spinbutton')[0], { target: { value: '40' } })
-  fireEvent.change(within(dialog).getAllByRole('combobox')[0], { target: { value: 'card' } })
-  fireEvent.change(within(dialog).getAllByRole('combobox')[1], { target: { value: card.id } })
+  chooseSource(dialog, 'Payment Method', 'Bank Card', 'Source card')
   fireEvent.change(within(dialog).getByLabelText('Category'), { target: { value: category.id } })
 }
 
@@ -169,30 +177,20 @@ describe('TransactionForm withdrawal fees', () => {
   it('clears the fee when the source card or payment method changes', () => {
     const { dialog } = renderForm(existingWithdrawal)
     const feeInput = within(dialog).getByLabelText('Withdrawal Fee (PHP)')
-    fireEvent.change(within(dialog).getAllByRole('combobox')[1], {
-      target: { value: otherCard.id },
-    })
+    chooseSource(dialog, 'Payment Method', 'Bank Card', 'Other source card')
     expect(feeInput).toHaveValue('0')
 
     fireEvent.change(feeInput, { target: { value: '25' } })
-    fireEvent.change(within(dialog).getAllByRole('combobox')[0], {
-      target: { value: 'ewallet' },
-    })
+    // The method only commits together with an account, so the fee is kept
+    // until the new source is chosen.
+    chooseSource(dialog, 'Payment Method', 'E-Wallet', 'Destination wallet')
     expect(feeInput).toHaveValue('0')
-    fireEvent.change(within(dialog).getAllByRole('combobox')[1], {
-      target: { value: wallet.id },
-    })
     expect(within(dialog).getByLabelText('Withdrawal Fee (PHP)')).toBeVisible()
   })
 
   it('shows the fee for lent withdrawals and clears it on transaction type changes', () => {
     const { dialog } = renderForm(existingWithdrawal)
-    fireEvent.change(within(dialog).getAllByRole('combobox')[0], {
-      target: { value: 'lent' },
-    })
-    fireEvent.change(within(dialog).getAllByRole('combobox')[1], {
-      target: { value: lent.id },
-    })
+    chooseSource(dialog, 'Payment Method', 'Lent', 'Lent source')
     const feeInput = within(dialog).getByLabelText('Withdrawal Fee (PHP)')
     fireEvent.change(feeInput, { target: { value: '12.34' } })
     fireEvent.click(within(dialog).getByRole('button', { name: 'Transfer/Deposit' }))

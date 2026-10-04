@@ -1,5 +1,4 @@
 
-import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useDailySpendingData } from '@/hooks/useDailySpendingData'
 import { useDashboardData } from '@/hooks/useDashboardData'
@@ -39,9 +38,9 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <DashboardSkeleton />
-      </Layout>
+      </>
     )
   }
 
@@ -56,7 +55,7 @@ export default function Dashboard() {
   const profileLabel = profile?.full_name ?? user?.email ?? 'PennyWings User'
 
   return (
-    <Layout>
+    <>
       <div className="dashboard-design space-y-6 lg:space-y-8">
         <DashboardHeader />
 
@@ -80,6 +79,6 @@ export default function Dashboard() {
           transactionCount={transactions.length}
         />
       </div>
-    </Layout>
+    </>
   )
 }

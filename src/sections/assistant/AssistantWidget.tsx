@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useAssistant } from '@/hooks/useAssistant'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
@@ -20,15 +20,22 @@ export function AssistantWidget() {
     isOpen,
     messages,
     openAssistant,
-    question,
     sendMessage,
     sending,
-    setQuestion,
   } = useAssistant()
+  const [question, setQuestion] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const isDesktop = useMediaQuery('(min-width: 768px)')
+
+  const submitQuestion = (nextQuestion = question) =>
+    sendMessage(nextQuestion, () => setQuestion(''))
+
+  const handleClear = () => {
+    clearConversation()
+    setQuestion('')
+  }
 
   // The desktop panel is a companion to the page and must not freeze it; the
   // mobile panel is full screen, so there it owns the page like any overlay.
@@ -116,7 +123,7 @@ export function AssistantWidget() {
         >
           <AssistantHeader
             canClear={messages.length > 0}
-            onClear={clearConversation}
+            onClear={handleClear}
             onClose={closeAssistant}
           />
 
@@ -128,7 +135,7 @@ export function AssistantWidget() {
             {messages.length === 0 && !sending ? (
               <AssistantWelcome
                 disabled={sending}
-                onSelect={(suggestion) => void sendMessage(suggestion)}
+                onSelect={(suggestion) => void submitQuestion(suggestion)}
               />
             ) : (
               <AssistantConversation messages={messages} sending={sending} />
@@ -140,7 +147,7 @@ export function AssistantWidget() {
             inputRef={inputRef}
             onCancel={cancelResponse}
             onQuestionChange={setQuestion}
-            onSend={sendMessage}
+            onSend={() => submitQuestion()}
             question={question}
             sending={sending}
           />

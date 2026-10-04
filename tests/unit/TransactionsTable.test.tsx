@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { TransactionsTable } from '@/sections/transactions/TransactionsTable'
 import type { Transaction } from '@/types'
@@ -74,11 +74,27 @@ describe('TransactionsTable UI Component', () => {
     expect(screen.getByText(/no entries found/i)).toBeInTheDocument()
   })
 
-  it('renders search input and handles search query typing', () => {
-    render(<TransactionsTable {...defaultProps} />)
-    const searchInput = screen.getByPlaceholderText(/description, category\.\.\./i)
-    fireEvent.change(searchInput, { target: { value: 'coffee' } })
-    expect(defaultProps.onSearchChange).toHaveBeenCalledWith('coffee')
+  it('shows typing at once and reports the search once after a pause', () => {
+    vi.useFakeTimers()
+    try {
+      const onSearchChange = vi.fn()
+      render(<TransactionsTable {...defaultProps} onSearchChange={onSearchChange} />)
+      const searchInput = screen.getByPlaceholderText(/description, category\.\.\./i)
+
+      fireEvent.change(searchInput, { target: { value: 'cof' } })
+      fireEvent.change(searchInput, { target: { value: 'coffee' } })
+
+      expect(searchInput).toHaveValue('coffee')
+      expect(onSearchChange).not.toHaveBeenCalled()
+
+      act(() => {
+        vi.advanceTimersByTime(250)
+      })
+      expect(onSearchChange).toHaveBeenCalledTimes(1)
+      expect(onSearchChange).toHaveBeenCalledWith('coffee')
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it.each([

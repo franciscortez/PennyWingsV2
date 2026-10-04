@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { AlertCircle, CreditCard, Wallet } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 
 import { AppButton } from '@/components/ui/Button'
 import {
@@ -12,6 +12,7 @@ import {
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { figure, surfaceNested, textMuted } from '@/components/ui/surfaces'
 import { debtModalPanel } from '@/sections/debts/debtStyles'
+import { PaymentSourcePicker } from '@/sections/transactions/PaymentSourcePicker'
 import type { Account, Debt, DebtPayMutationValues, PaymentMethod } from '@/types'
 
 type PayDebtModalProps = {
@@ -41,6 +42,8 @@ export function PayDebtModal({
     new Date().toISOString().slice(0, 10),
   )
   const [note, setNote] = useState<string>('')
+  // While the source picker is open it is the only dialog on screen.
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   // Filter out lent and inactive accounts
   const eligibleAccounts = useMemo(() => {
@@ -52,6 +55,22 @@ export function PayDebtModal({
         !a.isHidden,
     )
   }, [accounts])
+
+  const isCashAccount = (account: Account) =>
+    account.kind === 'cash' || account.accountType === 'cash'
+
+  const cardAccounts = useMemo(
+    () => eligibleAccounts.filter((a) => a.kind === 'card'),
+    [eligibleAccounts],
+  )
+  const cashAccount = useMemo(
+    () => eligibleAccounts.find((a) => a.kind !== 'card' && isCashAccount(a)) ?? null,
+    [eligibleAccounts],
+  )
+  const walletAccounts = useMemo(
+    () => eligibleAccounts.filter((a) => a.kind !== 'card' && !isCashAccount(a)),
+    [eligibleAccounts],
+  )
 
   const selectedAccount = useMemo(() => {
     return eligibleAccounts.find((a) => a.id === selectedAccountId) ?? null
@@ -83,7 +102,7 @@ export function PayDebtModal({
     const paymentMethod: PaymentMethod =
       selectedAccount.kind === 'card'
         ? 'card'
-        : selectedAccount.accountType === 'cash'
+        : isCashAccount(selectedAccount)
           ? 'cash'
           : 'ewallet'
 
@@ -109,6 +128,7 @@ export function PayDebtModal({
       onClose={onClose}
       closeLabel="Close repay debt dialog"
       closeDisabled={saving}
+      overlayClassName={pickerOpen ? 'invisible' : undefined}
       panelClassName={debtModalPanel}
       actions={
         <div className="flex w-full items-center justify-end gap-3">
@@ -206,78 +226,54 @@ export function PayDebtModal({
           )}
         </div>
 
-        {/* Source Account Selector */}
-        <div>
-          <label className={fieldLabel}>Select Source Account</label>
-          <p className={`mt-0.5 text-xs ${fieldHint}`}>
+        {/* Source Account: a tile that opens the picker modal */}
+        <div className={`${surfaceNested} space-y-3 p-4`}>
+          <p className={`${fieldLabel} ml-1 block`}>Source Account</p>
+          <PaymentSourcePicker
+            allowCash
+            allowLent={false}
+            cardAccounts={cardAccounts}
+            cardId={selectedAccount?.kind === 'card' ? selectedAccount.id : ''}
+            cashAccount={cashAccount}
+            errorId="pay-source-error"
+            label="Source Account"
+            lentAccounts={[]}
+            method={
+              !selectedAccount
+                ? 'cash'
+                : selectedAccount.kind === 'card'
+                  ? 'card'
+                  : isCashAccount(selectedAccount)
+                    ? 'cash'
+                    : 'ewallet'
+            }
+            onChange={(method, accountId) => {
+              setSelectedAccountId(method === 'cash' ? (cashAccount?.id ?? '') : accountId)
+            }}
+            onOpenChange={setPickerOpen}
+            requiredAmount={isInvalidAmount ? undefined : amount}
+            sheetTitle="Pay from"
+            unselected={!selectedAccount}
+            walletAccounts={walletAccounts}
+            walletId={
+              selectedAccount && selectedAccount.kind !== 'card' && !isCashAccount(selectedAccount)
+                ? selectedAccount.id
+                : ''
+            }
+          />
+          <p className={`ml-1 text-xs ${fieldHint}`}>
             Choose an active bank card, e-wallet, or cash account to deduct funds from.
           </p>
 
-          <div className="mt-2.5 max-h-48 space-y-2 overflow-y-auto pr-1" role="radiogroup" aria-label="Source account">
-            {eligibleAccounts.length === 0 ? (
-              <p className={`rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs ${textMuted} dark:border-slate-700`}>
-                No active source accounts found. Please add a bank card or e-wallet first.
-              </p>
-            ) : (
-              eligibleAccounts.map((account) => {
-                const isSelected = selectedAccountId === account.id
-                const insufficient = account.balance < amount
-
-                return (
-                  <label
-                    key={account.id}
-                    className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 transition-all ${
-                      isSelected
-                        ? 'border-pink-600 bg-pink-50/60 ring-2 ring-pink-500/20 dark:border-pink-500 dark:bg-pink-950/30'
-                        : 'border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="radio"
-                        name="source_account"
-                        value={account.id}
-                        checked={isSelected}
-                        onChange={() => setSelectedAccountId(account.id)}
-                        className="sr-only"
-                        aria-label={account.name}
-                      />
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                        {account.kind === 'card' ? (
-                          <CreditCard size={16} className="text-slate-700 dark:text-slate-300" />
-                        ) : (
-                          <Wallet size={16} className="text-slate-700 dark:text-slate-300" />
-                        )}
-                      </div>
-                      <div>
-                        <span className="block text-sm font-semibold text-slate-950 dark:text-white">
-                          {account.name}
-                        </span>
-                        <span className={`block text-xs uppercase ${textMuted}`}>
-                          {account.kind} • {account.accountType}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="text-right">
-                      <span className={`block text-sm font-semibold text-slate-900 dark:text-slate-100 ${figure}`}>
-                        {currencyFormatter.format(account.balance)}
-                      </span>
-                      {insufficient && (
-                        <span className="text-[11px] font-medium text-red-600 dark:text-red-400">
-                          Insufficient
-                        </span>
-                      )}
-                    </div>
-                  </label>
-                )
-              })
-            )}
-          </div>
+          {eligibleAccounts.length === 0 && (
+            <p className={`rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs ${textMuted} dark:border-slate-700`}>
+              No active source accounts found. Please add a bank card or e-wallet first.
+            </p>
+          )}
 
           {hasInsufficientFunds && (
-            <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-red-50 p-2.5 text-xs text-red-700 dark:bg-red-950/50 dark:text-red-300">
-              <AlertCircle size={14} className="shrink-0" />
+            <div className="flex items-center gap-2 rounded-xl bg-red-50 p-2.5 text-xs text-red-700 dark:bg-red-950/50 dark:text-red-300">
+              <AlertCircle size={14} className="shrink-0" aria-hidden="true" />
               <span>
                 Insufficient balance in this account (Available: {currencyFormatter.format(selectedAccount?.balance ?? 0)}).
               </span>

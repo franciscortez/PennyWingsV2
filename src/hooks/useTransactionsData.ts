@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import {
   keepPreviousData,
   useMutation,
@@ -20,11 +20,17 @@ import {
   updateTransaction as updateTransactionService,
 } from '@/services/transactionsService'
 import type {
+  Account,
   Transaction,
+  TransactionCategory,
   TransactionFilterType,
   TransactionFormValues,
   TransactionMutationValues,
 } from '@/types'
+
+// Stable fallbacks: a fresh `[]` per render would defeat every memo below.
+const noAccounts: Account[] = []
+const noCategories: TransactionCategory[] = []
 
 type UseTransactionsDataOptions = {
   page: number
@@ -103,8 +109,8 @@ export function useTransactionsData({
   }, [queryClient, userId])
 
   const listData = transactionsQuery.data ?? emptyTransactionsListData
-  const categories = categoriesQuery.data ?? []
-  const accounts = accountsQuery.data?.accounts ?? []
+  const categories = categoriesQuery.data ?? noCategories
+  const accounts = accountsQuery.data?.accounts ?? noAccounts
   const error =
     transactionsQuery.error instanceof Error
       ? transactionsQuery.error.message
@@ -116,18 +122,19 @@ export function useTransactionsData({
             ? 'Unable to load transactions.'
             : null
 
-  const transactableAccounts = accounts.filter((account) => account.canTransact)
-  const cardAccounts = transactableAccounts.filter(
-    (account) => account.kind === 'card',
-  )
-  const lentAccounts = transactableAccounts.filter(
-    (account) => account.kind === 'lent',
-  )
-  const walletAccounts = transactableAccounts.filter(
-    (account) => account.kind === 'wallet',
-  )
-  const cashAccount =
-    transactableAccounts.find((account) => account.kind === 'cash') ?? null
+  // Memoized so the account lists keep their identity between renders and the
+  // transaction form does not see "new" props on every parent update.
+  const { cardAccounts, cashAccount, lentAccounts, walletAccounts } = useMemo(() => {
+    const transactableAccounts = accounts.filter((account) => account.canTransact)
+
+    return {
+      cardAccounts: transactableAccounts.filter((account) => account.kind === 'card'),
+      cashAccount:
+        transactableAccounts.find((account) => account.kind === 'cash') ?? null,
+      lentAccounts: transactableAccounts.filter((account) => account.kind === 'lent'),
+      walletAccounts: transactableAccounts.filter((account) => account.kind === 'wallet'),
+    }
+  }, [accounts])
 
   const buildMutationValues = useCallback(
     (values: TransactionFormValues): TransactionMutationValues => {

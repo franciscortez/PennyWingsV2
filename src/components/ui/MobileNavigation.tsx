@@ -10,6 +10,7 @@ import {
   LogOut,
   Moon,
   MoreHorizontal,
+  Receipt,
   Sun,
   Wallet,
   X,
@@ -277,6 +278,22 @@ export function MobileNavigation({
               </span>
               <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-300">
                 Profile & settings
+              </span>
+            </span>
+            <ChevronRight size={18} aria-hidden="true" />
+          </Link>
+
+          <Link
+            to="/debts"
+            onClick={closeMore}
+            aria-current={pathname === '/debts' ? 'page' : undefined}
+            className="mobile-more-action"
+          >
+            <Receipt size={22} aria-hidden="true" />
+            <span className="flex-1 text-left">
+              <span className="block text-sm font-semibold">Debts</span>
+              <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-300">
+                Track BNPL & loans
               </span>
             </span>
             <ChevronRight size={18} aria-hidden="true" />

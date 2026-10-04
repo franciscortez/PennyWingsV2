@@ -166,6 +166,121 @@ export type Database = {
         }
         Relationships: []
       }
+      debt_payments: {
+        Row: {
+          amount: number
+          card_id: string | null
+          created_at: string
+          debt_id: string
+          id: string
+          note: string | null
+          payment_date: string
+          payment_method: string
+          reversal_reason: string | null
+          reversed_at: string | null
+          status: string
+          user_id: string
+          wallet_id: string | null
+        }
+        Insert: {
+          amount: number
+          card_id?: string | null
+          created_at?: string
+          debt_id: string
+          id?: string
+          note?: string | null
+          payment_date?: string
+          payment_method: string
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          status?: string
+          user_id: string
+          wallet_id?: string | null
+        }
+        Update: {
+          amount?: number
+          card_id?: string | null
+          created_at?: string
+          debt_id?: string
+          id?: string
+          note?: string | null
+          payment_date?: string
+          payment_method?: string
+          reversal_reason?: string | null
+          reversed_at?: string | null
+          status?: string
+          user_id?: string
+          wallet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "debt_payments_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "bank_cards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debt_payments_debt_id_fkey"
+            columns: ["debt_id"]
+            isOneToOne: false
+            referencedRelation: "debts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "debt_payments_wallet_id_fkey"
+            columns: ["wallet_id"]
+            isOneToOne: false
+            referencedRelation: "e_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      debts: {
+        Row: {
+          created_at: string
+          debt_type: string
+          due_date: string | null
+          id: string
+          note: string | null
+          original_amount: number
+          outstanding_amount: number
+          paid_at: string | null
+          provider_name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          debt_type: string
+          due_date?: string | null
+          id?: string
+          note?: string | null
+          original_amount: number
+          outstanding_amount: number
+          paid_at?: string | null
+          provider_name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          debt_type?: string
+          due_date?: string | null
+          id?: string
+          note?: string | null
+          original_amount?: number
+          outstanding_amount?: number
+          paid_at?: string | null
+          provider_name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       e_wallets: {
         Row: {
           account_identifier: string | null
@@ -490,6 +605,7 @@ export type Database = {
         Args: { p_code: string }
         Returns: undefined
       }
+      archive_debt_checked: { Args: { p_id: string }; Returns: undefined }
       can_transact_account: {
         Args: { p_resource_id: string; p_resource_type: string }
         Returns: boolean
@@ -498,12 +614,34 @@ export type Database = {
         Args: { p_resource_id: string; p_resource_type: string }
         Returns: boolean
       }
+      create_debt_checked: {
+        Args: {
+          p_debt_type: string
+          p_due_date?: string
+          p_note?: string
+          p_original_amount: number
+          p_provider_name: string
+        }
+        Returns: Json
+      }
       delete_transaction: { Args: { p_id: string }; Returns: undefined }
       get_account_owner: {
         Args: { p_resource_id: string; p_resource_type: string }
         Returns: string
       }
       map_share_user_id: { Args: never; Returns: undefined }
+      pay_debt_checked: {
+        Args: {
+          p_amount: number
+          p_card_id?: string
+          p_debt_id: string
+          p_note?: string
+          p_payment_date?: string
+          p_payment_method: string
+          p_wallet_id?: string
+        }
+        Returns: Json
+      }
       process_transaction:
         | {
             Args: {
@@ -570,6 +708,10 @@ export type Database = {
             }
             Returns: undefined
           }
+      reverse_debt_payment_checked: {
+        Args: { p_payment_id: string; p_reason?: string }
+        Returns: undefined
+      }
       revoke_joint_account_invite: {
         Args: { p_invite_id: string }
         Returns: undefined
@@ -604,12 +746,23 @@ export type Database = {
         Returns: undefined
       }
       sync_monthly_reports: { Args: never; Returns: undefined }
+      unarchive_debt_checked: { Args: { p_id: string }; Returns: undefined }
       update_account_member_role: {
         Args: { p_membership_id: string; p_role: string }
         Returns: undefined
       }
       update_card_balance: {
         Args: { p_delta: number; p_id: string }
+        Returns: undefined
+      }
+      update_debt_checked: {
+        Args: {
+          p_debt_type: string
+          p_due_date?: string
+          p_id: string
+          p_note?: string
+          p_provider_name: string
+        }
         Returns: undefined
       }
       update_transaction: {

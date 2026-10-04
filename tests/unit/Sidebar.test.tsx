@@ -14,6 +14,7 @@ vi.mock('@/components/ui/MobileNavigation', () => ({ MobileNavigation: () => nul
 const destinations = [
   ['Dashboard', '/dashboard'],
   ['Accounts', '/accounts'],
+  ['Debts', '/debts'],
   ['Activity', '/transactions'],
   ['Reports', '/reports'],
   ['Monitoring', '/monitoring'],
@@ -83,7 +84,7 @@ afterEach(() => {
 describe('desktop sidebar', () => {
   it.each(destinations)('names collapsed links and marks only %s current', (name, route) => {
     const { nav } = renderSidebar(false, profile, route)
-    expect(within(nav).getAllByRole('link')).toHaveLength(6)
+    expect(within(nav).getAllByRole('link')).toHaveLength(7)
     for (const [label, href] of destinations) {
       expect(within(nav).getByRole('link', { name: label })).toHaveAttribute('href', href)
     }

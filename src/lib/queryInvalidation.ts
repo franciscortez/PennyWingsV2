@@ -34,3 +34,16 @@ export const invalidateTransactionCaches = (
     queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(userId) }),
     queryClient.invalidateQueries({ queryKey: queryKeys.reports(userId) }),
   ])
+
+export const invalidateDebtCaches = (
+  queryClient: QueryClient,
+  userId: string,
+) =>
+  Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.debts(userId) }),
+    queryClient.invalidateQueries({ queryKey: ['debtCharges', userId] }),
+    queryClient.invalidateQueries({ queryKey: ['debtPayments', userId] }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.accounts(userId) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.dashboard(userId) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.reports(userId) }),
+  ])

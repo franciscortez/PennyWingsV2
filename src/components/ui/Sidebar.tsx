@@ -6,6 +6,7 @@ import {
   Home,
   LogOut,
   Menu,
+  Receipt,
   Settings,
   Wallet,
 } from 'lucide-react'
@@ -29,6 +30,7 @@ type SidebarProps = {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Accounts', href: '/accounts', icon: CreditCard },
+  { name: 'Debts', href: '/debts', icon: Receipt },
   { name: 'Activity', href: '/transactions', icon: History },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
   { name: 'Monitoring', href: '/monitoring', icon: Wallet },

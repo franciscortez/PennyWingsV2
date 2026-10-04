@@ -80,3 +80,20 @@ export type {
   TransactionsListParams,
   TransactionType,
 } from '@/types/transactions'
+export type {
+  Debt,
+  DebtActivityItem,
+  DebtCharge,
+  DebtChargeFormValues,
+  DebtChargeStatus,
+  DebtChargeValues,
+  DebtCreateValues,
+  DebtPayment,
+  DebtPaymentStatus,
+  DebtPayFormValues,
+  DebtPayMutationValues,
+  DebtStatus,
+  DebtSummaryStats,
+  DebtType,
+  DebtUpdateValues,
+} from '@/types/debts'

@@ -6,6 +6,7 @@ import { setupAuthenticatedMocks } from './helpers/authMock'
 const destinations = [
   ['Dashboard', '/dashboard'],
   ['Accounts', '/accounts'],
+  ['Debts', '/debts'],
   ['Activity', '/transactions'],
   ['Reports', '/reports'],
   ['Monitoring', '/monitoring'],
@@ -85,7 +86,7 @@ test.describe('Desktop sidebar', () => {
     await expect(sidebar.getByRole('button', { name: 'Collapse sidebar' })).toBeVisible()
     for (const [name, path] of destinations) {
       const nav = page.getByRole('navigation', { name: 'Primary desktop navigation' })
-      await expect(nav.getByRole('link')).toHaveCount(6)
+      await expect(nav.getByRole('link')).toHaveCount(7)
       await nav.getByRole('link', { name, exact: true }).click()
       await expect(page).toHaveURL(new RegExp(`${path}$`))
       const currentNav = page.getByRole('navigation', { name: 'Primary desktop navigation' })

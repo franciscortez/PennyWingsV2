@@ -262,6 +262,106 @@ export async function setupAuthenticatedMocks(page: Page) {
     })
   })
 
+  // Debts REST & RPCs
+  await page.route('**/rest/v1/debts*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 'debt-1',
+          user_id: 'test-user-id',
+          provider_name: 'Atome',
+          debt_type: 'bnpl',
+          original_amount: 5000,
+          outstanding_amount: 2500,
+          due_date: '2026-10-31',
+          note: 'Phone installment',
+          status: 'outstanding',
+          paid_at: null,
+          created_at: '2026-10-01T00:00:00Z',
+          updated_at: '2026-10-01T00:00:00Z',
+        },
+      ]),
+    })
+  })
+
+  await page.route('**/rest/v1/debt_payments*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([]),
+    })
+  })
+
+  await page.route('**/rest/v1/debt_charges*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        {
+          id: 'charge-2',
+          debt_id: 'debt-1',
+          user_id: 'test-user-id',
+          amount: 2000,
+          charge_date: '2026-10-05',
+          note: 'Second purchase',
+          status: 'active',
+          voided_at: null,
+          void_reason: null,
+          created_at: '2026-10-05T09:00:00Z',
+        },
+        {
+          id: 'charge-1',
+          debt_id: 'debt-1',
+          user_id: 'test-user-id',
+          amount: 3000,
+          charge_date: '2026-10-01',
+          note: null,
+          status: 'active',
+          voided_at: null,
+          void_reason: null,
+          created_at: '2026-10-01T09:00:00Z',
+        },
+      ]),
+    })
+  })
+
+  await page.route('**/rest/v1/rpc/add_debt_charge_checked*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'charge-new-1',
+        debt_id: 'debt-1',
+        amount: 50,
+        outstanding_amount: 2550,
+      }),
+    })
+  })
+
+  await page.route('**/rest/v1/rpc/create_debt_checked*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ id: 'debt-new-1' }),
+    })
+  })
+
+  await page.route('**/rest/v1/rpc/pay_debt_checked*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        id: 'payment-new-1',
+        debt_id: 'debt-1',
+        amount: 2500,
+        remaining_balance: 0,
+        is_paid: true,
+      }),
+    })
+  })
+
   // Set mock Supabase auth session in localStorage before page load
   await page.addInitScript((authStorageKey: string) => {
     const mockStorageSession = {

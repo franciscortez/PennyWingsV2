@@ -178,4 +178,135 @@ export const handlers = [
   http.post('*/rest/v1/rpc/update_transaction_checked', () => {
     return HttpResponse.json(null, { status: 200 })
   }),
+
+  // Debts REST & RPCs
+  http.get('*/rest/v1/debts*', ({ request }) => {
+    const debts = [
+      {
+        id: 'debt-1',
+        user_id: 'test-user-id',
+        provider_name: 'Atome',
+        debt_type: 'bnpl',
+        original_amount: 3000,
+        outstanding_amount: 1500,
+        due_date: '2026-10-31',
+        note: 'Gadget installment',
+        status: 'outstanding',
+        paid_at: null,
+        created_at: '2026-10-01T00:00:00Z',
+        updated_at: '2026-10-01T00:00:00Z',
+      },
+      {
+        id: 'debt-2',
+        user_id: 'test-user-id',
+        provider_name: 'SPayLater',
+        debt_type: 'bnpl',
+        original_amount: 5000,
+        outstanding_amount: 0,
+        due_date: '2026-09-15',
+        note: 'Shoes',
+        status: 'paid',
+        paid_at: '2026-09-15T12:00:00Z',
+        created_at: '2026-08-15T00:00:00Z',
+        updated_at: '2026-09-15T12:00:00Z',
+      },
+    ]
+
+    const accept = request.headers.get('accept')
+    if (accept?.includes('application/vnd.pgrst.object+json')) {
+      return HttpResponse.json(debts[0])
+    }
+
+    return HttpResponse.json(debts)
+  }),
+  http.get('*/rest/v1/debt_payments*', () => {
+    return HttpResponse.json([
+      {
+        id: 'payment-1',
+        debt_id: 'debt-1',
+        user_id: 'test-user-id',
+        amount: 1500,
+        payment_date: '2026-10-02',
+        payment_method: 'card',
+        card_id: 'card-1',
+        wallet_id: null,
+        note: 'First installment',
+        status: 'completed',
+        reversed_at: null,
+        reversal_reason: null,
+        created_at: '2026-10-02T10:00:00Z',
+        card: { card_name: 'Main Debit' },
+        wallet: null,
+      },
+    ])
+  }),
+  http.get('*/rest/v1/debt_charges*', () => {
+    return HttpResponse.json([
+      {
+        id: 'charge-2',
+        debt_id: 'debt-1',
+        user_id: 'test-user-id',
+        amount: 50,
+        charge_date: '2026-10-05',
+        note: 'Second purchase',
+        status: 'active',
+        voided_at: null,
+        void_reason: null,
+        created_at: '2026-10-05T09:00:00Z',
+      },
+      {
+        id: 'charge-1',
+        debt_id: 'debt-1',
+        user_id: 'test-user-id',
+        amount: 20,
+        charge_date: '2026-10-04',
+        note: null,
+        status: 'active',
+        voided_at: null,
+        void_reason: null,
+        created_at: '2026-10-04T09:00:00Z',
+      },
+    ])
+  }),
+  http.post('*/rest/v1/rpc/add_debt_charge_checked', () => {
+    return HttpResponse.json(
+      {
+        id: 'charge-new-1',
+        debt_id: 'debt-1',
+        amount: 50,
+        outstanding_amount: 70,
+      },
+      { status: 200 },
+    )
+  }),
+  http.post('*/rest/v1/rpc/void_debt_charge_checked', () => {
+    return HttpResponse.json(null, { status: 200 })
+  }),
+  http.post('*/rest/v1/rpc/create_debt_checked', () => {
+    return HttpResponse.json({ id: 'debt-new-1' }, { status: 200 })
+  }),
+  http.post('*/rest/v1/rpc/update_debt_checked', () => {
+    return HttpResponse.json(null, { status: 200 })
+  }),
+  http.post('*/rest/v1/rpc/archive_debt_checked', () => {
+    return HttpResponse.json(null, { status: 200 })
+  }),
+  http.post('*/rest/v1/rpc/unarchive_debt_checked', () => {
+    return HttpResponse.json(null, { status: 200 })
+  }),
+  http.post('*/rest/v1/rpc/pay_debt_checked', () => {
+    return HttpResponse.json(
+      {
+        id: 'payment-new-1',
+        debt_id: 'debt-1',
+        amount: 1500,
+        remaining_balance: 0,
+        is_paid: true,
+      },
+      { status: 200 },
+    )
+  }),
+  http.post('*/rest/v1/rpc/reverse_debt_payment_checked', () => {
+    return HttpResponse.json(null, { status: 200 })
+  }),
 ]

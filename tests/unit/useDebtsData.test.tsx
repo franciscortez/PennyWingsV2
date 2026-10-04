@@ -4,8 +4,8 @@ import type { PropsWithChildren } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useDebtsData } from '@/hooks/useDebtsData'
-import { addDebtCharge, voidDebtCharge } from '@/services/debtsService'
-import type { Debt, DebtCharge, DebtPayment } from '@/types'
+import { addDebtCharge, fetchDebts, voidDebtCharge } from '@/services/debtsService'
+import type { Debt, DebtCharge, DebtPayment, DebtStatus } from '@/types'
 
 const mockDebts: Debt[] = [
   {
@@ -159,6 +159,22 @@ describe('useDebtsData', () => {
     })
 
     expect(success).toBe(true)
+  })
+
+  it('keeps the previous debts on screen while a new status filter loads', async () => {
+    const { result, rerender } = renderHook(
+      ({ filter }: { filter: DebtStatus | 'all' }) => useDebtsData('user-1', filter),
+      { initialProps: { filter: 'all' as DebtStatus | 'all' }, wrapper: createWrapper() },
+    )
+    await waitFor(() => expect(result.current.loading).toBe(false))
+    expect(result.current.debts).toHaveLength(3)
+
+    // The next filter never resolves, so only placeholder data can be shown.
+    vi.mocked(fetchDebts).mockImplementationOnce(() => new Promise(() => undefined))
+    rerender({ filter: 'outstanding' })
+
+    expect(result.current.loading).toBe(false)
+    expect(result.current.debts).toHaveLength(3)
   })
 
   it('exposes charges and sends add and void charge mutations', async () => {

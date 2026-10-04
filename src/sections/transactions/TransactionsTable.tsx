@@ -11,6 +11,7 @@ import {
 import { AppButton, fieldInput, fieldLabel, figure, surface, textMuted } from '@/components/ui'
 import { FormattedFigure } from '@/components/ui/FormattedFigure'
 import { TransactionsLoadingRows } from '@/sections/transactions/TransactionsSkeleton'
+import { useDebouncedInput } from '@/hooks/useDebouncedInput'
 import { formatDate } from '@/lib/date'
 import type { Transaction, TransactionFilterType } from '@/types'
 
@@ -139,6 +140,10 @@ export function TransactionsTable({
   totalPages,
   transactions,
 }: TransactionsTableProps) {
+  // The field answers every keystroke locally; the URL-backed query only hears
+  // about the search once the user pauses.
+  const [searchDraft, setSearchDraft] = useDebouncedInput(searchQuery, onSearchChange)
+
   return (
     <>
       <section className={`${surface} flex min-w-0 flex-col gap-5 p-5 sm:p-6 xl:flex-row xl:items-end`}>
@@ -152,8 +157,8 @@ export function TransactionsTable({
               id="transaction-search"
               type="text"
               placeholder="Description, category..."
-              value={searchQuery}
-              onChange={(event) => onSearchChange(event.target.value)}
+              value={searchDraft}
+              onChange={(event) => setSearchDraft(event.target.value)}
               className={fieldInput(false, 'pl-12')}
             />
           </div>

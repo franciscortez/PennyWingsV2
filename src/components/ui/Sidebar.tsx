@@ -17,6 +17,7 @@ import { MobileNavigation } from '@/components/ui/MobileNavigation'
 import { SidebarTooltip } from '@/components/ui/SidebarTooltip'
 import { ThemeToggle } from '@/components/ui/ThemeToggle'
 import { PennyWingsMark } from '@/sections/shared'
+import { prefetchRoute } from '@/lib/routePrefetch'
 import type { SidebarInfo } from '@/types'
 
 type SidebarProps = {
@@ -170,6 +171,9 @@ function SidebarLink({
         <Link
           {...tooltipProps}
           to={item.href}
+          onFocus={() => prefetchRoute(item.href)}
+          onPointerEnter={() => prefetchRoute(item.href)}
+          onTouchStart={() => prefetchRoute(item.href)}
           tabIndex={0}
           aria-label={item.name}
           aria-current={active ? 'page' : undefined}
@@ -195,6 +199,9 @@ function SidebarProfile({ expanded, info }: { expanded: boolean; info: SidebarIn
         <Link
           {...tooltipProps}
           to="/profile"
+          onFocus={() => prefetchRoute('/profile')}
+          onPointerEnter={() => prefetchRoute('/profile')}
+          onTouchStart={() => prefetchRoute('/profile')}
           tabIndex={0}
           aria-label={info.loading ? 'Settings, loading profile' : `Settings for ${info.displayName}`}
           aria-busy={info.loading}

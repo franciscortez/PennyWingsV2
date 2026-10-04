@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
-import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useMonitoringData } from '@/hooks/useMonitoringData'
@@ -75,9 +74,9 @@ export default function Monitoring() {
 
   if (loading) {
     return (
-      <Layout>
+      <>
         <MonitoringSkeleton />
-      </Layout>
+      </>
     )
   }
 
@@ -178,7 +177,7 @@ export default function Monitoring() {
   }
 
   return (
-    <Layout>
+    <>
       <div className="app-design min-w-0 space-y-8 pb-20">
         <MonitoringHeader
           activeTab={activeTab}
@@ -243,6 +242,6 @@ export default function Monitoring() {
           onSubmit={handleSaveGoal}
         />
       ) : null}
-    </Layout>
+    </>
   )
 }

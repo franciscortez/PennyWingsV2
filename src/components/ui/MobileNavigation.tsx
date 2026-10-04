@@ -21,21 +21,17 @@ import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useScrollLock } from '@/hooks/useScrollLock'
 import { useMobileKeyboard } from '@/hooks/useMobileKeyboard'
 import { useTheme } from '@/context/ThemeContext'
+import { prefetchRoute } from '@/lib/routePrefetch'
 import type { SidebarInfo } from '@/types'
 
 const destinations = [
   { label: 'Home', name: 'Dashboard', href: '/dashboard', icon: Home },
   { label: 'Accounts', name: 'Accounts', href: '/accounts', icon: CreditCard },
+  { label: 'Debts', name: 'Debts', href: '/debts', icon: Receipt },
   { label: 'Activity', name: 'Activity', href: '/transactions', icon: History },
   { label: 'Reports', name: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Monitor', name: 'Monitoring', href: '/monitoring', icon: Wallet },
 ]
-
-// Each route renders its own Layout, so this component remounts on every
-// navigation. Without this cache the pill would snap to the new tab on first
-// paint; starting it at the previous tab's geometry lets the CSS transform
-// transition glide it left-to-right instead.
-let lastDockIndicatorGeometry: { x: number; w: number } | null = null
 
 type MobileNavigationProps = {
   onOpenAssistant: () => void
@@ -81,13 +77,11 @@ export function MobileNavigation({
     const indicator = indicatorRef.current
     if (!nav || !indicator) return
 
-    let raf = 0
     let disposed = false
     const place = (x: number, w: number) => {
       indicator.style.transform = `translateX(${x}px)`
       indicator.style.width = `${w}px`
       indicator.style.opacity = '1'
-      lastDockIndicatorGeometry = { x, w }
     }
 
     const update = () => {
@@ -100,23 +94,14 @@ export function MobileNavigation({
       const x = item.offsetLeft
       const w = item.offsetWidth
       if (!didInitIndicatorRef.current) {
+        // First placement snaps into position; the dock now lives in the
+        // persistent shell, so every later tab change glides via the CSS
+        // transform transition.
         didInitIndicatorRef.current = true
-        const cached = lastDockIndicatorGeometry
-        if (cached && (cached.x !== x || cached.w !== w)) {
-          // Start at the previous tab so the transition glides across.
-          indicator.style.transition = 'none'
-          indicator.style.transform = `translateX(${cached.x}px)`
-          indicator.style.width = `${cached.w}px`
-          indicator.style.opacity = '1'
-          void indicator.offsetWidth
-          indicator.style.transition = ''
-          raf = requestAnimationFrame(() => place(x, w))
-        } else {
-          indicator.style.transition = 'none'
-          place(x, w)
-          void indicator.offsetWidth
-          indicator.style.transition = ''
-        }
+        indicator.style.transition = 'none'
+        place(x, w)
+        void indicator.offsetWidth
+        indicator.style.transition = ''
       } else {
         place(x, w)
       }
@@ -135,7 +120,6 @@ export function MobileNavigation({
 
     return () => {
       disposed = true
-      cancelAnimationFrame(raf)
       observer.disconnect()
       window.removeEventListener('resize', update)
     }
@@ -188,6 +172,9 @@ export function MobileNavigation({
                   itemRefs.current[index] = element
                 }}
                 to={href}
+                onFocus={() => prefetchRoute(href)}
+                onPointerEnter={() => prefetchRoute(href)}
+                onTouchStart={() => prefetchRoute(href)}
                 aria-label={name === label ? name : `${label} (${name})`}
                 aria-current={active ? 'page' : undefined}
                 className="mobile-dock-item"
@@ -278,22 +265,6 @@ export function MobileNavigation({
               </span>
               <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-300">
                 Profile & settings
-              </span>
-            </span>
-            <ChevronRight size={18} aria-hidden="true" />
-          </Link>
-
-          <Link
-            to="/debts"
-            onClick={closeMore}
-            aria-current={pathname === '/debts' ? 'page' : undefined}
-            className="mobile-more-action"
-          >
-            <Receipt size={22} aria-hidden="true" />
-            <span className="flex-1 text-left">
-              <span className="block text-sm font-semibold">Debts</span>
-              <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-300">
-                Track BNPL & loans
               </span>
             </span>
             <ChevronRight size={18} aria-hidden="true" />

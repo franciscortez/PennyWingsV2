@@ -322,7 +322,7 @@ body {
   .mobile-dock {
     position: relative;
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(7, minmax(0, 1fr));
     padding: 4px 6px;
     border: 1px solid var(--color-pink-100);
     border-radius: 32px;
@@ -369,6 +369,19 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Seven items need the full width on the narrowest phones to keep every
+     target at 44px: (320 - 2 * 4px margin - 2px border) / 7 = 44.3px. */
+  @media (width < 22rem) {
+    .mobile-navigation-shell {
+      left: max(0.25rem, var(--mobile-safe-left));
+      right: max(0.25rem, var(--mobile-safe-right));
+    }
+
+    .mobile-dock {
+      padding-inline: 0;
+    }
   }
 
   .mobile-dock-item[data-selected='true'] {
@@ -568,6 +581,40 @@ body {
 @keyframes mobile-sheet-in {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Motion tokens. One easing and one enter duration keep route changes, sheets
+   and the dock feeling like the same product. */
+:root {
+  --motion-ease-out: cubic-bezier(0.32, 0.72, 0, 1);
+  --motion-enter: 220ms;
+}
+
+/* Route change: the routed page fades in and rises a few pixels while the
+   sidebar and dock stay put. `backwards` fill applies the first frame during
+   any delay but leaves no transform behind, so fixed and sticky descendants
+   keep their normal containing block once the animation ends. */
+@keyframes route-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .route-enter {
+    animation: route-enter var(--motion-enter) var(--motion-ease-out) backwards;
+  }
+}
+
+/* Payment source picker: slides up from the bottom edge on phones. */
+@keyframes picker-sheet-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .picker-sheet {
+    animation: picker-sheet-in 200ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
 }
 
 /* Calendar selection and focus remain legible on every heatmap intensity.

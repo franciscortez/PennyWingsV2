@@ -3,7 +3,6 @@ import { appChoice, appChoiceActive, appChoiceIdle } from '@/sections/shared/app
 import { KeyRound, ShieldAlert, User } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 
-import Layout from '@/components/Layout'
 import { useAuth } from '@/hooks/useAuth'
 import { consumePendingGoogleDeletion } from '@/lib/accountDeletion'
 import { alerts } from '@/lib/alert'
@@ -49,7 +48,7 @@ export default function ProfilePage() {
   ] as const
 
   return (
-    <Layout>
+    <>
       <div className="app-design min-w-0">
       <PageHeader title="Settings" description="Update your display name, avatar, and account security." />
       <div className="my-8 flex flex-wrap gap-2" aria-label="Settings views">
@@ -71,6 +70,6 @@ export default function ProfilePage() {
         )}
       </div>
       </div>
-    </Layout>
+    </>
   )
 }

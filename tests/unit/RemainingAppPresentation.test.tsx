@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import ProfilePage from '@/pages/Profile'
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -25,7 +24,6 @@ const mocks = vi.hoisted(() => ({
   updateProfile: vi.fn(), updatePassword: vi.fn(), deleteAccount: vi.fn(), reauthenticate: vi.fn(),
   profile: { full_name: 'Fixture User', avatar_url: null }, success: vi.fn(), error: vi.fn(), warning: vi.fn(), confirmDelete: vi.fn(), google: false,
 }))
-vi.mock('@/components/Layout', () => ({ default: ({ children }: { children: ReactNode }) => <main>{children}</main> }))
 vi.mock('@/hooks/useAuth', () => ({ useAuth: () => ({
   user: { last_sign_in_at: '2026-10-03T00:00:00Z', id: 'fixture-user', email: 'fixture@example.com', app_metadata: { provider: mocks.google ? 'google' : 'email' } },
   profile: mocks.profile, updateProfile: mocks.updateProfile,

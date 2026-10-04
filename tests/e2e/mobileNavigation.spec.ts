@@ -8,13 +8,17 @@ test.describe('Mobile bottom navigation', () => {
     await setupAuthenticatedMocks(page)
     await page.goto('/dashboard')
     await expect(page.getByRole('navigation', { name: 'Primary mobile navigation' })).toBeVisible()
+    // The shell paints before the lazy page chunk and its data; wait for the
+    // page itself so scroll and height assertions see real content.
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible()
   })
 
   test('stays a fixed size on scroll and keeps accessible touch targets at 320px', async ({ page }, testInfo) => {
     const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
     const items = nav.locator('a, button')
-    await expect(items).toHaveCount(6)
+    await expect(items).toHaveCount(7)
     await expect(nav.getByRole('link', { name: /Home/ })).toBeVisible()
+    await expect(nav.getByRole('link', { name: /Debts/ })).toBeVisible()
     await expect(nav.getByRole('link', { name: /Monitor/ })).toBeVisible()
     await expect(nav.locator('.mobile-dock-label')).toHaveCount(0)
     await expect(nav).not.toHaveAttribute('data-shrunk', 'true')
@@ -26,7 +30,8 @@ test.describe('Mobile bottom navigation', () => {
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
       const before = await nav.boundingBox()
       expect(before).not.toBeNull()
-      expect(before!.x).toBeGreaterThanOrEqual(12)
+      // 4px edge margin on the narrowest phones keeps seven 44px targets.
+      expect(before!.x).toBeGreaterThanOrEqual(4)
       expect(before!.y + before!.height).toBeLessThanOrEqual(656)
       for (const item of await items.all()) {
         const bounds = await item.boundingBox()
@@ -53,7 +58,7 @@ test.describe('Mobile bottom navigation', () => {
 
   test('navigates to each destination and marks the current route', async ({ page }) => {
     const destinations = [
-      ['Accounts', '/accounts'], ['Activity', '/transactions'],
+      ['Accounts', '/accounts'], ['Debts', '/debts'], ['Activity', '/transactions'],
       ['Reports', '/reports'], ['Monitoring', '/monitoring'], ['Dashboard', '/dashboard'],
     ]
     for (const [name, path] of destinations) {
@@ -76,11 +81,10 @@ test.describe('Mobile bottom navigation', () => {
       return `${style.transform}|${style.width}|${style.opacity}`
     })
 
-    // The dock remounts on navigation and glides the pill from the previous
-    // tab (360ms CSS transition after a rAF). Reading the transform
-    // immediately after the URL changes can hit the detached old node
-    // (empty computed style) or the glide start position, so wait for the
-    // pill to settle before capturing a state for later comparison.
+    // The dock lives in the persistent shell and glides the pill with a CSS
+    // transform transition. Reading the transform immediately after the URL
+    // changes can catch it mid-glide, so wait for the pill to settle before
+    // capturing a state for later comparison.
     const waitForSettledIndicator = async () => {
       await expect.poll(() => indicator.evaluate(
         (element) => `${element.isConnected}|${getComputedStyle(element).opacity}`,

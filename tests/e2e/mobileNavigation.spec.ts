@@ -58,8 +58,8 @@ test.describe('Mobile bottom navigation', () => {
 
   test('navigates to each destination and marks the current route', async ({ page }) => {
     const destinations = [
-      ['Accounts', '/accounts'], ['Debts', '/debts'], ['Activity', '/transactions'],
-      ['Reports', '/reports'], ['Monitoring', '/monitoring'], ['Dashboard', '/dashboard'],
+      ['Accounts', '/accounts'], ['Activity', '/transactions'], ['Reports', '/reports'],
+      ['Debts', '/debts'], ['Monitoring', '/monitoring'], ['Dashboard', '/dashboard'],
     ]
     for (const [name, path] of destinations) {
       const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })

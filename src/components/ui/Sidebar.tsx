@@ -31,9 +31,9 @@ type SidebarProps = {
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
   { name: 'Accounts', href: '/accounts', icon: CreditCard },
-  { name: 'Debts', href: '/debts', icon: Receipt },
   { name: 'Activity', href: '/transactions', icon: History },
   { name: 'Reports', href: '/reports', icon: BarChart3 },
+  { name: 'Debts', href: '/debts', icon: Receipt },
   { name: 'Monitoring', href: '/monitoring', icon: Wallet },
   { name: 'Settings', href: '/profile', icon: Settings },
 ]

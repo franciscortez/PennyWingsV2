@@ -27,9 +27,9 @@ import type { SidebarInfo } from '@/types'
 const destinations = [
   { label: 'Home', name: 'Dashboard', href: '/dashboard', icon: Home },
   { label: 'Accounts', name: 'Accounts', href: '/accounts', icon: CreditCard },
-  { label: 'Debts', name: 'Debts', href: '/debts', icon: Receipt },
   { label: 'Activity', name: 'Activity', href: '/transactions', icon: History },
   { label: 'Reports', name: 'Reports', href: '/reports', icon: BarChart3 },
+  { label: 'Debts', name: 'Debts', href: '/debts', icon: Receipt },
   { label: 'Monitor', name: 'Monitoring', href: '/monitoring', icon: Wallet },
 ]
 

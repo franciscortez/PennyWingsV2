@@ -6,9 +6,9 @@ import { setupAuthenticatedMocks } from './helpers/authMock'
 const destinations = [
   ['Dashboard', '/dashboard'],
   ['Accounts', '/accounts'],
-  ['Debts', '/debts'],
   ['Activity', '/transactions'],
   ['Reports', '/reports'],
+  ['Debts', '/debts'],
   ['Monitoring', '/monitoring'],
   ['Settings', '/profile'],
 ] as const

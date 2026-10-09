@@ -1,3 +1,4 @@
+import { Link } from 'react-router'
 import {
   ArrowLeft,
   Clock,
@@ -281,6 +282,7 @@ function TypeBadge({ transaction }: { transaction: Transaction }) {
 
 function TransactionActions({ canManage, deleting, transaction, onEdit, onDelete, compact = false }: TransactionItemProps & { compact?: boolean }) {
   if (!canManage) return <span className={`text-xs ${textMuted}`}>View only</span>
+  if (transaction.debt_payment_id) return <Link to="/debts" className="text-xs font-medium text-pink-700 underline dark:text-pink-400">Manage in Debts</Link>
 
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">

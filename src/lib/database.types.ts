@@ -554,6 +554,7 @@ export type Database = {
           category_id: string | null
           created_at: string
           created_by: string | null
+          debt_payment_id: string | null
           description: string | null
           fee_amount: number
           id: string
@@ -573,6 +574,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           created_by?: string | null
+          debt_payment_id?: string | null
           description?: string | null
           fee_amount?: number
           id?: string
@@ -592,6 +594,7 @@ export type Database = {
           category_id?: string | null
           created_at?: string
           created_by?: string | null
+          debt_payment_id?: string | null
           description?: string | null
           fee_amount?: number
           id?: string
@@ -618,6 +621,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_debt_payment_id_fkey"
+            columns: ["debt_payment_id"]
+            isOneToOne: false
+            referencedRelation: "debt_payments"
             referencedColumns: ["id"]
           },
           {

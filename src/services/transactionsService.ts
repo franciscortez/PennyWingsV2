@@ -14,7 +14,7 @@ import type {
 
 const TX_SELECT = `
   id, user_id, created_by, type, payment_method, amount, fee_amount, description,
-  transaction_date, created_at,
+  transaction_date, created_at, debt_payment_id,
   card_id, wallet_id, category_id, to_card_id, to_wallet_id,
   category:categories(id, name, type, icon, color),
   card:bank_cards!transactions_card_id_fkey(card_name, color),
@@ -39,6 +39,7 @@ type RawTransactionRow = {
   created_at?: string | null
   created_by: string | null
   description: string | null
+  debt_payment_id?: string | null
   fee_amount?: number | null
   id: string
   payment_method: PaymentMethod
@@ -98,6 +99,7 @@ const mapTransaction = (transaction: RawTransactionRow): Transaction => ({
   created_at: transaction.created_at,
   created_by: transaction.created_by,
   description: transaction.description,
+  debt_payment_id: transaction.debt_payment_id ?? null,
   fee_amount: Number(transaction.fee_amount ?? 0),
   id: transaction.id,
   payment_method: transaction.payment_method,

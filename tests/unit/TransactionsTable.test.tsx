@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router'
 import { TransactionsTable } from '@/sections/transactions/TransactionsTable'
 import type { Transaction } from '@/types'
 
@@ -72,6 +73,24 @@ describe('TransactionsTable UI Component', () => {
   it('renders empty state message when transaction list is empty', () => {
     render(<TransactionsTable {...defaultProps} transactions={[]} totalCount={0} />)
     expect(screen.getByText(/no entries found/i)).toBeInTheDocument()
+  })
+
+  it('routes repayment rows to Debts instead of offering independent edit/delete actions', () => {
+    const onEdit = vi.fn()
+    const onDelete = vi.fn()
+    render(
+      <MemoryRouter>
+        <TransactionsTable {...defaultProps} onEdit={onEdit} onDelete={onDelete}
+          transactions={[{ ...mockTransactions[0], debt_payment_id: 'payment-1' }]} />
+      </MemoryRouter>,
+    )
+    expect(screen.queryByRole('button', { name: 'Edit transaction' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Delete transaction' })).toBeNull()
+    const links = screen.getAllByRole('link', { name: 'Manage in Debts' })
+    expect(links).toHaveLength(2)
+    for (const link of links) expect(link).toHaveAttribute('href', '/debts')
+    expect(onEdit).not.toHaveBeenCalled()
+    expect(onDelete).not.toHaveBeenCalled()
   })
 
   it('shows typing at once and reports the search once after a pause', () => {

@@ -31,6 +31,7 @@ export type Transaction = {
   created_at?: string | null
   created_by: string | null
   description: string | null
+  debt_payment_id?: string | null
   fee_amount?: number
   id: string
   payment_method: PaymentMethod

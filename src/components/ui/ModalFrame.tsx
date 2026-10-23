@@ -18,6 +18,7 @@ import { registerOverlay, type OverlayHandle } from '@/lib/overlayStack'
 type ModalBackdropMode = 'dismiss' | 'none'
 
 type ModalFrameProps = {
+  mobilePresentation?: 'dialog' | 'sheet' | 'fullscreen'
   /** Pinned below the scroll region, so it stays reachable for long forms. */
   actions?: ReactNode
   /**
@@ -62,6 +63,7 @@ type ModalFrameProps = {
  */
 
 export function ModalFrame({
+  mobilePresentation = 'dialog',
   actions,
   backdrop = 'dismiss',
   backdropClassName = 'bg-black/40',
@@ -168,6 +170,7 @@ export function ModalFrame({
         overlayClassName,
       )}
       data-modal-backdrop={backdrop}
+      data-mobile-presentation={mobilePresentation}
       onClick={(event) => {
         // Only the surface outside the panel dismisses: a click inside the
         // panel bubbles up with a different target and is ignored.

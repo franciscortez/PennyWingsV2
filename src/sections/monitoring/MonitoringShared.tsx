@@ -55,7 +55,7 @@ export function ModalShell({ actions, children, onClose, saving, title }: {
   saving: boolean
   title: string
 }) {
-  return <ModalFrame actions={actions} closeDisabled={saving} closeLabel="Close monitoring form" onClose={onClose} panelClassName={`${appModalPanel} max-w-lg`} title={title} titleId="monitoring-modal-title">{children}</ModalFrame>
+  return <ModalFrame mobilePresentation="sheet" actions={actions} closeDisabled={saving} closeLabel="Close monitoring form" onClose={onClose} panelClassName={`${appModalPanel} max-w-lg`} title={title} titleId="monitoring-modal-title">{children}</ModalFrame>
 }
 
 export function ModalActions({ formId, onClose, saving, submitLabel, waitingLabel }: {

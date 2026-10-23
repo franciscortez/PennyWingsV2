@@ -1,0 +1,240 @@
+/* Signed-in phone layouts. Desktop retains the established design system. */
+.connection-notice {
+  margin-bottom: 1rem;
+  border: 1px solid var(--color-pink-200);
+  border-radius: 1rem;
+  padding: 1rem;
+  background: var(--color-pink-50);
+  color: var(--color-pink-900);
+  font-size: .875rem;
+}
+
+.connection-notice button {
+  min-height: 44px;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.dark .connection-notice {
+  background: var(--color-slate-900);
+  color: var(--color-pink-200);
+  border-color: var(--color-slate-700);
+}
+
+@media (max-width: 767px) {
+  :root { --mobile-dock-height: 4.25rem; }
+  .modal-panel :is(input, select, textarea), .mobile-assistant textarea { font-size: 16px; }
+  .modal-header button { min-width: 44px; min-height: 44px; }
+  .mobile-navigation-shell {
+    max-width: 27rem;
+    left: max(.75rem, env(safe-area-inset-left));
+    right: max(.75rem, env(safe-area-inset-right));
+  }
+
+  .mobile-dock {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    border-radius: 24px;
+    padding: 4px;
+  }
+
+  .mobile-dock-item {
+    flex-direction: column;
+    gap: 3px;
+    height: 58px;
+    min-height: 58px;
+    border-radius: 20px;
+  }
+
+  .mobile-dock-label {
+    display: block;
+    font-size: 11px;
+    line-height: 1.2;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .mobile-dock-indicator {
+    border-radius: 20px;
+  }
+
+  .mobile-dock-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mobile-more-panel {
+    max-height: calc(var(--app-viewport-height, 100dvh) - var(--mobile-dock-height) - 2.25rem - env(safe-area-inset-bottom));
+    border-radius: 24px;
+  }
+
+  .mobile-more-action[aria-current="page"] {
+    background: var(--color-pink-100);
+    color: var(--color-pink-900);
+  }
+
+  .dark .mobile-more-action[aria-current="page"] {
+    background: var(--color-slate-800);
+    color: var(--color-pink-200);
+  }
+
+  .mobile-install-help {
+    padding-inline: 1rem;
+    font-size: .875rem;
+  }
+
+  .mobile-install-help summary {
+    min-height: 44px;
+    align-content: center;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .mobile-install-help p {
+    margin-bottom: .75rem;
+    line-height: 1.5;
+  }
+
+  .modal-overlay[data-mobile-presentation="sheet"],
+  .modal-overlay[data-mobile-presentation="fullscreen"] {
+    inset: auto 0;
+    top: var(--app-viewport-top, 0px);
+    height: var(--app-viewport-height, 100dvh);
+    padding: max(8px, env(safe-area-inset-top)) 0 0;
+    align-items: flex-end;
+  }
+
+  .modal-overlay[data-mobile-presentation="sheet"] .modal-panel {
+    width: 100%;
+    max-width: none;
+    max-height: 100%;
+    border-radius: 24px 24px 0 0;
+    border-bottom: 0;
+    animation: mobile-form-sheet-in 180ms ease-out;
+  }
+
+  .modal-overlay[data-mobile-presentation="fullscreen"] {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .modal-overlay[data-mobile-presentation="fullscreen"] .modal-panel {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+  }
+
+  .modal-overlay[data-mobile-presentation="sheet"] :is(.modal-header, .modal-body, .modal-actions),
+  .modal-overlay[data-mobile-presentation="fullscreen"] :is(.modal-header, .modal-body, .modal-actions) {
+    padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
+  }
+
+  .modal-overlay:not([data-mobile-presentation="dialog"]) .modal-header {
+    padding-block: 16px 12px;
+  }
+
+  .modal-overlay:not([data-mobile-presentation="dialog"]) .modal-actions {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    background: inherit;
+  }
+
+  html[data-keyboard="true"] .modal-overlay .modal-actions {
+    padding-block: 8px;
+  }
+
+  .modal-overlay:not([data-mobile-presentation="dialog"]) .modal-body:last-child {
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  .mobile-assistant {
+    top: var(--app-viewport-top, 0px);
+    bottom: auto;
+    height: var(--app-viewport-height, 100dvh);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  html[data-keyboard="true"] .mobile-assistant {
+    padding-bottom: 0;
+  }
+
+
+  @media (max-height: 480px) {
+    .modal-overlay:not([data-mobile-presentation="dialog"]) .modal-panel { overflow-y: auto; }
+    .modal-overlay:not([data-mobile-presentation="dialog"]) .modal-body { overflow: visible; flex: none; }
+  }
+}
+@keyframes mobile-form-sheet-in {
+  from { opacity: .5; transform: translateY(32px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .modal-overlay .modal-panel { animation: none; }
+}
+
+@media (max-width: 767px) {
+  .swal2-container.mobile-alert-confirm {
+    inset: auto 0;
+    top: var(--app-viewport-top, 0px);
+    height: var(--app-viewport-height, 100dvh);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: max(8px, env(safe-area-inset-top)) 0 0;
+  }
+
+  .swal2-container.mobile-alert-confirm .swal2-popup {
+    align-self: flex-end;
+    width: 100%;
+    max-width: none;
+    max-height: 100%;
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-radius: 24px 24px 0 0;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    --swal2-show-animation: mobile-form-sheet-in 180ms ease-out;
+    --swal2-hide-animation: mobile-alert-out 120ms ease-in forwards;
+  }
+
+  .mobile-alert-confirm .swal2-actions {
+    gap: 8px;
+    padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right));
+  }
+
+  .mobile-alert-confirm .swal2-actions button {
+    min-height: 44px;
+    margin: 0;
+  }
+
+  body.swal2-toast-shown > .swal2-container.mobile-alert-toast.swal2-top-end {
+    inset: auto 12px calc(env(safe-area-inset-bottom) + .75rem) 12px;
+    width: auto;
+    max-width: none;
+    height: auto;
+    padding: 0;
+    transform: none;
+  }
+
+  body.swal2-toast-shown:has(.mobile-navigation-shell:not([hidden])) > .swal2-container.mobile-alert-toast.swal2-top-end {
+    bottom: calc(var(--mobile-dock-height, 4.25rem) + env(safe-area-inset-bottom) + 1.5rem);
+  }
+
+  html[data-keyboard="true"] body.swal2-toast-shown > .swal2-container.mobile-alert-toast.swal2-top-end {
+    bottom: calc(100dvh - var(--app-viewport-height, 100dvh) - var(--app-viewport-top, 0px) + .75rem);
+  }
+
+  .mobile-alert-toast .swal2-toast {
+    width: 100%;
+    --swal2-toast-show-animation: mobile-form-sheet-in 180ms ease-out;
+    --swal2-toast-hide-animation: mobile-alert-out 120ms ease-in forwards;
+  }
+}
+
+@keyframes mobile-alert-out {
+  to { opacity: 0; transform: translateY(16px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-alert-confirm .swal2-popup, .mobile-alert-toast .swal2-toast { animation: none; }
+}

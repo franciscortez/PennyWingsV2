@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import {
   ArrowUpRight,
   BarChart3,
@@ -22,6 +22,7 @@ import { useScrollLock } from '@/hooks/useScrollLock'
 import { useMobileKeyboard } from '@/hooks/useMobileKeyboard'
 import { useTheme } from '@/context/ThemeContext'
 import { prefetchRoute } from '@/lib/routePrefetch'
+import { tabDestination, subscribeNavigation, navigationSnapshot } from '@/lib/navigationState'
 import type { SidebarInfo } from '@/types'
 
 const destinations = [
@@ -29,8 +30,10 @@ const destinations = [
   { label: 'Accounts', name: 'Accounts', href: '/accounts', icon: CreditCard },
   { label: 'Activity', name: 'Activity', href: '/transactions', icon: History },
   { label: 'Reports', name: 'Reports', href: '/reports', icon: BarChart3 },
-  { label: 'Debts', name: 'Debts', href: '/debts', icon: Receipt },
-  { label: 'Monitor', name: 'Monitoring', href: '/monitoring', icon: Wallet },
+]
+const secondaryDestinations = [
+  { name: 'Debts', href: '/debts', icon: Receipt },
+  { name: 'Monitoring', href: '/monitoring', icon: Wallet },
 ]
 
 type MobileNavigationProps = {
@@ -45,9 +48,11 @@ export function MobileNavigation({
   sidebarInfo,
 }: MobileNavigationProps) {
   const { pathname } = useLocation()
+  useSyncExternalStore(subscribeNavigation, navigationSnapshot)
   const { theme, toggleTheme } = useTheme()
   const [moreOpen, setMoreOpen] = useState(false)
   const isDesktop = useMediaQuery('(min-width: 768px)')
+  const standalone = useMediaQuery('(display-mode: standalone)') || ('standalone' in navigator && navigator.standalone === true)
   const keyboardOpen = useMobileKeyboard()
   const dialogRef = useRef<HTMLDialogElement>(null)
   const moreButtonRef = useRef<HTMLButtonElement>(null)
@@ -56,7 +61,8 @@ export function MobileNavigation({
   const indicatorRef = useRef<HTMLSpanElement | null>(null)
   const didInitIndicatorRef = useRef(false)
   const profileActive = pathname === '/profile'
-  const activeIndex = destinations.findIndex(({ href }) => pathname === href)
+  const moreActive = profileActive || secondaryDestinations.some(({ href }) => href === pathname)
+  const activeIndex = moreActive ? 4 : destinations.findIndex(({ href }) => pathname === href)
 
   const closeMore = () => {
     dialogRef.current?.close()
@@ -86,7 +92,7 @@ export function MobileNavigation({
 
     const update = () => {
       if (disposed || !nav.getClientRects().length) return
-      const item = activeIndex >= 0 ? itemRefs.current[activeIndex] : null
+      const item = activeIndex === 4 ? moreButtonRef.current : activeIndex >= 0 ? itemRefs.current[activeIndex] : null
       if (!item) {
         indicator.style.opacity = '0'
         return
@@ -171,7 +177,14 @@ export function MobileNavigation({
                 ref={(element) => {
                   itemRefs.current[index] = element
                 }}
-                to={href}
+                to={tabDestination(href)}
+                state={{ restoreTab: true }}
+                onClick={(event) => {
+                  if (active && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+                    event.preventDefault()
+                    window.scrollTo({ top: 0, behavior: 'instant' })
+                  }
+                }}
                 onFocus={() => prefetchRoute(href)}
                 onPointerEnter={() => prefetchRoute(href)}
                 onTouchStart={() => prefetchRoute(href)}
@@ -183,6 +196,7 @@ export function MobileNavigation({
                 <span className="mobile-dock-icon" aria-hidden="true">
                   <Icon size={24} strokeWidth={active ? 2.25 : 1.75} />
                 </span>
+                <span className="mobile-dock-label">{label}</span>
               </Link>
             )
           })}
@@ -194,11 +208,13 @@ export function MobileNavigation({
             aria-expanded={moreOpen}
             aria-haspopup="dialog"
             aria-controls="mobile-more-panel"
+            data-selected={moreActive}
             onClick={openMore}
           >
             <span className="mobile-dock-icon" aria-hidden="true">
               <MoreHorizontal size={24} strokeWidth={1.75} />
             </span>
+            <span className="mobile-dock-label">More</span>
           </button>
         </nav>
       </div>
@@ -215,7 +231,7 @@ export function MobileNavigation({
         }}
         onKeyDown={(event) => {
           if (event.key !== 'Tab') return
-          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled])'))
+          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), summary')).filter((control) => control.getClientRects().length)
           if (!controls.length) return
           event.preventDefault()
           const current = controls.findIndex((control) => control === document.activeElement)
@@ -246,6 +262,13 @@ export function MobileNavigation({
         </div>
 
         <div className="px-3 pb-3">
+          {secondaryDestinations.map(({ name, href, icon: Icon }) => (
+            <Link key={href} to={tabDestination(href)} state={{ restoreTab: true }} onClick={closeMore}
+              onFocus={() => prefetchRoute(href)} onPointerEnter={() => prefetchRoute(href)}
+              aria-current={pathname === href ? 'page' : undefined} className="mobile-more-action">
+              <Icon size={22} aria-hidden="true" /><span className="flex-1 text-sm font-semibold">{name}</span><ChevronRight size={18} aria-hidden="true" />
+            </Link>
+          ))}
           <Link
             to="/profile"
             onClick={closeMore}
@@ -300,6 +323,11 @@ export function MobileNavigation({
           </button>
 
           <div className="mx-3 my-1 border-t border-pink-100 dark:border-slate-800" />
+          {!standalone ? <details className="mobile-install-help">
+            <summary>Install on iPhone</summary>
+            <p>Open PennyWings in Safari. Open the page menu if needed, tap Share, then Add to Home Screen. Turn on Open as Web App if shown, then tap Add.</p>
+            <p>An internet connection is needed to load and save your finances.</p>
+          </details> : null}
           <button
             type="button"
             className="mobile-more-action mobile-sign-out"

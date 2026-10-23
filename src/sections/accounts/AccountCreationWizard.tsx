@@ -307,7 +307,7 @@ export function AccountCreationWizard({
     ) : null
 
   return (
-    <ModalFrame
+    <ModalFrame mobilePresentation="sheet"
       bodyRef={bodyRef}
       closeDisabled={saving}
       closeLabel="Close account setup"

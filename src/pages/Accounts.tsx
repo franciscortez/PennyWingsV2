@@ -206,7 +206,7 @@ export default function Accounts() {
   }
 
   const handleTabChange = (tab: AccountTab) => {
-    setSearchParams({ tab })
+    setSearchParams((current) => { const next = new URLSearchParams(current); next.set('tab', tab); return next })
   }
 
   const handleCreateAccount = async (values: AccountCreateValues) => {

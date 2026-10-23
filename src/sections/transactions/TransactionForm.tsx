@@ -284,6 +284,7 @@ export function TransactionForm({
 
   return (
     <ModalFrame
+      mobilePresentation="sheet"
       actions={
         <AppButton
           disabled={saving}

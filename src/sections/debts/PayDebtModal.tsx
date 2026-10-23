@@ -123,6 +123,7 @@ export function PayDebtModal({
 
   return (
     <ModalFrame
+      mobilePresentation="sheet"
       title={`Repay ${debt.providerName}`}
       description="Pay off a portion or the full balance of this debt."
       onClose={onClose}

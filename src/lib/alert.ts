@@ -42,6 +42,7 @@ const toast = Swal.mixin({
   timer: 2500,
   timerProgressBar: false,
   customClass: {
+    container: 'mobile-alert-toast',
     popup:
       'rounded-2xl border border-pink-50 shadow-lg dark:border-slate-800',
   },
@@ -50,6 +51,7 @@ const toast = Swal.mixin({
 const confirm = Swal.mixin({
   reverseButtons: false,
   customClass: {
+    container: 'mobile-alert-confirm',
     popup:
       'rounded-[2.5rem] border border-pink-50 p-8 shadow-lg dark:border-slate-800',
     title: 'mb-2 text-2xl font-black tracking-tight',

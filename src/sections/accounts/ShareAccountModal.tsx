@@ -120,6 +120,7 @@ export function ShareAccountModal({ account, onClose }: ShareAccountModalProps) 
 
   return (
     <ModalFrame
+      mobilePresentation="sheet"
       closeLabel="Close share modal"
       description={account.name}
       onClose={onClose}

@@ -24,6 +24,9 @@ import {
   updateProfile as updateProfileService,
 } from '@/services/authService'
 import { AuthContext } from '@/context/authContextValue'
+import { clearNavigationMemory, markSignedOut, allowReturnCapture, syncNavigationOwner } from '@/lib/navigationState'
+import { assertOnline, clearUncertainWrite, isTransportError } from '@/lib/connectivity'
+import { queryClient } from '@/lib/queryClient'
 import { AppError } from '@/lib/errors'
 import type {
   AuthContextValue,
@@ -36,19 +39,15 @@ type AuthProviderProps = {
   children: ReactNode
 }
 
-const MIN_INITIAL_LOADING_MS = 900
-
-const wait = (duration: number) =>
-  new Promise((resolve) => {
-    window.setTimeout(resolve, duration)
-  })
-
 const runAuthOperation = async <T,>(
   operation: () => Promise<T>,
+  write = true,
 ): AuthResult<T> => {
   try {
+    if (write) assertOnline(false)
     return { data: await operation(), error: null }
   } catch (error) {
+    if (write && isTransportError(error)) return { data: null, error: new AppError('The request could not be confirmed. Reconnect and check your account before trying again.', { cause: error }) }
     return { data: null, error: AppError.from(error) }
   }
 }
@@ -86,14 +85,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     let bootstrapping = true
 
     const bootstrapAuth = async () => {
-      const minimumLoader = wait(MIN_INITIAL_LOADING_MS)
 
       try {
         if (window.location.hash.includes('access_token')) {
           const session = await getSession()
 
           if (session) {
-            window.history.replaceState(null, '', window.location.pathname)
+            window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
           }
         }
 
@@ -109,6 +107,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           return
         }
 
+        if (currentUser) allowReturnCapture()
+        if (currentUser && syncNavigationOwner(currentUser.id)) { queryClient.clear(); clearUncertainWrite() }
         setUser(currentUser)
 
         if (currentUser) {
@@ -124,7 +124,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
           setProfile(null)
         }
       } finally {
-        await minimumLoader
         bootstrapping = false
 
         if (mounted) {
@@ -139,6 +138,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       data: { subscription },
     } = onAuthStateChange((_event, session) => {
       const currentUser = session?.user ?? null
+      if (currentUser) allowReturnCapture()
+      if (currentUser && syncNavigationOwner(currentUser.id)) { queryClient.clear(); clearUncertainWrite() }
+      if (_event === 'SIGNED_OUT') {
+        clearNavigationMemory()
+        markSignedOut()
+        clearUncertainWrite()
+        queryClient.clear()
+      }
       setUser(currentUser)
 
       if (currentUser) {
@@ -211,7 +218,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   )
 
   const signOut = useCallback(
-    () => runAuthOperation(() => signOutService()),
+    () => runAuthOperation(() => signOutService(), false),
     [],
   )
 

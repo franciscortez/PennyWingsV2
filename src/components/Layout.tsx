@@ -6,12 +6,15 @@ import { useSidebarInfo } from '@/hooks/useSidebarInfo'
 import { alerts } from '@/lib/alert'
 import { AssistantWidget } from '@/sections/assistant'
 import { Sidebar } from '@/components/ui'
+import { useVisualViewport } from '@/hooks/useVisualViewport'
+import { ConnectionNotice } from '@/components/ConnectionNotice'
 
 type LayoutProps = {
   children: ReactNode
 }
 
 export default function Layout({ children }: LayoutProps) {
+  useVisualViewport()
   const { loading, profile, signOut, user } = useAuth()
   const { openAssistant } = useAssistant()
   const sidebarInfo = useSidebarInfo(loading, user?.email, profile)
@@ -52,6 +55,7 @@ export default function Layout({ children }: LayoutProps) {
         }`}
       >
         <div className="app-content mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8 md:pb-8 lg:px-8 xl:px-12">
+          <ConnectionNotice />
           {children}
         </div>
       </main>

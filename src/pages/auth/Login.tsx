@@ -1,3 +1,4 @@
+import { readReturnTarget } from '@/lib/navigationState'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -46,7 +47,7 @@ export default function Login() {
     if (signInError) {
       alerts.error(signInError.message)
     } else {
-      navigate('/dashboard')
+      navigate(readReturnTarget(), { replace: true })
     }
 
     setLoading(false)

@@ -1,5 +1,7 @@
+import { useSearchParams } from 'react-router'
+import { reportMonth } from '@/lib/navigationState'
 import { FileChartColumn } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 
 import { useAuth } from '@/hooks/useAuth'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
@@ -20,7 +22,17 @@ import {
 
 export default function Reports() {
   const { user } = useAuth()
-  const [selectedMonth, setSelectedMonth] = useState(currentMonthInput)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedMonth = reportMonth(searchParams.get('month'), currentMonthInput())
+  useEffect(() => {
+    if (searchParams.get('month') === selectedMonth) return
+    setSearchParams((current) => { const next = new URLSearchParams(current); next.set('month', selectedMonth); return next }, { replace: true })
+  }, [searchParams, selectedMonth, setSearchParams])
+  const setSelectedMonth = (month: string) => setSearchParams((current) => {
+    const next = new URLSearchParams(current)
+    next.set('month', reportMonth(month, currentMonthInput()))
+    return next
+  })
   const { error, loading, reports } = useReportsData(user?.id)
   useErrorAlert(error)
   const selectedReport = useMemo(

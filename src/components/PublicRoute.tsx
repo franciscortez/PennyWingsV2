@@ -1,3 +1,4 @@
+import { readReturnTarget } from '@/lib/navigationState'
 import type { ReactNode } from 'react'
 import { useEffect } from 'react'
 import { Navigate } from 'react-router'
@@ -24,7 +25,7 @@ export default function PublicRoute({ children }: PublicRouteProps) {
   }
 
   if (user) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to={readReturnTarget()} replace />
   }
 
   return children

@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react'
-import { Navigate } from 'react-router'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Navigate, useLocation } from 'react-router'
+import { rememberReturnTarget, readReturnTarget, clearReturnTarget } from '@/lib/navigationState'
 
 import { PageLoader } from '@/components/ui'
 import { ThemeProvider } from '@/context/ThemeContext'
@@ -11,6 +12,12 @@ type ProtectedRouteProps = {
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { loading, user } = useAuth()
+  const location = useLocation()
+  const current = location.pathname + location.search + location.hash
+  useEffect(() => {
+    if (loading) return
+    if (!user) rememberReturnTarget(current)
+  }, [current, loading, user])
 
   if (loading) {
     return (
@@ -24,5 +31,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />
   }
 
+  return <SignedInEntry key={user.id}>{children}</SignedInEntry>
+}
+
+function SignedInEntry({ children }: ProtectedRouteProps) {
+  const location = useLocation()
+  const [entry] = useState(() => ({ key: location.key, target: readReturnTarget() }))
+  useEffect(clearReturnTarget, [])
+  if (location.key === entry.key && location.pathname === '/dashboard' && entry.target !== '/dashboard') return <Navigate to={entry.target} replace />
   return <ThemeProvider>{children}</ThemeProvider>
 }

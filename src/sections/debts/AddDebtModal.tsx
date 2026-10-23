@@ -108,6 +108,7 @@ export function AddDebtModal({
 
   return (
     <ModalFrame
+      mobilePresentation="sheet"
       title="Add New Debt"
       description="Track an installment, credit card balance, or personal loan."
       onClose={onClose}

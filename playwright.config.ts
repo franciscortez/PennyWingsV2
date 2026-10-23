@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test'
 
 export default defineConfig({
   testDir: './tests/e2e',
+  testIgnore: '**/production/**',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
@@ -32,7 +33,7 @@ export default defineConfig({
     {
       name: 'Mobile Safari',
       use: { ...devices['iPhone 13'] },
-      testMatch: /.*(?:transactionModalOverflow|mobileNavigation|mobilePrimaryAction|pwa|dailySpendingCalendar|dashboardDesign|activityDesign|accountsDesign|remainingAppDesign)\.spec\.ts/,
+      testMatch: /.*(?:auth|mobileExperience|routeTransition|modalFocus|transactionModalOverflow|mobileNavigation|mobilePrimaryAction|pwa|dailySpendingCalendar|dashboardDesign|activityDesign|accountsDesign|remainingAppDesign)\.spec\.ts/,
     },
   ],
   webServer: {

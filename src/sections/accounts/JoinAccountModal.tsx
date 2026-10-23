@@ -56,6 +56,7 @@ export function JoinAccountModal({ onClose, onJoined }: JoinAccountModalProps) {
 
   return (
     <ModalFrame
+      mobilePresentation="sheet"
       closeDisabled={false}
       closeLabel="Close join modal"
       onClose={onClose}

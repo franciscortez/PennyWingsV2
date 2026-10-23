@@ -77,6 +77,7 @@ export function EditDebtModal({
 
   return (
     <ModalFrame
+      mobilePresentation="sheet"
       title={`Edit ${debt.providerName}`}
       description="Update debt information or payment deadline."
       onClose={onClose}

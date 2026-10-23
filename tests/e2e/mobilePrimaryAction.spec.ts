@@ -5,7 +5,7 @@ const navigation = (page: Page) => page.getByRole('navigation', { name: 'Primary
 const noDuplicateAction = async (page: Page) => {
   await expect(page.locator('[data-mobile-primary-action], .mobile-primary-action')).toHaveCount(0)
   await expect(page.locator('.mobile-navigation-shell').getByRole('button', { name: /New transaction|Add account|New budget|New goal/i })).toHaveCount(0)
-  await expect(navigation(page).locator('a, button')).toHaveCount(7)
+  await expect(navigation(page).locator('a, button')).toHaveCount(5)
 }
 
 const ready = async (page: Page, path: string) => {

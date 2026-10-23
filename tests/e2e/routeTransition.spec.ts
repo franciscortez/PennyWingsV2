@@ -27,7 +27,10 @@ test.describe('Persistent app shell and route transitions', () => {
       ['Debts', '/debts'],
       ['Activity', '/transactions'],
     ] as const) {
-      await nav.getByRole('link', { name: new RegExp(name) }).click()
+      if (isMobile && path === '/debts') {
+        await page.getByRole('button', { name: 'Open more navigation' }).click()
+        await page.getByRole('dialog', { name: 'Your space' }).getByRole('link', { name }).click()
+      } else await nav.getByRole('link', { name: new RegExp(name) }).click()
       await expect(page).toHaveURL(new RegExp(`${path}$`))
       await expect(page.getByRole('main')).toHaveCount(1)
     }

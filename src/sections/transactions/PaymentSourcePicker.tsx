@@ -243,7 +243,7 @@ export function PaymentSourcePicker({
       ) : null}
 
       {open ? (
-        <ModalFrame
+        <ModalFrame mobilePresentation="sheet"
           closeLabel={`Close ${label} picker`}
           contentClassName="space-y-3 px-4 pb-4 md:px-6 md:pb-6"
           headerClassName="px-4 pt-4 md:px-6 md:pt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight"

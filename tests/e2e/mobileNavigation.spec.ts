@@ -16,11 +16,9 @@ test.describe('Mobile bottom navigation', () => {
   test('stays a fixed size on scroll and keeps accessible touch targets at 320px', async ({ page }, testInfo) => {
     const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
     const items = nav.locator('a, button')
-    await expect(items).toHaveCount(7)
+    await expect(items).toHaveCount(5)
     await expect(nav.getByRole('link', { name: /Home/ })).toBeVisible()
-    await expect(nav.getByRole('link', { name: /Debts/ })).toBeVisible()
-    await expect(nav.getByRole('link', { name: /Monitor/ })).toBeVisible()
-    await expect(nav.locator('.mobile-dock-label')).toHaveCount(0)
+    await expect(nav.locator('.mobile-dock-label')).toHaveCount(5)
     await expect(nav).not.toHaveAttribute('data-shrunk', 'true')
     await expect(nav.locator('.mobile-dock-indicator')).toHaveCount(1)
     await expect(nav.locator('.mobile-dock-indicator')).toHaveAttribute('aria-hidden', 'true')
@@ -30,7 +28,7 @@ test.describe('Mobile bottom navigation', () => {
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
       const before = await nav.boundingBox()
       expect(before).not.toBeNull()
-      // 4px edge margin on the narrowest phones keeps seven 44px targets.
+      // Five labeled destinations retain 44px targets on narrow phones.
       expect(before!.x).toBeGreaterThanOrEqual(4)
       expect(before!.y + before!.height).toBeLessThanOrEqual(656)
       for (const item of await items.all()) {
@@ -59,12 +57,12 @@ test.describe('Mobile bottom navigation', () => {
   test('navigates to each destination and marks the current route', async ({ page }) => {
     const destinations = [
       ['Accounts', '/accounts'], ['Activity', '/transactions'], ['Reports', '/reports'],
-      ['Debts', '/debts'], ['Monitoring', '/monitoring'], ['Dashboard', '/dashboard'],
+      ['Dashboard', '/dashboard'],
     ]
     for (const [name, path] of destinations) {
       const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
       await nav.getByRole('link', { name: new RegExp(name) }).click()
-      await expect(page).toHaveURL(new RegExp(`${path}$`))
+      await expect(page).toHaveURL(new RegExp(`${path}(?:\\?.*)?$`))
       await expect(nav.getByRole('link', { name: new RegExp(name) })).toHaveAttribute('aria-current', 'page')
       await expect(nav.locator('[aria-current="page"]')).toHaveCount(1)
     }
@@ -163,8 +161,8 @@ test.describe('Mobile bottom navigation', () => {
     await panel.getByRole('link', { name: /Profile & settings/ }).click()
     await expect(page).toHaveURL(/\/profile$/)
     await expect(panel).not.toBeVisible()
-    await expect(more).not.toHaveAttribute('data-selected', 'true')
-    await expect.poll(() => page.getByRole('navigation', { name: 'Primary mobile navigation' }).locator('.mobile-dock-indicator').evaluate((element) => getComputedStyle(element).opacity)).toBe('0')
+    await expect(more).toHaveAttribute('data-selected', 'true')
+    await expect.poll(() => page.getByRole('navigation', { name: 'Primary mobile navigation' }).locator('.mobile-dock-indicator').evaluate((element) => getComputedStyle(element).opacity)).toBe('1')
     await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-dock-dark.png') })
     await more.click()
     await panel.getByRole('button', { name: /AI Assistant/ }).click()

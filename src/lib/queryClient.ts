@@ -1,11 +1,19 @@
-import { QueryClient } from '@tanstack/react-query'
+import { MutationCache, QueryClient } from '@tanstack/react-query'
+import { assertOnline, handleWriteError } from '@/lib/connectivity'
 
 import type { MonitoringTab, TransactionFilterType } from '@/types'
 
 const cacheMinutes = 5
 
 export const queryClient = new QueryClient({
+  mutationCache: new MutationCache({
+    onMutate: (_variables, mutation) => assertOnline(mutation.options.meta?.readOnly !== true),
+    onError: (error, _variables, _result, mutation) => {
+      if (mutation.options.meta?.readOnly !== true) handleWriteError(error)
+    },
+  }),
   defaultOptions: {
+    mutations: { networkMode: 'always', retry: false },
     queries: {
       gcTime: 30 * 60 * 1000,
       refetchOnWindowFocus: false,

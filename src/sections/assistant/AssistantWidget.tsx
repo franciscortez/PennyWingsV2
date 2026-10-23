@@ -116,7 +116,7 @@ export function AssistantWidget() {
       {isOpen ? (
         <section
           ref={panelRef}
-          className="animate-assistant-panel-in fixed inset-0 z-60 flex flex-col overflow-hidden border-pink-100 bg-white shadow-2xl md:inset-auto md:bottom-24 md:right-6 md:h-[min(42rem,calc(100vh-8rem))] md:w-[min(26rem,calc(100vw-3rem))] md:rounded-2xl md:border dark:border-slate-800 dark:bg-slate-900"
+          className="mobile-assistant animate-assistant-panel-in fixed inset-0 z-60 flex flex-col overflow-hidden border-pink-100 bg-white shadow-2xl md:inset-auto md:bottom-24 md:right-6 md:h-[min(42rem,calc(100vh-8rem))] md:w-[min(26rem,calc(100vw-3rem))] md:rounded-2xl md:border dark:border-slate-800 dark:bg-slate-900"
           role="dialog"
           aria-modal="true"
           aria-labelledby="assistant-title"

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#c94466">
+    <title>Reconnect · PennyWings</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; background: #fffafd; color: #341421; }
+      * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
+      main { max-width: 28rem; } .brand { color: #a32e50; font-weight: 650; } h1 { font-size: 2rem; letter-spacing: -.04em; line-height: 1.15; } p { line-height: 1.6; }
+      button { min-height: 48px; padding: 12px 24px; border: 0; border-radius: 16px; font: inherit; font-weight: 650; color: white; background: #a32e50; cursor: pointer; } button:focus-visible { outline: 3px solid #c94466; outline-offset: 4px; }
+      @media (prefers-color-scheme: dark) { :root { background: #020617; color: #f1f5f9; } .brand { color: #ffb6c1; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="brand">PennyWings</p>
+      <h1>Let’s reconnect.</h1>
+      <p>This page could not be reached. Check your connection, then try again.</p>
+      <p>Your financial records need a connection to load. This screen does not contain saved balances or queue any changes.</p>
+      <button type="button" id="retry">Try again</button>
+    </main>
+    <script>document.getElementById('retry').addEventListener('click', function () { location.reload(); });</script>
+  </body>
+</html>

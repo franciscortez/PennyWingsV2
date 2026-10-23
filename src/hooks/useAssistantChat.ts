@@ -25,6 +25,7 @@ export function useAssistantChat() {
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const { isPending, mutateAsync, reset } = useMutation({
+    meta: { readOnly: true },
     mutationFn: ({
       request,
       signal,

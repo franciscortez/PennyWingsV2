@@ -133,10 +133,12 @@ export const fetchTransactions = async ({
   let countQuery = supabase
     .from('transactions')
     .select('id', { count: 'exact', head: true })
+    .retry(false)
 
   let dataQuery = supabase
     .from('transactions')
     .select(TX_SELECT)
+    .retry(false)
     .order('transaction_date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to)
@@ -177,6 +179,7 @@ export const fetchAccountBalance = async (
     const { data, error } = await supabase
       .from('bank_cards')
       .select('balance')
+      .retry(false)
       .eq('id', account.card_id)
       .single<BalanceRow>()
 
@@ -191,6 +194,7 @@ export const fetchAccountBalance = async (
     const { data, error } = await supabase
       .from('e_wallets')
       .select('balance')
+      .retry(false)
       .eq('id', account.wallet_id)
       .single<BalanceRow>()
 

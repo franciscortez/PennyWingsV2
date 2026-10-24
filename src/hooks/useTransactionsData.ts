@@ -315,6 +315,7 @@ export function useTransactionsData({
     error: userId ? error : null,
     lentAccounts,
     loading: userId ? transactionsQuery.isLoading : false,
+    hasLoadedData: transactionsQuery.data !== undefined && !transactionsQuery.isPlaceholderData,
     optionsLoading: userId
       ? categoriesQuery.isLoading || accountsQuery.isLoading
       : false,

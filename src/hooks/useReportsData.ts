@@ -20,6 +20,7 @@ export function useReportsData(userId: string | undefined) {
         : null
 
   return {
+    hasLoadedData: reportsQuery.data !== undefined,
     error: userId ? error : null,
     loading: userId ? reportsQuery.isLoading : false,
     reports: reportsQuery.data ?? [],

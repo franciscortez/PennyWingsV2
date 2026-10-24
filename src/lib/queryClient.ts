@@ -15,9 +15,12 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     mutations: { networkMode: 'always', retry: false },
     queries: {
+      // Fail offline reads instead of pausing them for an automatic reconnect replay.
+      networkMode: 'always',
       gcTime: 30 * 60 * 1000,
       refetchOnWindowFocus: false,
-      retry: 1,
+      refetchOnReconnect: false,
+      retry: (failureCount) => navigator.onLine && failureCount < 1,
       staleTime: cacheMinutes * 60 * 1000,
     },
   },

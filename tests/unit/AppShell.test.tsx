@@ -5,6 +5,7 @@ import { Link, MemoryRouter, Route, Routes } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import AppShell from '@/components/AppShell'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 
 const guardMounts = vi.fn()
 const sidebarMounts = vi.fn()
@@ -44,6 +45,7 @@ vi.mock('@/sections/assistant', () => ({ AssistantWidget: () => null }))
 
 const renderShell = (initialPath = '/dashboard') =>
   render(
+    <QueryClientProvider client={new QueryClient()}>
     <MemoryRouter initialEntries={[initialPath]}>
       <Routes>
         <Route element={<AppShell />}>
@@ -67,7 +69,8 @@ const renderShell = (initialPath = '/dashboard') =>
           />
         </Route>
       </Routes>
-    </MemoryRouter>,
+    </MemoryRouter>
+    </QueryClientProvider>,
   )
 
 describe('AppShell', () => {

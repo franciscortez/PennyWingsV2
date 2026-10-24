@@ -115,6 +115,7 @@ export const fetchProfile = async (userId: string) => {
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
+    .retry(false)
     .eq('id', userId)
     .single<Profile>()
 

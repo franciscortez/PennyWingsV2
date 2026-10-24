@@ -41,13 +41,14 @@ describe('AddChargeModal', () => {
     const onClose = vi.fn()
     render(<AddChargeModal debt={atome} onClose={onClose} onSubmit={onSubmit} saving={false} />)
 
-    await user.type(screen.getByLabelText(/Purchase Amount/i), '50')
+    await user.type(screen.getByLabelText(/Purchase Amount/i), '22222.50')
+    expect(screen.getByLabelText(/Purchase Amount/i)).toHaveValue('22,222.50')
     await user.type(screen.getByLabelText(/Note/i), 'Headphones')
     await user.click(screen.getByRole('button', { name: 'Add Purchase' }))
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1))
     expect(onSubmit).toHaveBeenCalledWith(
-      expect.objectContaining({ amount: 50, debt_id: 'debt-1', note: 'Headphones' }),
+      expect.objectContaining({ amount: 22222.5, debt_id: 'debt-1', note: 'Headphones' }),
     )
     await waitFor(() => expect(onClose).toHaveBeenCalled())
   })

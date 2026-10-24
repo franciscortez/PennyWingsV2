@@ -4,6 +4,7 @@ import {
   useId,
   useLayoutEffect,
   useRef,
+  useState,
   type ReactNode,
   type Ref,
   type RefObject,
@@ -13,6 +14,9 @@ import { twMerge } from 'tailwind-merge'
 
 import { useModalFocus } from '@/hooks/useModalFocus'
 import { useScrollLock } from '@/hooks/useScrollLock'
+import { useConnectionFeedback } from '@/hooks/useConnectionFeedback'
+import { useTopOverlay } from '@/hooks/useTopOverlay'
+import { ConnectionNotice } from '@/components/ConnectionNotice'
 import { registerOverlay, type OverlayHandle } from '@/lib/overlayStack'
 
 type ModalBackdropMode = 'dismiss' | 'none'
@@ -92,20 +96,24 @@ export function ModalFrame({
   const layerRef = useRef<HTMLDivElement>(null)
   const dialogRef = useRef<HTMLElement>(null)
   const overlayRef = useRef<OverlayHandle | null>(null)
+  const [overlayToken] = useState(() => Symbol('modal'))
+  const feedback = useConnectionFeedback()
+  const topOverlay = useTopOverlay()
+  const showConnection = feedback && feedback.state !== 'online' && topOverlay === overlayToken
 
   // Hook order matters: layout cleanups run in declaration order, so the page
   // scroll position is restored before focus returns to the opener.
   useScrollLock(lockScroll)
 
   useLayoutEffect(() => {
-    const overlay = registerOverlay(document)
+    const overlay = registerOverlay(document, overlayToken)
     overlayRef.current = overlay
 
     return () => {
       overlay.release()
       overlayRef.current = null
     }
-  }, [])
+  }, [overlayToken])
 
   useModalFocus({
     dialogRef,
@@ -237,8 +245,9 @@ export function ModalFrame({
           {children}
         </div>
 
-        {actions ? (
+        {actions || showConnection ? (
           <div className="modal-actions border-t border-pink-50 px-6 py-4 md:px-8 dark:border-slate-800">
+            {showConnection ? <ConnectionNotice compact /> : null}
             {actions}
           </div>
         ) : null}

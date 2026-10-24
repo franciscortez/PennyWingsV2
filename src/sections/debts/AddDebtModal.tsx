@@ -1,7 +1,9 @@
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
+import type { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { AppButton } from '@/components/ui/Button'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import {
   fieldError,
   fieldHint,
@@ -16,7 +18,7 @@ import {
   debtChoiceIdle,
   debtModalPanel,
 } from '@/sections/debts/debtStyles'
-import { debtCreateSchema } from '@/validation/debtSchemas'
+import { debtCreateFormSchema } from '@/validation/debtSchemas'
 import type { Debt, DebtCreateValues, DebtType } from '@/types'
 
 type AddDebtModalProps = {
@@ -27,13 +29,7 @@ type AddDebtModalProps = {
   saving: boolean
 }
 
-type AddDebtFormValues = {
-  debt_type: DebtType
-  due_date?: string | null
-  note?: string | null
-  original_amount: number
-  provider_name: string
-}
+type AddDebtFormValues = z.input<typeof debtCreateFormSchema>
 
 const providerSuggestions = [
   'Atome',
@@ -66,20 +62,21 @@ export function AddDebtModal({
   saving,
 }: AddDebtModalProps) {
   const {
+    control,
     formState: { errors },
     handleSubmit,
     register,
     setValue,
     watch,
-  } = useForm<AddDebtFormValues>({
+  } = useForm<AddDebtFormValues, unknown, z.output<typeof debtCreateFormSchema>>({
     defaultValues: {
       debt_type: 'bnpl',
       due_date: '',
       note: '',
-      original_amount: '' as unknown as number,
+      original_amount: '',
       provider_name: '',
     },
-    resolver: zodResolver(debtCreateSchema),
+    resolver: zodResolver(debtCreateFormSchema),
   })
 
   const selectedType = watch('debt_type')
@@ -93,7 +90,7 @@ export function AddDebtModal({
         )
       : undefined
 
-  const handleFormSubmit = async (values: AddDebtFormValues) => {
+  const handleFormSubmit = async (values: z.output<typeof debtCreateFormSchema>) => {
     const success = await onSubmit({
       debt_type: values.debt_type,
       due_date: values.due_date || null,
@@ -229,15 +226,19 @@ export function AddDebtModal({
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5 text-sm font-semibold text-slate-500 dark:text-slate-400">
               ₱
             </span>
-            <input
-              id="original-amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              autoComplete="off"
-              placeholder="0.00"
-              className={fieldInput(Boolean(errors.original_amount), 'pl-10 font-geist-mono tabular-nums')}
-              {...register('original_amount', { valueAsNumber: true })}
+            <Controller
+              control={control}
+              name="original_amount"
+              render={({ field: { onChange, ...field } }) => (
+                <MoneyInput
+                  {...field}
+                  id="original-amount"
+                  autoComplete="off"
+                  placeholder="0.00"
+                  className={fieldInput(Boolean(errors.original_amount), 'pl-10 font-geist-mono tabular-nums')}
+                  onValueChange={onChange}
+                />
+              )}
             />
           </div>
           {errors.original_amount && (

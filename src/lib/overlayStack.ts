@@ -13,12 +13,22 @@ export type OverlayHandle = {
 }
 
 const overlayStacks = new WeakMap<Document, symbol[]>()
+const listeners = new Set<() => void>()
 
-export function registerOverlay(doc: Document = document): OverlayHandle {
-  const token = Symbol('overlay')
+export function subscribeOverlays(listener: () => void) {
+  listeners.add(listener)
+  return () => { listeners.delete(listener) }
+}
+
+export function topOverlaySnapshot() {
+  return overlayStacks.get(document)?.at(-1) ?? null
+}
+
+export function registerOverlay(doc: Document = document, token = Symbol('overlay')): OverlayHandle {
   const stack = overlayStacks.get(doc) ?? []
   stack.push(token)
   overlayStacks.set(doc, stack)
+  listeners.forEach(listener => listener())
 
   let released = false
 
@@ -49,6 +59,7 @@ export function registerOverlay(doc: Document = document): OverlayHandle {
       if (current.length === 0) {
         overlayStacks.delete(doc)
       }
+      listeners.forEach(listener => listener())
     },
   }
 }

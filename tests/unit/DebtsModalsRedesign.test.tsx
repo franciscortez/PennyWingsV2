@@ -37,7 +37,7 @@ describe('Debts Modals Redesign', () => {
       expect(dialog).toHaveClass('max-w-lg')
 
       const amountInput = screen.getByLabelText(/Total Amount/i)
-      expect(amountInput).toHaveValue(null)
+      expect(amountInput).toHaveValue('')
       expect(amountInput).toHaveAttribute('placeholder', '0.00')
     })
 

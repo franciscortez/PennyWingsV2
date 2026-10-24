@@ -1,5 +1,7 @@
 
 import { useAuth } from '@/hooks/useAuth'
+import { OfflineDataState } from '@/components/OfflineDataState'
+import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useDailySpendingData } from '@/hooks/useDailySpendingData'
 import { useDashboardData } from '@/hooks/useDashboardData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
@@ -19,6 +21,7 @@ export default function Dashboard() {
     accounts,
     error,
     loading,
+    hasLoadedData,
     monthlyStats,
     progress,
     totalBalance,
@@ -30,12 +33,15 @@ export default function Dashboard() {
   const {
     calendar,
     loading: dailySpendingLoading,
+    hasLoadedData: dailySpendingLoaded,
     error: dailySpendingError,
   } = useDailySpendingData(user?.id, toReportMonth(dashboardMonth))
   // `dailySpendingError` is not alerted here. The calendar section owns that
   // query's alert, so repeating it would show the same toast twice.
   useErrorAlert(error)
+  const unavailable = useUnavailableOfflineData(hasLoadedData)
 
+  if (unavailable) return <OfflineDataState />
   if (loading) {
     return (
       <>
@@ -68,6 +74,7 @@ export default function Dashboard() {
         <ProgressOverviewSection progress={progress} />
         <DailySpendingCalendarSection
           calendar={calendar}
+          hasLoadedData={dailySpendingLoaded}
           error={dailySpendingError}
           loading={dailySpendingLoading}
           month={dashboardMonth}

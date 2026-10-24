@@ -93,23 +93,89 @@ test.describe('Page actions without duplicate mobile buttons', () => {
 
   test('dock keeps safe-area clearance, narrow layout and reduced motion', async ({ page }, testInfo) => {
     await ready(page, '/dashboard')
-    for (const width of [320, 375, 430, 767]) {
+    for (const width of [320, 390, 440, 767]) {
       await page.setViewportSize({ width, height: 667 })
       const box = await navigation(page).boundingBox()
-      expect(box!.x).toBeGreaterThanOrEqual(4) // 4px edge margin below 352px keeps seven 44px targets
-      expect(box!.x + box!.width).toBeLessThanOrEqual(width - 4)
+      expect(box!.x).toBeCloseTo(0, 1)
+      expect(box!.width).toBeCloseTo(width, 1)
       await noDuplicateAction(page)
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
     }
     await page.setViewportSize({ width: 375, height: 667 })
-    await page.locator('.app-layout').evaluate(element => (element as HTMLElement).style.setProperty('--mobile-safe-bottom', '34px'))
+    await page.locator('html').evaluate(element => element.style.setProperty('--mobile-safe-bottom', '34px'))
     const box = await navigation(page).boundingBox()
-    expect(box!.y + box!.height).toBeLessThanOrEqual(667 - 34 - 12)
+    expect(box!.y + box!.height).toBeCloseTo(667 - 34, 1)
+    const shell = await page.locator('.mobile-navigation-shell').boundingBox()
+    expect(shell!.y + shell!.height).toBeCloseTo(667, 1)
+    expect(shell!.height).toBe(68 + 34)
+    expect(await page.locator('.app-content').evaluate(element => getComputedStyle(element).paddingBottom)).toBe('134px')
+    const indicator = await navigation(page).locator('.mobile-dock-indicator').boundingBox()
+    expect(indicator!.y + indicator!.height).toBeLessThanOrEqual(box!.y + box!.height)
     await page.screenshot({ path: testInfo.outputPath('mobile-dock-no-action.png'), animations: 'disabled' })
     await page.emulateMedia({ reducedMotion: 'reduce' })
     expect(await navigation(page).locator('.mobile-dock-indicator').evaluate(element => getComputedStyle(element).transitionDuration)).toBe('0s')
     await page.setViewportSize({ width: 768, height: 1024 })
     await expect(navigation(page)).not.toBeVisible()
+  })
+
+  test('bar fills the safe area while More and toasts stay above it in portrait and landscape', async ({ page }) => {
+    await ready(page, '/dashboard')
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.locator('html').evaluate(element => {
+      element.style.setProperty('--mobile-safe-bottom', '34px')
+      element.style.setProperty('--mobile-safe-left', '44px')
+      element.style.setProperty('--mobile-safe-right', '44px')
+    })
+
+    for (const viewport of [{ width: 390, height: 844 }, { width: 667, height: 320 }]) {
+      await page.setViewportSize(viewport)
+      const shell = page.locator('.mobile-navigation-shell')
+      const bar = await shell.boundingBox()
+      expect(bar!.x).toBe(0)
+      expect(bar!.width).toBe(viewport.width)
+      expect(bar!.y + bar!.height).toBe(viewport.height)
+      const items = navigation(page).locator('a, button')
+      const first = await items.first().boundingBox()
+      const last = await items.last().boundingBox()
+      expect(first!.x).toBeGreaterThanOrEqual(44)
+      expect(last!.x + last!.width).toBeLessThanOrEqual(viewport.width - 44)
+      for (const item of await items.all()) {
+        const box = await item.boundingBox()
+        expect(box!.width).toBeGreaterThanOrEqual(44)
+        expect(box!.height).toBeGreaterThanOrEqual(44)
+        expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height - 34)
+      }
+
+      await page.evaluate(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' }))
+      const content = await page.locator('.app-content > :last-child').boundingBox()
+      expect(content!.y + content!.height).toBeLessThanOrEqual(bar!.y - 32 + 1)
+
+      await page.getByRole('button', { name: 'Open more navigation' }).click()
+      const panel = page.getByRole('dialog', { name: 'Your space' })
+      const panelBox = await panel.boundingBox()
+      expect(bar!.y - panelBox!.y - panelBox!.height).toBeCloseTo(12, 1)
+      expect(panelBox!.y).toBeGreaterThanOrEqual(12)
+      await panel.getByRole('button', { name: 'Switch to dark mode' }).click()
+      expect(await shell.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(
+        await navigation(page).evaluate(element => getComputedStyle(element).backgroundColor),
+      )
+      await panel.getByRole('button', { name: 'Switch to light mode' }).click()
+      await page.keyboard.press('Escape')
+
+      // Exercise the real toast integration without changing account data.
+      await page.evaluate(async () => {
+        const alertModule = '/src/lib/alert.ts'
+        const { alerts } = await import(/* @vite-ignore */ alertModule)
+        alerts.info('Navigation spacing check')
+      })
+      const toast = page.locator('.mobile-alert-toast')
+      await expect(toast).toBeVisible()
+      const toastBox = await toast.boundingBox()
+      expect(bar!.y - toastBox!.y - toastBox!.height).toBeCloseTo(12, 1)
+      expect(toastBox!.x).toBeGreaterThanOrEqual(44)
+      expect(toastBox!.x + toastBox!.width).toBeLessThanOrEqual(viewport.width - 44)
+      await expect(toast).toHaveCount(0)
+    }
   })
 
   test('More sheet stays reachable with enlarged text and long profile names', async ({ page }) => {

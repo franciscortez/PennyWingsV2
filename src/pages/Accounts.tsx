@@ -18,6 +18,8 @@ import { useAccountsData } from '@/hooks/useAccountsData'
 import { useArchivedAccountsData } from '@/hooks/useArchivedAccountsData'
 import { useAccountMembership } from '@/hooks/useJointAccountData'
 import { useAuth } from '@/hooks/useAuth'
+import { OfflineDataState } from '@/components/OfflineDataState'
+import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { alerts } from '@/lib/alert'
 import {
@@ -78,11 +80,13 @@ export default function Accounts() {
     editAccount,
     error,
     loading,
+    hasLoadedData,
     saving,
     totalBalance,
     reload,
   } = useAccountsData(user?.id)
   useErrorAlert(error)
+  const unavailable = useUnavailableOfflineData(hasLoadedData)
   const { leaveAccount, toggleHidden } = useAccountMembership(user?.id)
   const {
     accounts: archivedAccounts,
@@ -181,6 +185,7 @@ export default function Accounts() {
     setWizardOpen(true)
   }, [])
 
+  if (unavailable) return <OfflineDataState />
   if (loading) {
     return (
       <>

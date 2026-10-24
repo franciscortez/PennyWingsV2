@@ -2,6 +2,8 @@ import { useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import { useAuth } from '@/hooks/useAuth'
+import { OfflineDataState } from '@/components/OfflineDataState'
+import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useMonitoringData } from '@/hooks/useMonitoringData'
 import { alerts } from '@/lib/alert'
@@ -51,6 +53,7 @@ export default function Monitoring() {
     expenseCategories,
     goals,
     loading,
+    hasLoadedData,
     optionsLoading,
     removeBudget,
     removeGoal,
@@ -58,6 +61,7 @@ export default function Monitoring() {
     summary,
   } = useMonitoringData(user?.id, activeTab)
   useErrorAlert(error)
+  const unavailable = useUnavailableOfflineData(hasLoadedData)
 
   const linkedGoalCount = useMemo(
     () => goals.filter((goal) => goal.linkedAccount).length,
@@ -72,6 +76,7 @@ export default function Monitoring() {
     setGoalModal({ mode: 'create', goal: null })
   }, [])
 
+  if (unavailable) return <OfflineDataState />
   if (loading) {
     return (
       <>

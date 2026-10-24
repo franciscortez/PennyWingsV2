@@ -8,6 +8,7 @@ export const fetchSidebarProfile = async (
   const { data, error } = await supabase
     .from('profiles')
     .select('id, full_name, avatar_url')
+    .retry(false)
     .eq('id', userId)
     .single<SidebarProfile>()
 

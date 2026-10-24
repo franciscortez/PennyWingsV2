@@ -110,6 +110,7 @@ export const fetchDebts = async (status?: DebtStatus | 'all'): Promise<Debt[]> =
   let query = supabase
     .from('debts')
     .select('*')
+    .retry(false)
     .order('created_at', { ascending: false })
 
   if (status && status !== 'all') {
@@ -127,6 +128,7 @@ export const fetchDebtById = async (id: string): Promise<Debt> => {
   const { data, error } = await supabase
     .from('debts')
     .select('*')
+    .retry(false)
     .eq('id', id)
     .single()
 
@@ -144,6 +146,7 @@ export const fetchDebtPayments = async (debtId?: string): Promise<DebtPayment[]>
       card:bank_cards!debt_payments_card_id_fkey(card_name),
       wallet:e_wallets!debt_payments_wallet_id_fkey(wallet_name)
     `)
+    .retry(false)
     .order('payment_date', { ascending: false })
     .order('created_at', { ascending: false })
 
@@ -162,6 +165,7 @@ export const fetchDebtCharges = async (debtId?: string): Promise<DebtCharge[]> =
   let query = supabase
     .from('debt_charges')
     .select('*')
+    .retry(false)
     .order('charge_date', { ascending: false })
     .order('created_at', { ascending: false })
 

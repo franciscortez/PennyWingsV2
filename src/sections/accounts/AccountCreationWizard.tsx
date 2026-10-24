@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import {
   FaArrowLeft,
   FaBuilding,
@@ -574,15 +575,13 @@ const StepThree = memo(function StepThree({
           <span className="pointer-events-none absolute left-5 top-1/2 -translate-y-1/2 text-base text-slate-600 dark:text-slate-400">
             PHP
           </span>
-          <input
+          <MoneyInput
             id="account-initial-balance"
             aria-describedby={errors.balance ? 'account-balance-error' : undefined}
             aria-invalid={Boolean(errors.balance)}
-            type="number"
-            step="0.01"
             placeholder="0.00"
             value={form.balance}
-            onChange={(event) => onChange('balance', event.target.value)}
+            onValueChange={(value) => onChange('balance', value)}
             className={fieldInput(Boolean(errors.balance), "pl-16 font-geist-mono")}
           />
         </div>

@@ -69,7 +69,7 @@ describe('TransactionForm payment picker', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Bank Card/ }))
     fireEvent.click(screen.getByRole('button', { name: /BDO Debit/ }))
 
-    expect(amount).toHaveValue(125.5)
+    expect(amount).toHaveValue('125.5')
     expect(within(formDialog).getByRole('button', { name: /Payment Method/ })).toHaveTextContent(
       'BDO Debit',
     )

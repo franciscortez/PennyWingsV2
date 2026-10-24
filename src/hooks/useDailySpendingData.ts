@@ -37,6 +37,7 @@ export function useDailySpendingData(
         : null
 
   return {
+    hasLoadedData: dailySpendingQuery.data !== undefined,
     calendar: dailySpendingQuery.data ?? emptyCalendar(month),
     error: userId ? error : null,
     loading: userId ? dailySpendingQuery.isLoading : false,

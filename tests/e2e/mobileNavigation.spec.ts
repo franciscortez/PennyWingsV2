@@ -23,14 +23,16 @@ test.describe('Mobile bottom navigation', () => {
     await expect(nav.locator('.mobile-dock-indicator')).toHaveCount(1)
     await expect(nav.locator('.mobile-dock-indicator')).toHaveAttribute('aria-hidden', 'true')
 
-    for (const width of [320, 375, 430, 767]) {
+    for (const width of [320, 390, 440, 767]) {
       await page.setViewportSize({ width, height: 667 })
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
       const before = await nav.boundingBox()
       expect(before).not.toBeNull()
       // Five labeled destinations retain 44px targets on narrow phones.
-      expect(before!.x).toBeGreaterThanOrEqual(4)
-      expect(before!.y + before!.height).toBeLessThanOrEqual(656)
+      expect(before!.x).toBeCloseTo(0, 1)
+      expect(before!.width).toBeCloseTo(width, 1)
+      expect(before!.y + before!.height).toBeCloseTo(667, 1)
+      expect(before!.height).toBe(68)
       for (const item of await items.all()) {
         const bounds = await item.boundingBox()
         expect(bounds!.width).toBeGreaterThanOrEqual(44)
@@ -51,6 +53,8 @@ test.describe('Mobile bottom navigation', () => {
 
     await page.setViewportSize({ width: 375, height: 667 })
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+    await expect.poll(async () => (await nav.locator('.mobile-dock-indicator').boundingBox())!.width)
+      .toBeCloseTo((await items.first().boundingBox())!.width, 0)
     await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-dock-light.png') })
   })
 
@@ -135,7 +139,7 @@ test.describe('Mobile bottom navigation', () => {
     await panel.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)))
     const navBox = await page.getByRole('navigation', { name: 'Primary mobile navigation' }).boundingBox()
     const panelBox = await panel.boundingBox()
-    expect(panelBox!.y + panelBox!.height).toBeLessThan(navBox!.y)
+    expect(navBox!.y - panelBox!.y - panelBox!.height).toBeCloseTo(12, 1)
     for (let index = 0; index < 7; index += 1) {
       await page.keyboard.press('Tab')
       expect(await panel.evaluate((element) => element.contains(document.activeElement))).toBe(true)

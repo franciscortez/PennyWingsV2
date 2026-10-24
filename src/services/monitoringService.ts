@@ -219,6 +219,7 @@ export const fetchMonitoringData = async (
         .select(
           'id, category_id, limit_amount, period, created_at, category:categories(id, name, type, icon, color)',
         )
+        .retry(false)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .overrideTypes<RawBudgetRow[]>(),
@@ -230,18 +231,21 @@ export const fetchMonitoringData = async (
           linked_card:bank_cards!goals_linked_card_id_fkey(id, card_name, balance, color, is_active),
           linked_wallet:e_wallets!goals_linked_wallet_id_fkey(id, wallet_name, wallet_type, balance, color, is_active)`,
         )
+        .retry(false)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .overrideTypes<RawGoalRow[]>(),
       supabase
         .from('categories')
         .select('id, name, type, icon, color')
+        .retry(false)
         .eq('type', 'expense')
         .or(`user_id.is.null,user_id.eq.${userId}`)
         .order('name', { ascending: true }),
       supabase
         .from('transactions')
         .select('category_id, amount, transaction_date')
+        .retry(false)
         .eq('user_id', userId)
         .eq('type', 'expense')
         .gte('transaction_date', yearStart)

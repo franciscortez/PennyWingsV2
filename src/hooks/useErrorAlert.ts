@@ -6,7 +6,7 @@ export function useErrorAlert(error: string | null) {
   const lastShownError = useRef<string | null>(null)
 
   useEffect(() => {
-    if (!error) {
+    if (!error || !navigator.onLine) {
       lastShownError.current = null
       return
     }

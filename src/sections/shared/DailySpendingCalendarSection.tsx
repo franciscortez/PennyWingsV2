@@ -20,12 +20,14 @@ import {
   weekdays,
 } from '@/sections/shared/dailySpendingCalendar'
 import { FormattedFigure } from '@/components/ui/FormattedFigure'
+import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { figure, surface, surfaceNested } from '@/components/ui/surfaces'
 import type { CalendarCell } from '@/sections/shared/dailySpendingCalendar'
 import type { DailySpendingCalendar } from '@/types'
 
 type DailySpendingCalendarSectionProps = {
   calendar: DailySpendingCalendar
+  hasLoadedData?: boolean
   error: string | null
   loading: boolean
   month: string
@@ -247,6 +249,7 @@ function DayDetailPanel({
 
 export function DailySpendingCalendarSection({
   calendar,
+  hasLoadedData = true,
   error,
   loading,
   month,
@@ -254,6 +257,7 @@ export function DailySpendingCalendarSection({
   const selectedButtonRef = useRef<HTMLButtonElement | null>(null)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const today = toDateInputValue()
+  const unavailable = useUnavailableOfflineData(hasLoadedData)
   const cells = buildCells(month, calendar)
   const stats = getStats(cells, today)
   // The calendar owns this query, so it owns the alert. `Reports.tsx` must not
@@ -281,6 +285,13 @@ export function DailySpendingCalendarSection({
   const toggleDay = (date: string) => {
     setSelectedDate(activeSelection === date ? null : date)
   }
+
+  if (unavailable) return (
+    <article className={`${surface} p-6`}>
+      <h2 className="text-xl font-semibold">Daily spending</h2>
+      <p className="mt-3 text-slate-600 dark:text-slate-300">Reconnect and refresh your records to load daily spending for this month.</p>
+    </article>
+  )
 
   return (
     <article className={`${surface} dashboard-calendar min-w-0 p-4 sm:p-6 md:p-8`}>

@@ -1,4 +1,5 @@
 import { fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import { useState, type FormEvent } from 'react'
 
 import {
@@ -111,16 +112,12 @@ export function BudgetModal({
             >
               Limit
             </label>
-            <input
+            <MoneyInput
               id="budget-limit"
               name="budget-limit"
               autoComplete="off"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
               value={limitAmount}
-              onChange={(event) => setLimitAmount(event.target.value)}
+              onValueChange={setLimitAmount}
               className={fieldInput(false, "min-w-0")}
               placeholder="0.00"
             />

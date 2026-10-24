@@ -1,7 +1,9 @@
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
+import type { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 
 import { AppButton } from '@/components/ui/Button'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import {
   fieldError,
   fieldHint,
@@ -12,7 +14,7 @@ import {
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { figure, surfaceNested, textMuted } from '@/components/ui/surfaces'
 import { debtModalPanel } from '@/sections/debts/debtStyles'
-import { debtChargeSchema } from '@/validation/debtSchemas'
+import { debtChargeFormSchema } from '@/validation/debtSchemas'
 import type { Debt, DebtChargeValues } from '@/types'
 
 type AddChargeModalProps = {
@@ -22,11 +24,7 @@ type AddChargeModalProps = {
   saving: boolean
 }
 
-type AddChargeFormValues = {
-  amount: number
-  charge_date: string
-  note?: string | null
-}
+type AddChargeFormValues = z.input<typeof debtChargeFormSchema>
 
 const currencyFormatter = new Intl.NumberFormat('en-PH', {
   currency: 'PHP',
@@ -38,24 +36,25 @@ const todayIso = () => new Date().toISOString().slice(0, 10)
 
 export function AddChargeModal({ debt, onClose, onSubmit, saving }: AddChargeModalProps) {
   const {
+    control,
     formState: { errors },
     handleSubmit,
     register,
     watch,
-  } = useForm<AddChargeFormValues>({
+  } = useForm<AddChargeFormValues, unknown, z.output<typeof debtChargeFormSchema>>({
     defaultValues: {
-      amount: '' as unknown as number,
+      amount: '',
       charge_date: todayIso(),
       note: '',
     },
-    resolver: zodResolver(debtChargeSchema),
+    resolver: zodResolver(debtChargeFormSchema),
   })
 
   const rawAmount = Number(watch('amount'))
   const previewAmount = Number.isFinite(rawAmount) && rawAmount > 0 ? rawAmount : 0
   const balanceAfter = debt.outstandingAmount + previewAmount
 
-  const handleFormSubmit = async (values: AddChargeFormValues) => {
+  const handleFormSubmit = async (values: z.output<typeof debtChargeFormSchema>) => {
     const success = await onSubmit({
       amount: Number(values.amount),
       charge_date: values.charge_date,
@@ -105,17 +104,21 @@ export function AddChargeModal({ debt, onClose, onSubmit, saving }: AddChargeMod
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5 text-sm font-semibold text-slate-500 dark:text-slate-400">
               ₱
             </span>
-            <input
-              id="charge-amount"
-              type="number"
-              step="0.01"
-              min="0.01"
-              autoFocus
-              autoComplete="off"
-              placeholder="0.00"
-              aria-describedby="charge-balance-preview"
-              className={fieldInput(Boolean(errors.amount), 'pl-10 font-geist-mono tabular-nums')}
-              {...register('amount', { valueAsNumber: true })}
+            <Controller
+              control={control}
+              name="amount"
+              render={({ field: { onChange, ...field } }) => (
+                <MoneyInput
+                  {...field}
+                  id="charge-amount"
+                  autoFocus
+                  autoComplete="off"
+                  placeholder="0.00"
+                  aria-describedby="charge-balance-preview"
+                  className={fieldInput(Boolean(errors.amount), 'pl-10 font-geist-mono tabular-nums')}
+                  onValueChange={onChange}
+                />
+              )}
             />
           </div>
           {errors.amount && (

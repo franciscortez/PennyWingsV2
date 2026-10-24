@@ -185,6 +185,7 @@ export function useMonitoringData(
 
   return {
     ...data,
+    hasLoadedData: monitoringQuery.data !== undefined,
     accounts,
     addBudget,
     addGoal,

@@ -124,7 +124,7 @@ describe('PayDebtModal', () => {
     renderModal()
 
     expect(screen.getByText(/Atome/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Payment Amount/i)).toHaveValue(2000)
+    expect(screen.getByLabelText(/Payment Amount/i)).toHaveValue('2,000')
   })
 
   it('asks for a source account and blocks confirming until one is picked', () => {

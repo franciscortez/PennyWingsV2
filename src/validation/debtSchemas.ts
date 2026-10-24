@@ -68,6 +68,17 @@ export const debtChargeSchema = z.object({
     .transform((val) => (val ? val : null)),
 })
 
+// Editing keeps decimal strings intact; submission uses the existing numeric rules.
+const enteredMoney = z.string().transform(value => value === '' ? NaN : Number(value))
+
+export const debtCreateFormSchema = debtCreateSchema.extend({
+  original_amount: enteredMoney.pipe(debtCreateSchema.shape.original_amount),
+})
+
+export const debtChargeFormSchema = debtChargeSchema.extend({
+  amount: enteredMoney.pipe(debtChargeSchema.shape.amount),
+})
+
 export const debtPaySchema = z
   .object({
     amount: z

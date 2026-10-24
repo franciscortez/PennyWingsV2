@@ -2,6 +2,8 @@ import { useState } from 'react'
 
 import { useAccountsData } from '@/hooks/useAccountsData'
 import { useAuth } from '@/hooks/useAuth'
+import { OfflineDataState } from '@/components/OfflineDataState'
+import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useDebtsData } from '@/hooks/useDebtsData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { alerts } from '@/lib/alert'
@@ -36,6 +38,7 @@ export default function Debts() {
     editDebt,
     error,
     loading,
+    hasLoadedData,
     overdueCount,
     payDebt,
     payments,
@@ -49,6 +52,7 @@ export default function Debts() {
 
   const { accounts } = useAccountsData(user?.id)
   useErrorAlert(error)
+  const unavailable = useUnavailableOfflineData(hasLoadedData)
 
   const [addModalOpen, setAddModalOpen] = useState(false)
   const [editingDebt, setEditingDebt] = useState<Debt | null>(null)
@@ -125,6 +129,8 @@ export default function Debts() {
     }
     return success
   }
+
+  if (unavailable) return <OfflineDataState />
 
   return (
     <>

@@ -4,6 +4,38 @@ import { setupAuthenticatedMocks } from './helpers/authMock'
 test.use({ viewport: { width: 390, height: 844 } })
 test.beforeEach(async ({ page }) => { await setupAuthenticatedMocks(page) })
 
+test('money entry groups thousands while preserving cents and cursor edits', async ({ page }, testInfo) => {
+  await page.goto('/transactions')
+  await page.getByRole('button', { name: 'New Transaction' }).click()
+  const amount = page.getByRole('textbox', { name: 'Amount (PHP)' })
+  await expect(amount).toHaveAttribute('inputmode', 'decimal')
+  await amount.pressSequentially('22222.50')
+  await expect(amount).toHaveValue('22,222.50')
+  await amount.evaluate((input: HTMLInputElement) => input.setSelectionRange(1, 1))
+  await amount.press('9')
+  await expect(amount).toHaveValue('292,222.50')
+  expect(await amount.evaluate((input: HTMLInputElement) => input.selectionStart)).toBe(2)
+  await amount.fill('2,222,222.25')
+  await expect(amount).toHaveValue('2,222,222.25')
+  await page.screenshot({ path: testInfo.outputPath('grouped-money-input.png'), animations: 'disabled' })
+  await amount.fill('')
+  await expect(amount).toHaveValue('')
+})
+
+test('new debt submits the unformatted numeric amount', async ({ page }) => {
+  await page.goto('/debts')
+  await page.getByRole('button', { name: 'Add Debt' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Add New Debt' })
+  await dialog.getByLabel('Provider or Creditor Name').fill('Example provider')
+  const amount = dialog.getByLabel('Total Amount (PHP)')
+  await amount.pressSequentially('22222.50')
+  await expect(amount).toHaveValue('22,222.50')
+  const request = page.waitForRequest(request => request.url().includes('/rpc/create_debt_checked') && request.method() === 'POST')
+  await dialog.getByRole('button', { name: 'Create Debt' }).click()
+  expect((await request).postDataJSON()).toMatchObject({ p_original_amount: 22222.5 })
+  await expect(dialog).not.toBeVisible()
+})
+
 test('transaction sheet is bottom attached, preserves input through a nested picker, and remains bounded in landscape', async ({ page }) => {
   await page.goto('/transactions')
   await page.getByRole('button', { name: 'New Transaction' }).click()
@@ -18,6 +50,10 @@ test('transaction sheet is bottom attached, preserves input through a nested pic
   await expect(dialog.getByPlaceholder('Short note...')).toHaveValue('Keep this draft')
   for (const viewport of [{ width: 320, height: 568 }, { width: 667, height: 320 }]) {
     await page.setViewportSize(viewport)
+    await expect.poll(async () => {
+      const bounds = await dialog.boundingBox()
+      return bounds!.y + bounds!.height
+    }).toBeLessThanOrEqual(viewport.height + 1)
     const box = await dialog.boundingBox()
     expect(box!.y).toBeGreaterThanOrEqual(0)
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 1)
@@ -88,9 +124,12 @@ test('warm offline notice retains the current form draft', async ({ page, contex
   await page.getByPlaceholder('Short note...').fill('Still here')
   await context.setOffline(true)
   await expect(page.getByPlaceholder('Short note...')).toHaveValue('Still here')
+  await expect(page.getByRole('dialog', { name: 'New Transaction' }).getByRole('status')).toContainText("You're offline")
   await page.getByRole('button', { name: /Close transaction/i }).click()
-  await expect(page.getByRole('status')).toContainText('Offline')
+  await expect(page.getByRole('status')).toContainText("You're offline")
   await context.setOffline(false)
+  await expect(page.getByRole('status')).toContainText('Connection detected')
+  await page.getByRole('button', { name: 'Refresh records', exact: true }).click()
   await expect(page.getByRole('status')).toHaveCount(0)
 })
 

@@ -99,6 +99,7 @@ export const fetchMonthlyReports = async (
   const { data, error } = await supabase
     .from('monthly_reports')
     .select('*')
+    .retry(false)
     .eq('user_id', userId)
     .order('report_month', { ascending: false })
 
@@ -180,6 +181,7 @@ export const fetchDailySpending = async (
       card:bank_cards!transactions_card_id_fkey(card_name),
       wallet:e_wallets!transactions_wallet_id_fkey(wallet_name)`,
     )
+    .retry(false)
     // Scoped to the signed-in user on purpose. `save_monthly_report()`
     // aggregates `t.user_id = current_user_id` only, and shared-account
     // activity is recorded on the owner's ledger, so widening this to every

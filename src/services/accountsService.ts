@@ -141,6 +141,7 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
       .select(
         'id, card_name, card_type, balance, color, text_color, last_four, is_active, status, created_at, user_id',
       )
+      .retry(false)
       .eq('is_active', true)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
@@ -149,12 +150,14 @@ export const fetchAccounts = async (userId: string): Promise<AccountsData> => {
       .select(
         'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, status, created_at, user_id',
       )
+      .retry(false)
       .eq('is_active', true)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
     supabase
       .from('account_memberships')
       .select('id, resource_type, resource_id, role, is_hidden')
+      .retry(false)
       .eq('user_id', userId),
   ])
 
@@ -226,6 +229,7 @@ export const fetchArchivedAccounts = async (
       .select(
         'id, card_name, card_type, balance, color, text_color, last_four, is_active, status, created_at, user_id',
       )
+      .retry(false)
       .eq('user_id', userId)
       .eq('is_active', false)
       .eq('status', 'archived')
@@ -235,6 +239,7 @@ export const fetchArchivedAccounts = async (
       .select(
         'id, wallet_name, wallet_type, balance, color, text_color, account_identifier, is_active, status, created_at, user_id',
       )
+      .retry(false)
       .eq('user_id', userId)
       .eq('is_active', false)
       .eq('status', 'archived')

@@ -10,6 +10,7 @@ import {
 
 import { AppButton, fieldError, fieldInput, fieldLabel, surfaceNested } from '@/components/ui'
 import { ModalFrame } from '@/components/ui/ModalFrame'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import { PaymentSourcePicker } from '@/sections/transactions/PaymentSourcePicker'
 import { toDateInputValue } from '@/lib/date'
 import type {
@@ -323,14 +324,13 @@ export function TransactionForm({
               <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-600 dark:text-slate-400">
                 PHP
               </span>
-              <input
+              <MoneyInput
                 aria-describedby={errors.amount ? 'transaction-amount-error' : undefined}
                 aria-invalid={Boolean(errors.amount)}
-                type="number"
-                step="0.01"
+                aria-label="Amount (PHP)"
                 placeholder="0.00"
                 value={form.amount}
-                onChange={(event) => updateField('amount', event.target.value)}
+                onValueChange={(value) => updateField('amount', value)}
                 className={fieldInput(Boolean(errors.amount), 'pl-16 font-geist-mono tabular-nums text-xl')}
               />
             </div>
@@ -640,15 +640,13 @@ function TransactionFeePanel({
           ))}
         </div>
       </div>
-      <input
+      <MoneyInput
         aria-describedby={errors.fee_amount ? 'transaction-fee-error' : undefined}
         aria-invalid={Boolean(errors.fee_amount)}
         id="transaction-fee"
-        type="text"
-        inputMode="decimal"
         placeholder="0.00"
         value={form.fee_amount}
-        onChange={(event) => onUpdate('fee_amount', event.target.value)}
+        onValueChange={(value) => onUpdate('fee_amount', value)}
         className={fieldInput(Boolean(errors.fee_amount), 'font-geist-mono tabular-nums')}
       />
       {errors.fee_amount ? (

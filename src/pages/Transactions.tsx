@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router'
 
 import { AppButton, PageHeader } from '@/components/ui'
 import { useAuth } from '@/hooks/useAuth'
+import { OfflineDataState } from '@/components/OfflineDataState'
+import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useTransactionsData } from '@/hooks/useTransactionsData'
 import { alerts } from '@/lib/alert'
@@ -51,6 +53,7 @@ export default function Transactions() {
     error,
     lentAccounts,
     loading,
+    hasLoadedData,
     optionsLoading,
     removeTransaction,
     saving,
@@ -67,6 +70,7 @@ export default function Transactions() {
     userId: user?.id,
   })
   useErrorAlert(error)
+  const unavailable = useUnavailableOfflineData(hasLoadedData)
 
   const openCreateForm = useCallback(() => {
     setEditingTransaction(null)
@@ -85,6 +89,7 @@ export default function Transactions() {
   }, [setSearchParams])
 
   useEffect(() => {
+    if (!hasLoadedData) return
     if (!loading && totalPages > 0 && page > totalPages) {
       setPage(totalPages, true)
     }
@@ -92,8 +97,9 @@ export default function Transactions() {
     if (!loading && totalPages === 0 && page > 1) {
       setPage(1, true)
     }
-  }, [loading, page, setPage, totalPages])
+  }, [hasLoadedData, loading, page, setPage, totalPages])
 
+  if (unavailable) return <OfflineDataState />
   if (loading) {
     return (
       <>

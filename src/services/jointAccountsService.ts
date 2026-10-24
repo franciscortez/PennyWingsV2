@@ -97,6 +97,7 @@ export const fetchAccountMembers = async (
   const { data: members, error: membersError } = await supabase
     .from('account_memberships')
     .select('id, resource_type, resource_id, user_id, role, invited_by, joined_at')
+    .retry(false)
     .eq('resource_type', resourceType)
     .eq('resource_id', resourceId)
     .order('joined_at', { ascending: true })
@@ -108,6 +109,7 @@ export const fetchAccountMembers = async (
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, full_name')
+    .retry(false)
     .in('id', userIds)
 
   const profileMap = new Map(
@@ -136,6 +138,7 @@ export const fetchActiveInvites = async (
   const { data, error } = await supabase
     .from('joint_account_invites')
     .select('*')
+    .retry(false)
     .eq('resource_type', resourceType)
     .eq('resource_id', resourceId)
     .is('accepted_by', null)

@@ -24,6 +24,7 @@ export const fetchCategories = async (
   const { data, error } = await supabase
     .from('categories')
     .select('id, name, type, icon, color')
+    .retry(false)
     .or(`user_id.is.null,user_id.eq.${userId}`)
     .order('name', { ascending: true })
 

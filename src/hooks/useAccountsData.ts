@@ -130,6 +130,7 @@ export function useAccountsData(userId: string | undefined) {
   const data = accountsQuery.data ?? emptyAccountsData
 
   return {
+    hasLoadedData: accountsQuery.data !== undefined,
     ...(userId ? data : emptyAccountsData),
     addAccount,
     archiveAccount,

@@ -1,4 +1,5 @@
 import { fieldInput, fieldLabel } from '@/components/ui/fieldStyles'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import { useState, type FormEvent } from 'react'
 
 import {
@@ -109,16 +110,12 @@ export function GoalModal({
             >
               Target
             </label>
-            <input
+            <MoneyInput
               id="goal-target"
               name="goal-target"
               autoComplete="off"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.01"
               value={targetAmount}
-              onChange={(event) => setTargetAmount(event.target.value)}
+              onValueChange={setTargetAmount}
               className={fieldInput(false, "min-w-0")}
               placeholder="0.00"
             />
@@ -130,15 +127,12 @@ export function GoalModal({
             >
               Saved
             </label>
-            <input
+            <MoneyInput
               id="goal-current"
               name="goal-current"
               autoComplete="off"
-              type="number"
-              min="0"
-              step="0.01"
               value={currentAmount}
-              onChange={(event) => setCurrentAmount(event.target.value)}
+              onValueChange={setCurrentAmount}
               className={fieldInput(false, "min-w-0")}
               placeholder="0.00"
             />

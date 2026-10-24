@@ -3,24 +3,78 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-    <meta name="theme-color" content="#c94466">
-    <title>Reconnect · PennyWings</title>
+    <meta name="theme-color" content="#fffafd">
+    <title>Reconnect | PennyWings</title>
+    <script>
+      (function () {
+        var preference = null;
+        try { preference = localStorage.getItem('theme'); } catch (_) {}
+        var dark = preference === 'dark' || (preference !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+        document.querySelector('meta[name="theme-color"]').content = dark ? '#020617' : '#fffafd';
+      })();
+    </script>
     <style>
-      :root { color-scheme: light dark; font-family: system-ui, sans-serif; background: #fffafd; color: #341421; }
-      * { box-sizing: border-box; } body { margin: 0; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
-      main { max-width: 28rem; } .brand { color: #a32e50; font-weight: 650; } h1 { font-size: 2rem; letter-spacing: -.04em; line-height: 1.15; } p { line-height: 1.6; }
-      button { min-height: 48px; padding: 12px 24px; border: 0; border-radius: 16px; font: inherit; font-weight: 650; color: white; background: #a32e50; cursor: pointer; } button:focus-visible { outline: 3px solid #c94466; outline-offset: 4px; }
-      @media (prefers-color-scheme: dark) { :root { background: #020617; color: #f1f5f9; } .brand { color: #ffb6c1; } }
+      :root { color-scheme: light; --paper: #fffafd; --surface: #fff0f5; --text: #0f172a; --muted: #475569; --accent: #a32e50; --border: #ffb6c1; --button: #a32e50; font-family: system-ui, sans-serif; background: var(--paper); color: var(--text); }
+      :root[data-theme="dark"] { color-scheme: dark; --paper: #020617; --surface: #0f172a; --text: #f1f5f9; --muted: #cbd5e1; --accent: #ffb6c1; --border: #475569; --button: #a32e50; }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      main { display: flex; flex-direction: column; width: min(100%, 30rem); min-height: 100vh; min-height: 100dvh; margin: 0 auto; padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left)); }
+      .brand { margin: 0; color: var(--accent); font-size: 1.125rem; font-weight: 700; letter-spacing: -.03em; }
+      .content { padding: 48px 0 32px; margin: auto 0; }
+      .illustration { display: grid; place-items: center; width: 88px; height: 88px; border: 1px solid var(--border); border-radius: 28px; background: var(--surface); color: var(--accent); }
+      h1 { margin: 24px 0 12px; font-size: 1.75rem; line-height: 1.2; letter-spacing: -.04em; }
+      p { font-size: 1rem; line-height: 1.6; }
+      .description { color: var(--muted); margin: 0; }
+      .hint { padding: 16px; margin-top: 24px; border-radius: 16px; background: var(--surface); color: var(--muted); }
+      footer { padding-top: 16px; }
+      .status { margin: 0 0 16px; min-height: 3.2em; color: var(--muted); }
+      button { width: 100%; min-height: 48px; padding: 14px 20px; border: 0; border-radius: 999px; font: inherit; font-weight: 650; color: #fff; background: var(--button); cursor: pointer; }
+      button:active { opacity: .85; } button:disabled { opacity: .65; cursor: wait; }
+      button:focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+      @media (max-height: 480px) { .content { padding: 24px 0 8px; } .illustration { width: 64px; height: 64px; border-radius: 20px; } }
     </style>
   </head>
   <body>
-    <main>
+    <main id="offline-page">
       <p class="brand">PennyWings</p>
-      <h1>Let’s reconnect.</h1>
-      <p>This page could not be reached. Check your connection, then try again.</p>
-      <p>Your financial records need a connection to load. This screen does not contain saved balances or queue any changes.</p>
-      <button type="button" id="retry">Try again</button>
+      <section class="content" aria-labelledby="offline-title">
+        <span class="illustration"><svg aria-hidden="true" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m2 2 20 20M8.5 16.5a5 5 0 0 1 7 0M2 8.8a16 16 0 0 1 2-1.6m4-1.8A16 16 0 0 1 22 8.8M5 12a11 11 0 0 1 2.2-1.6m5-1.4A11 11 0 0 1 19 12"/><circle cx="12" cy="20" r=".5" fill="currentColor"/></svg></span>
+        <h1 id="offline-title">You're offline</h1>
+        <p class="description">Connect to Wi-Fi or mobile data to open PennyWings.</p>
+        <p class="hint">Your records will appear when you reconnect. New entries need a connection to save.</p>
+      </section>
+      <footer>
+        <p id="connection-status" class="status" role="status" aria-atomic="true">Check your connection, then try again.</p>
+        <button type="button" id="retry" aria-describedby="connection-status">Try again</button>
+      </footer>
     </main>
-    <script>document.getElementById('retry').addEventListener('click', function () { location.reload(); });</script>
+    <script>
+      (function () {
+        var button = document.getElementById('retry');
+        var status = document.getElementById('connection-status');
+        var page = document.getElementById('offline-page');
+        function updateConnection() {
+          button.disabled = false;
+          page.removeAttribute('aria-busy');
+          button.textContent = navigator.onLine ? 'Open PennyWings' : 'Try again';
+          status.textContent = navigator.onLine ? 'Connection detected. Tap below to try opening your page.' : 'Check your connection, then try again.';
+        }
+        button.addEventListener('click', function () {
+          if (!navigator.onLine) {
+            status.textContent = 'Still offline. Check your connection and try again.';
+            return;
+          }
+          button.disabled = true;
+          button.textContent = 'Opening...';
+          page.setAttribute('aria-busy', 'true');
+          location.reload();
+        });
+        window.addEventListener('online', updateConnection);
+        window.addEventListener('offline', updateConnection);
+        window.addEventListener('pageshow', updateConnection);
+        updateConnection();
+      })();
+    </script>
   </body>
 </html>

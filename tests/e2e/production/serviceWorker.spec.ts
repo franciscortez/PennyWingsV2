@@ -27,17 +27,22 @@ test('built worker serves only a public fallback and retry retains the requested
   const requested = '/transactions?type=expense&page=2'
   connected = false
   await page.goto(base + requested)
-  await expect(page.getByRole('heading', { name: 'Let’s reconnect.' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: "You're offline" })).toBeVisible()
   expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(requested)
   const cached = await page.evaluate(async () => {
     const keys = (await caches.keys()).filter((key) => key.startsWith('pennywings-offline-'))
     return Promise.all(keys.map(async (key) => (await (await caches.open(key)).keys()).map((request) => new URL(request.url).pathname)))
   })
   expect(cached).toEqual([['/offline.html']])
+  // A failed retry returns to a usable fallback at the same deep link.
+  await page.getByRole('button', { name: 'Open PennyWings' }).click()
+  await expect(page.getByRole('heading', { name: "You're offline" })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Open PennyWings' })).toBeEnabled()
+  expect(new URL(page.url()).pathname + new URL(page.url()).search).toBe(requested)
   connected = true
-  await page.getByRole('button', { name: 'Try again' }).click()
+  await page.getByRole('button', { name: 'Open PennyWings' }).click()
   await expect(page).toHaveURL(/\/login$/)
-  await expect(page.getByRole('heading', { name: 'Let’s reconnect.' })).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: "You're offline" })).toHaveCount(0)
   expect(await page.evaluate(() => sessionStorage.getItem('pennywings:return'))).toBe(requested)
   const response = await page.goto(`${base}/server-error`)
   expect(response?.status()).toBe(503)

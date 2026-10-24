@@ -1,9 +1,12 @@
 import { Suspense } from 'react'
-import { Outlet } from 'react-router'
+import { Outlet, useLocation } from 'react-router'
 
 import Layout from '@/components/Layout'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import RouteTransition from '@/components/RouteTransition'
+import { ConnectionFeedbackProvider } from '@/context/ConnectionFeedbackContext'
+import { useAuth } from '@/hooks/useAuth'
+import { OfflineRouteBoundary } from '@/components/OfflineRouteBoundary'
 
 /**
  * The signed-in app chrome, mounted once for every protected route. The guard,
@@ -12,15 +15,21 @@ import RouteTransition from '@/components/RouteTransition'
  * chunk that is still loading never takes the chrome down with it.
  */
 export default function AppShell() {
+  const { user } = useAuth()
+  const { pathname } = useLocation()
   return (
     <ProtectedRoute>
-      <Layout>
-        <RouteTransition>
-          <Suspense fallback={<div aria-busy="true" className="min-h-[60dvh]" />}>
-            <Outlet />
-          </Suspense>
-        </RouteTransition>
-      </Layout>
+      <ConnectionFeedbackProvider key={user?.id ?? 'anonymous'}>
+        <Layout>
+          <RouteTransition>
+            <OfflineRouteBoundary key={pathname}>
+              <Suspense fallback={<div aria-busy="true" className="min-h-[60dvh]" />}>
+                <Outlet />
+              </Suspense>
+            </OfflineRouteBoundary>
+          </RouteTransition>
+        </Layout>
+      </ConnectionFeedbackProvider>
     </ProtectedRoute>
   )
 }

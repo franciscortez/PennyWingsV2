@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { AlertCircle } from 'lucide-react'
 
 import { AppButton } from '@/components/ui/Button'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import {
   fieldError,
   fieldHint,
@@ -36,7 +37,8 @@ export function PayDebtModal({
   onSubmit,
   saving,
 }: PayDebtModalProps) {
-  const [amount, setAmount] = useState<number>(debt.outstandingAmount)
+  const [amountInput, setAmountInput] = useState(String(debt.outstandingAmount))
+  const amount = amountInput === '' ? NaN : Number(amountInput)
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
   const [paymentDate, setPaymentDate] = useState<string>(
     new Date().toISOString().slice(0, 10),
@@ -92,7 +94,7 @@ export function PayDebtModal({
 
   const handlePreset = (fraction: number) => {
     const raw = Math.round(debt.outstandingAmount * fraction * 100) / 100
-    setAmount(raw)
+    setAmountInput(String(raw))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -182,14 +184,11 @@ export function PayDebtModal({
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-5 text-sm font-semibold text-slate-500 dark:text-slate-400">
               ₱
             </span>
-            <input
+            <MoneyInput
               id="pay-amount"
-              type="number"
-              step="0.01"
-              min="0.01"
               autoComplete="off"
-              value={isNaN(amount) ? '' : amount}
-              onChange={(e) => setAmount(parseFloat(e.target.value))}
+              value={amountInput}
+              onValueChange={setAmountInput}
               className={fieldInput(isOverpaying || isInvalidAmount, 'pl-10 font-geist-mono tabular-nums')}
               required
             />

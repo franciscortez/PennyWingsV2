@@ -262,6 +262,7 @@ export function useDebtsData(
     charges,
     debts,
     dueSoonCount: stats.dueSoonCount,
+    hasLoadedData: debtsQuery.data !== undefined && !debtsQuery.isPlaceholderData && paymentsQuery.data !== undefined && chargesQuery.data !== undefined,
     editDebt,
     error: userId ? error : null,
     loading:

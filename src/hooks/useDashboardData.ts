@@ -22,6 +22,7 @@ export function useDashboardData(userId: string | undefined, txLimit = 5) {
         : null
 
   return {
+    hasLoadedData: dashboardQuery.data !== undefined,
     ...(userId ? (dashboardQuery.data ?? emptyDashboardData) : emptyDashboardData),
     loading: userId ? dashboardQuery.isLoading : false,
     error: userId ? error : null,

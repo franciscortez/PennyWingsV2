@@ -1,19 +1,47 @@
 /* Signed-in phone layouts. Desktop retains the established design system. */
 .connection-notice {
+  position: sticky;
+  top: max(8px, env(safe-area-inset-top));
+  z-index: 30;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
   margin-bottom: 1rem;
-  border: 1px solid var(--color-pink-200);
+  border: 1px solid var(--color-pink-300);
   border-radius: 1rem;
   padding: 1rem;
   background: var(--color-pink-50);
   color: var(--color-pink-900);
-  font-size: .875rem;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
+.connection-heading { margin-bottom: 4px; font-weight: 650; }
+.connection-icon { width: 22px; height: 22px; margin-top: 2px; flex-shrink: 0; }
+.connection-notice-compact { position: static; margin-bottom: 12px; padding: 12px; font-size: .875rem; }
+.connection-notice-compact:last-child { margin-bottom: 0; }
+.offline-data-state { max-width: 30rem; margin: 40px auto; padding: 24px; color: var(--color-slate-600); line-height: 1.6; }
+.offline-data-state h1 { margin-block: 24px 12px; color: var(--color-slate-950); font-size: 1.75rem; font-weight: 650; letter-spacing: -.04em; line-height: 1.2; }
+.offline-illustration { display: grid; place-items: center; width: 88px; height: 88px; border: 1px solid var(--color-pink-300); border-radius: 28px; background: var(--color-pink-50); color: var(--color-pink-800); }
+.offline-data-state button { display: inline-flex; min-height: 48px; align-items: center; margin-top: 24px; border-radius: 999px; background: var(--color-pink-800); padding: 12px 24px; font-weight: 650; color: white; }
+.offline-data-state button:focus-visible { outline: 2px solid var(--color-pink-700); outline-offset: 4px; }
+.offline-data-state button:disabled { opacity: .55; cursor: not-allowed; }
+.dark .offline-data-state { color: var(--color-slate-300); }
+.dark .offline-data-state h1 { color: var(--color-slate-100); }
+.dark .offline-illustration { background: var(--color-slate-900); color: var(--color-pink-200); border-color: var(--color-slate-600); }
+
 .connection-notice button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
   min-height: 44px;
   font-weight: 600;
   text-decoration: underline;
 }
+
+.connection-notice button:disabled { opacity: .65; cursor: wait; }
+.connection-notice button:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: 4px; }
 
 .dark .connection-notice {
   background: var(--color-slate-900);
@@ -22,21 +50,8 @@
 }
 
 @media (max-width: 767px) {
-  :root { --mobile-dock-height: 4.25rem; }
   .modal-panel :is(input, select, textarea), .mobile-assistant textarea { font-size: 16px; }
   .modal-header button { min-width: 44px; min-height: 44px; }
-  .mobile-navigation-shell {
-    max-width: 27rem;
-    left: max(.75rem, env(safe-area-inset-left));
-    right: max(.75rem, env(safe-area-inset-right));
-  }
-
-  .mobile-dock {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    border-radius: 24px;
-    padding: 4px;
-  }
-
   .mobile-dock-item {
     flex-direction: column;
     gap: 3px;
@@ -63,7 +78,6 @@
   }
 
   .mobile-more-panel {
-    max-height: calc(var(--app-viewport-height, 100dvh) - var(--mobile-dock-height) - 2.25rem - env(safe-area-inset-bottom));
     border-radius: 24px;
   }
 
@@ -208,7 +222,7 @@
   }
 
   body.swal2-toast-shown > .swal2-container.mobile-alert-toast.swal2-top-end {
-    inset: auto 12px calc(env(safe-area-inset-bottom) + .75rem) 12px;
+    inset: auto max(12px, var(--mobile-safe-right)) calc(var(--mobile-safe-bottom) + .75rem) max(12px, var(--mobile-safe-left));
     width: auto;
     max-width: none;
     height: auto;
@@ -217,7 +231,7 @@
   }
 
   body.swal2-toast-shown:has(.mobile-navigation-shell:not([hidden])) > .swal2-container.mobile-alert-toast.swal2-top-end {
-    bottom: calc(var(--mobile-dock-height, 4.25rem) + env(safe-area-inset-bottom) + 1.5rem);
+    bottom: calc(var(--mobile-dock-height) + var(--mobile-safe-bottom) + .75rem);
   }
 
   html[data-keyboard="true"] body.swal2-toast-shown > .swal2-container.mobile-alert-toast.swal2-top-end {

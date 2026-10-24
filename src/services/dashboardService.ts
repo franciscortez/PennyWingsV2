@@ -205,11 +205,13 @@ export const fetchDashboardData = async (
     supabase
       .from('bank_cards')
       .select('id, card_name, card_type, balance, color, text_color')
+      .retry(false)
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
     supabase
       .from('e_wallets')
       .select('id, wallet_name, wallet_type, balance, color, text_color')
+      .retry(false)
       .eq('is_active', true)
       .order('created_at', { ascending: false }),
     supabase
@@ -223,6 +225,7 @@ export const fetchDashboardData = async (
         to_card:bank_cards!transactions_to_card_id_fkey(card_name, color),
         to_wallet:e_wallets!transactions_to_wallet_id_fkey(wallet_name, color)
       `)
+      .retry(false)
       .order('transaction_date', { ascending: false })
       .order('created_at', { ascending: false })
       .limit(txLimit)
@@ -230,15 +233,18 @@ export const fetchDashboardData = async (
     supabase
       .from('transactions')
       .select('type, amount, fee_amount, category_id')
+      .retry(false)
       .gte('transaction_date', start)
       .lte('transaction_date', end),
     supabase
       .from('budgets')
       .select('category_id, limit_amount')
+      .retry(false)
       .eq('user_id', userId),
     supabase
       .from('goals')
       .select('target_amount, current_amount, linked_card_id, linked_wallet_id')
+      .retry(false)
       .eq('user_id', userId),
   ])
 

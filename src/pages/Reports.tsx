@@ -4,6 +4,8 @@ import { FileChartColumn } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 
 import { useAuth } from '@/hooks/useAuth'
+import { OfflineDataState } from '@/components/OfflineDataState'
+import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useReportsData } from '@/hooks/useReportsData'
 import {
@@ -33,7 +35,8 @@ export default function Reports() {
     next.set('month', reportMonth(month, currentMonthInput()))
     return next
   })
-  const { error, loading, reports } = useReportsData(user?.id)
+  const { error, loading, reports, hasLoadedData } = useReportsData(user?.id)
+  const unavailable = useUnavailableOfflineData(hasLoadedData)
   useErrorAlert(error)
   const selectedReport = useMemo(
     () =>
@@ -43,6 +46,7 @@ export default function Reports() {
     [reports, selectedMonth],
   )
 
+  if (unavailable) return <OfflineDataState />
   if (loading) {
     return (
       <>

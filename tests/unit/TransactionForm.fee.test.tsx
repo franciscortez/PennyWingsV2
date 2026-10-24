@@ -75,7 +75,7 @@ const chooseSource = (dialog: HTMLElement, tile: string, method: string, account
 
 const completeNewTransfer = (dialog: HTMLElement) => {
   fireEvent.click(within(dialog).getByRole('button', { name: 'Transfer/Deposit' }))
-  fireEvent.change(within(dialog).getAllByRole('spinbutton')[0], { target: { value: '40' } })
+  fireEvent.change(within(dialog).getByRole('textbox', { name: 'Amount (PHP)' }), { target: { value: '40' } })
   chooseSource(dialog, 'From Account', 'Bank Card', 'Source card')
   chooseSource(dialog, 'To Account', 'E-Wallet', 'Destination wallet')
   fireEvent.change(within(dialog).getByLabelText('Category'), { target: { value: category.id } })
@@ -83,12 +83,27 @@ const completeNewTransfer = (dialog: HTMLElement) => {
 
 const completeNewWithdrawal = (dialog: HTMLElement) => {
   fireEvent.click(within(dialog).getByRole('button', { name: 'withdrawal' }))
-  fireEvent.change(within(dialog).getAllByRole('spinbutton')[0], { target: { value: '40' } })
+  fireEvent.change(within(dialog).getByRole('textbox', { name: 'Amount (PHP)' }), { target: { value: '40' } })
   chooseSource(dialog, 'Payment Method', 'Bank Card', 'Source card')
   fireEvent.change(within(dialog).getByLabelText('Category'), { target: { value: category.id } })
 }
 
 describe('TransactionForm transfer fees', () => {
+  it('submits grouped amounts and fees as plain numbers', async () => {
+    const { dialog, onSubmit } = renderForm()
+    completeNewTransfer(dialog)
+    const amount = within(dialog).getByRole('textbox', { name: 'Amount (PHP)' })
+    const fee = within(dialog).getByLabelText('Transfer Fee (PHP)')
+    fireEvent.change(amount, { target: { value: '22,222.50' } })
+    fireEvent.change(fee, { target: { value: '1,234.05' } })
+    expect(amount).toHaveValue('22,222.50')
+    expect(fee).toHaveValue('1,234.05')
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save Transaction' }))
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
+      amount: 22222.5, fee_amount: 1234.05,
+    })))
+  })
+
   it.each([0, 15, 25, 12.34])('submits validated fee %s', async (fee) => {
     const { dialog, onSubmit } = renderForm()
     completeNewTransfer(dialog)
@@ -128,7 +143,7 @@ describe('TransactionForm transfer fees', () => {
     })))
   })
 
-  it.each(['-1', 'invalid'])('rejects invalid fee %s without submitting', async (fee) => {
+  it.each(['-1', '-'])('rejects invalid fee %s without submitting', async (fee) => {
     const { dialog, onSubmit } = renderForm()
     completeNewTransfer(dialog)
     fireEvent.change(within(dialog).getByLabelText('Transfer Fee (PHP)'), {
@@ -202,7 +217,7 @@ describe('TransactionForm withdrawal fees', () => {
     expect(within(dialog).getByLabelText('Withdrawal Fee (PHP)')).toHaveValue('0')
   })
 
-  it.each(['-1', 'invalid'])('rejects withdrawal fee %s without submitting', async (fee) => {
+  it.each(['-1', '-'])('rejects withdrawal fee %s without submitting', async (fee) => {
     const { dialog, onSubmit } = renderForm()
     completeNewWithdrawal(dialog)
     fireEvent.change(within(dialog).getByLabelText('Withdrawal Fee (PHP)'), {

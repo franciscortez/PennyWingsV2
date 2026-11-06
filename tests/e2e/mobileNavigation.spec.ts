@@ -182,6 +182,33 @@ test.describe('Mobile bottom navigation', () => {
     await expect(page.locator('.more-avatar')).toHaveText('A')
     expect(await page.locator('.more-page').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
   })
+
+  test('More text doubles at 200% and keyboard focus stays above the tabs', async ({ page }) => {
+    await page.goto('/more')
+    const screen = page.locator('.more-page')
+    const label = screen.getByRole('link', { name: 'Debts', exact: true }).locator('.more-row-copy')
+    const originalSize = await label.evaluate(el => parseFloat(getComputedStyle(el).fontSize))
+    await page.evaluate(() => { document.documentElement.style.fontSize = '200%' })
+    expect(await label.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBeCloseTo(originalSize * 2)
+    await screen.locator('summary').click()
+    await expect(screen.getByText(/Turn on Open as Web App/)).toBeVisible()
+    await screen.getByRole('heading', { level: 1 }).focus()
+
+    for (const control of await screen.locator('a, button, summary').all()) {
+      await page.keyboard.press('Tab')
+      await expect(control).toBeFocused()
+      await expect.poll(async () => (await control.boundingBox())!.y).toBeGreaterThanOrEqual(0)
+      await expect.poll(async () => {
+        const bounds = await control.boundingBox()
+        const dock = await page.getByRole('navigation', { name: 'Primary mobile navigation' }).boundingBox()
+        return bounds!.y + bounds!.height - dock!.y
+      }).toBeLessThanOrEqual(0)
+      const bounds = await control.boundingBox()
+      expect(bounds!.height).toBeGreaterThanOrEqual(44)
+      expect(await control.evaluate(el => getComputedStyle(el).outlineStyle)).not.toBe('none')
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375)
+  })
 })
 
 test('unauthenticated More links return to More after signing in', async ({ page }) => {

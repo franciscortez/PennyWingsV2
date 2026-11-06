@@ -547,39 +547,58 @@ body {
 
 /* More is a routed page; its rows use the existing shell's safe-area gutters. */
 .more-page { width: 100%; max-width: 640px; margin-inline: auto; }
-.more-page h1 { margin: 0 0 16px; font-size: 24px; line-height: 1.25; font-weight: 650; letter-spacing: -.025em; }
-.more-page h2 { margin: 16px 12px 8px; font-size: 14px; line-height: 1.5; font-weight: 600; color: var(--color-slate-600); }
-.more-group { overflow: hidden; border-radius: 16px; background: white; }
-.more-row { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 12px 16px; text-align: left; touch-action: manipulation; scroll-margin-bottom: calc(var(--mobile-dock-height) + var(--mobile-safe-bottom) + 16px); font-size: 16px; line-height: 1.5; font-weight: 550; color: var(--color-slate-950); }
+.more-page h1 { margin: 0 0 16px; font-size: 1.875rem; line-height: 1.1; font-weight: 600; letter-spacing: -.05em; color: var(--color-slate-950); }
+.more-page h2 { margin: 16px 16px 8px; font-size: 1.125rem; line-height: 1.5; font-weight: 600; letter-spacing: -.025em; color: var(--color-pink-700); }
+.more-group { padding: 4px; border-radius: 32px; background: var(--color-white); }
+.more-row { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 56px; border-radius: 20px; padding: 12px 16px; text-align: left; touch-action: manipulation; scroll-margin-block: 16px calc(var(--mobile-dock-height) + var(--mobile-safe-bottom) + 16px); font-size: 1rem; line-height: 1.5; font-weight: 550; color: var(--color-slate-950); transition: background-color 150ms ease, color 150ms ease; }
+.more-group .more-row { padding-inline: 12px; }
 .more-row > svg { flex-shrink: 0; color: var(--color-slate-600); stroke-width: 1.75; }
+.more-group .more-row > svg:first-child { color: var(--color-pink-700); }
 .more-row-copy { min-width: 0; flex: 1; overflow-wrap: anywhere; }
-.more-description { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; line-height: 1.45; color: var(--color-slate-600); }
-.more-profile { min-height: 72px; border-radius: 16px; background: var(--color-pink-50); }
+.more-description { display: block; margin-top: 4px; font-size: .875rem; font-weight: 400; line-height: 1.5; color: var(--color-slate-600); }
+.more-profile { min-height: 72px; border-radius: 32px; background: var(--color-pink-50); }
 .more-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
-.more-avatar { display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--color-pink-100); color: var(--color-pink-800); font-size: 18px; font-weight: 600; }
+.more-avatar { display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--color-pink-100); color: var(--color-pink-800); font-size: 1.125rem; font-weight: 600; }
 .more-avatar img, .more-avatar-loading { width: 100%; height: 100%; object-fit: cover; }
 .more-avatar-loading { background: var(--color-slate-200); }
-.more-value { font-size: 14px; font-weight: 400; color: var(--color-slate-600); }
+.more-value { flex-shrink: 0; font-size: .875rem; font-weight: 400; color: var(--color-slate-600); }
 .more-install summary { cursor: pointer; list-style: none; }
 .more-install summary::-webkit-details-marker { display: none; }
+.more-install summary > svg:last-child { transition: transform 150ms ease; }
 .more-install[open] summary > svg:last-child { transform: rotate(90deg); }
-.more-install-copy { padding: 0 16px 16px 52px; font-size: 14px; line-height: 1.5; color: var(--color-slate-600); }
+.more-install-copy { padding: 0 12px 12px 48px; border-radius: 20px; font-size: .875rem; line-height: 1.5; overflow-wrap: anywhere; color: var(--color-slate-600); }
 .more-install-copy p + p { margin-top: 12px; }
-.more-sign-out { margin-top: 12px; border-radius: 16px; color: var(--color-pink-800); }
+.more-sign-out { margin-top: 16px; background: var(--color-red-700); color: var(--color-white); }
 .more-sign-out > svg { color: inherit; }
-.more-page :is(a, button, summary):focus-visible { outline: 2px solid var(--color-pink-700); outline-offset: -2px; border-radius: 12px; }
+.more-page :is(a, button, summary):focus-visible { outline: 2px solid var(--color-pink-700); outline-offset: -3px; }
+.dark .more-page h1 { color: var(--color-white); }
+.dark .more-page h2 { color: var(--color-pink-400); }
 .dark .more-group { background: var(--color-slate-900); }
-.dark .more-profile, .dark .more-avatar { background: var(--color-slate-800); }
+.dark .more-profile { background: color-mix(in srgb, var(--color-pink-400) 12%, var(--color-slate-900)); }
+.dark .more-avatar { background: color-mix(in srgb, var(--color-pink-400) 16%, var(--color-slate-900)); }
 .dark .more-row { color: var(--color-slate-100); }
-.dark .more-page h2, .dark .more-description, .dark .more-value, .dark .more-row > svg, .dark .more-install-copy { color: var(--color-slate-300); }
-.dark .more-sign-out, .dark .more-sign-out > svg, .dark .more-avatar { color: var(--color-pink-400); }
+.dark .more-description, .dark .more-value, .dark .more-row > svg, .dark .more-install-copy { color: var(--color-slate-300); }
+.dark .more-group .more-row > svg:first-child, .dark .more-avatar { color: var(--color-pink-400); }
+.dark .more-sign-out, .dark .more-sign-out > svg { color: var(--color-white); }
 .dark .more-avatar-loading { background: var(--color-slate-700); }
-.dark .more-page :is(a, button, summary):focus-visible { outline-color: var(--color-pink-300); }
+.dark .more-page :is(a, button, summary):focus-visible { outline-color: var(--color-pink-400); }
+.more-page .more-sign-out:focus-visible, .dark .more-page .more-sign-out:focus-visible { outline-color: var(--color-white); }
 .more-row:active { background: var(--color-pink-100); }
 .dark .more-row:active { background: var(--color-slate-800); }
 @media (hover: hover) {
   .more-row:hover { background: var(--color-pink-50); }
+  .more-profile:hover { background: var(--color-pink-100); }
+  .more-sign-out:hover { background: var(--color-red-800); }
   .dark .more-row:hover { background: var(--color-slate-800); }
+  .dark .more-profile:hover { background: color-mix(in srgb, var(--color-pink-400) 18%, var(--color-slate-900)); }
+  .dark .more-sign-out:hover { background: var(--color-red-800); }
+}
+.more-sign-out:active, .dark .more-sign-out:active { background: var(--color-red-900); }
+@media (min-width: 640px) {
+  .more-page h1 { font-size: 2.25rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .more-row, .more-install summary > svg:last-child { transition: none; }
 }
 
 /* Route focus announces the title without treating it as an interactive control. */

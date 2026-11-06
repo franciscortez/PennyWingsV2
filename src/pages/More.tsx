@@ -45,7 +45,7 @@ export default function More() {
           <span className="more-name">{info.loading ? 'Loading profile…' : info.displayName}</span>
           <span className="more-description">Profile &amp; settings</span>
         </span>
-        <ChevronRight size={18} aria-hidden="true" />
+        <ChevronRight size={20} aria-hidden="true" />
       </Link>
 
       <section aria-labelledby="more-tools">
@@ -54,18 +54,18 @@ export default function More() {
           {tools.map(({ name, href, icon: Icon }) => (
             <Link key={href} to={tabDestination(href)} state={{ restoreTab: true }} className="more-row"
               onFocus={() => prefetchRoute(href)} onPointerEnter={() => prefetchRoute(href)} onTouchStart={() => prefetchRoute(href)}>
-              <Icon size={22} aria-hidden="true" />
+              <Icon size={24} aria-hidden="true" />
               <span className="more-row-copy">{name}</span>
-              <ChevronRight size={18} aria-hidden="true" />
+              <ChevronRight size={20} aria-hidden="true" />
             </Link>
           ))}
           <button type="button" className="more-row" onClick={(event) => {
             event.currentTarget.focus({ preventScroll: true })
             openAssistant()
           }}>
-            <Bot size={22} aria-hidden="true" />
+            <Bot size={24} aria-hidden="true" />
             <span className="more-row-copy">AI Assistant<span className="more-description">Talk through your finances</span></span>
-            <ArrowUpRight size={18} aria-hidden="true" />
+            <ArrowUpRight size={20} aria-hidden="true" />
           </button>
         </div>
       </section>
@@ -74,16 +74,16 @@ export default function More() {
         <h2 id="more-preferences">Preferences</h2>
         <div className="more-group">
           <button type="button" className="more-row" onClick={toggleTheme} aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}>
-            {theme === 'light' ? <Moon size={22} aria-hidden="true" /> : <Sun size={22} aria-hidden="true" />}
+            {theme === 'light' ? <Moon size={24} aria-hidden="true" /> : <Sun size={24} aria-hidden="true" />}
             <span className="more-row-copy">Appearance</span>
             <span className="more-value">{theme === 'light' ? 'Light' : 'Dark'}</span>
           </button>
           {!standalone && (
             <details className="more-install">
               <summary className="more-row">
-                <Download size={22} aria-hidden="true" />
+                <Download size={24} aria-hidden="true" />
                 <span className="more-row-copy">Install on iPhone</span>
-                <ChevronRight size={18} aria-hidden="true" />
+                <ChevronRight size={20} aria-hidden="true" />
               </summary>
               <div className="more-install-copy">
                 <p>Open PennyWings in Safari. Open the page menu if needed, tap Share, then Add to Home Screen. Turn on Open as Web App if shown, then tap Add.</p>
@@ -98,7 +98,7 @@ export default function More() {
         event.currentTarget.focus({ preventScroll: true })
         void signOut()
       }}>
-        <LogOut size={22} aria-hidden="true" /><span>Sign out</span>
+        <LogOut size={24} aria-hidden="true" /><span>Sign out</span>
       </button>
     </div>
   )

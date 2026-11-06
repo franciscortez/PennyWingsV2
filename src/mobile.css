@@ -68,44 +68,9 @@
     white-space: nowrap;
   }
 
-  .mobile-dock-indicator {
-    border-radius: 20px;
-  }
-
   .mobile-dock-icon svg {
     width: 22px;
     height: 22px;
-  }
-
-  .mobile-more-panel {
-    border-radius: 24px;
-  }
-
-  .mobile-more-action[aria-current="page"] {
-    background: var(--color-pink-100);
-    color: var(--color-pink-900);
-  }
-
-  .dark .mobile-more-action[aria-current="page"] {
-    background: var(--color-slate-800);
-    color: var(--color-pink-200);
-  }
-
-  .mobile-install-help {
-    padding-inline: 1rem;
-    font-size: .875rem;
-  }
-
-  .mobile-install-help summary {
-    min-height: 44px;
-    align-content: center;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .mobile-install-help p {
-    margin-bottom: .75rem;
-    line-height: 1.5;
   }
 
   .modal-overlay[data-mobile-presentation="sheet"],

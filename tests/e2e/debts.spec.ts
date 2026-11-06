@@ -244,9 +244,9 @@ test.describe('Debts Page & Workflows', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'Debts' })).toBeVisible()
     await expect(debtsLink).toHaveAttribute('aria-current', 'page')
 
-    await dock.getByRole('button', { name: 'Open more navigation' }).click()
+    await dock.getByRole('link', { name: 'More', exact: true }).click()
     await expect(
-      page.locator('#mobile-more-panel').getByRole('link', { name: /Debts/i }),
+      page.locator('.more-page').getByRole('link', { name: /Debts/i }),
     ).toHaveCount(0)
   })
 })

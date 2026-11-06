@@ -16,6 +16,8 @@ describe('mobile continuity boundaries', () => {
   })
 
   it('keeps a target through auth redirects until explicitly consumed', () => {
+    rememberReturnTarget('/more')
+    expect(readReturnTarget()).toBe('/more')
     rememberReturnTarget('/reports?month=2026-02')
     expect(readReturnTarget()).toBe('/reports?month=2026-02')
     clearReturnTarget()

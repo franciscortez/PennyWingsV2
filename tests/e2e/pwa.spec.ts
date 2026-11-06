@@ -32,7 +32,7 @@ test('browser theme color follows saved app theme, toggles, and public light mod
   await expect(page.locator('meta[name="apple-mobile-web-app-capable"]')).toHaveAttribute('content', 'yes')
   await expect(page.locator('meta[name="apple-mobile-web-app-status-bar-style"]')).toHaveAttribute('content', 'default')
   await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute('content', 'PennyWings')
-  await page.getByRole('button', { name: 'Open more navigation' }).click()
+  await page.getByRole('link', { name: 'More', exact: true }).click()
   await page.getByRole('button', { name: 'Switch to light mode' }).click()
   await expect(page.locator('meta[name="theme-color"][media="all"]')).toHaveAttribute('content', '#c94466')
   await page.goto('/forgot-password')

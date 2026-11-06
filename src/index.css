@@ -344,18 +344,18 @@ body {
     background: transparent;
     -webkit-tap-highlight-color: transparent;
     transition: background-color 160ms ease,
-                color 160ms ease,
-                transform 160ms ease;
+                color 160ms ease;
   }
 
   .mobile-dock-indicator {
     position: absolute;
-    top: 4px;
-    bottom: 4px;
+    top: -1px;
+    bottom: auto;
     left: 0;
     z-index: 0;
     width: 0;
-    border-radius: 999px;
+    height: 3px;
+    border-radius: 0;
     background: var(--color-pink-700);
     opacity: 0;
     pointer-events: none;
@@ -371,180 +371,55 @@ body {
   }
 
   .mobile-dock-item[data-selected='true'] {
-    color: white;
+    color: var(--color-pink-700);
   }
 
   .mobile-dock-item:active {
-    transform: scale(0.96);
+    color: var(--color-pink-800);
   }
 
-  .mobile-dock-item:focus-visible,
-  .mobile-more-panel :is(a, button):focus-visible {
+  .mobile-dock-item:focus-visible {
     outline: 2px solid var(--color-pink-700);
     outline-offset: 2px;
   }
 
-  .mobile-more-panel {
-    position: fixed;
-    inset: auto max(0.75rem, var(--mobile-safe-right)) calc(var(--mobile-dock-height) + 0.75rem + var(--mobile-safe-bottom)) max(0.75rem, var(--mobile-safe-left));
-    width: auto;
-    max-width: 22rem;
-    max-height: calc(var(--app-viewport-height, 100dvh) - var(--mobile-dock-height) - 1.5rem - var(--mobile-safe-bottom) - var(--mobile-safe-top));
-    margin: 0 auto;
-    padding: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    border: 1px solid var(--color-pink-100);
-    border-radius: 32px;
-    background: var(--color-paper);
-    color: var(--color-slate-950);
-    box-shadow: var(--shadow-wing-lg);
-  }
-
-  .mobile-more-panel[open] {
-    animation: mobile-sheet-in 180ms ease-out;
-  }
-
-  .mobile-more-panel::backdrop {
-    background: rgb(15 23 42 / 30%);
-  }
-
-  .mobile-more-close {
-    display: flex;
-    width: 44px;
-    height: 44px;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    color: var(--color-slate-600);
-  }
-
-  .mobile-profile-link {
-    display: flex;
-    min-height: 76px;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 6px;
-    padding: 12px;
-    border-radius: 20px;
-    background: var(--color-pink-50);
-  }
-
-  .mobile-profile-initial {
-    display: flex;
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background: var(--color-pink-100);
-    color: var(--color-pink-800);
-    font-size: 18px;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  .mobile-more-action {
-    display: flex;
-    width: 100%;
-    min-height: 56px;
-    align-items: center;
-    gap: 14px;
-    padding: 12px;
-    border-radius: 999px;
-    color: var(--color-slate-600);
-    transition: background-color 160ms ease;
-  }
-
-  .mobile-theme-value {
-    padding: 4px 10px;
-    border: 1px solid var(--color-pink-100);
-    border-radius: 999px;
-    font-size: 12px;
-    color: var(--color-slate-600);
-  }
-
-  .mobile-more-action > .flex-1 {
-    min-width: 0;
-    overflow-wrap: anywhere;
-  }
-
-  .mobile-sign-out {
-    color: var(--color-pink-800);
-  }
-
   .dark .mobile-navigation-shell,
-  .dark .mobile-dock,
-  .dark .mobile-more-panel {
+  .dark .mobile-dock {
     border-color: var(--color-slate-700);
     background: var(--color-slate-900);
     color: var(--color-slate-300);
   }
 
-  .dark .mobile-more-panel {
-    color: var(--color-slate-100);
-    box-shadow: var(--shadow-wing-lg);
-  }
-
   .dark .mobile-dock-indicator {
-    background: var(--color-slate-800);
+    background: var(--color-pink-400);
   }
 
   .dark .mobile-dock-item[data-selected='true'] {
     color: var(--color-pink-400);
   }
 
-  .dark .mobile-profile-initial {
-    background: var(--color-slate-800);
-    color: var(--color-pink-400);
+  .dark .mobile-dock-item:active {
+    color: var(--color-pink-300);
   }
 
-  .dark .mobile-profile-link {
-    background: var(--color-slate-800);
-  }
-
-  .dark .mobile-more-action,
-  .dark .mobile-more-close,
-  .dark .mobile-theme-value {
-    color: var(--color-slate-300);
-  }
-
-  .dark .mobile-sign-out {
-    color: var(--color-pink-400);
-  }
-
-  .dark .mobile-theme-value {
-    border-color: var(--color-slate-700);
-  }
-
-  .dark .mobile-dock-item:focus-visible,
-  .dark .mobile-more-panel :is(a, button):focus-visible {
+  .dark .mobile-dock-item:focus-visible {
     outline-color: var(--color-pink-300);
   }
 
   @media (hover: hover) {
-    .mobile-dock-item:not([data-selected='true']):hover,
-    .mobile-more-action:hover,
-    .mobile-more-close:hover {
+    .mobile-dock-item:not([data-selected='true']):hover {
       background: var(--color-pink-50);
     }
 
-    .dark .mobile-dock-item:not([data-selected='true']):hover,
-    .dark .mobile-more-action:hover,
-    .dark .mobile-more-close:hover {
+    .dark .mobile-dock-item:not([data-selected='true']):hover {
       background: var(--color-slate-800);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .mobile-more-panel[open] {
-      animation: none;
-    }
 
     .mobile-dock-indicator,
-    .mobile-dock-item,
-    .mobile-more-action {
+    .mobile-dock-item {
       transition: none;
     }
 
@@ -552,9 +427,6 @@ body {
       animation: none;
     }
 
-    .mobile-dock-item:active {
-      transform: none;
-    }
   }
 
   @media (display-mode: standalone) {
@@ -564,10 +436,7 @@ body {
   }
 }
 
-@keyframes mobile-sheet-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+
 
 /* Motion tokens. One easing and one enter duration keep route changes, sheets
    and the dock feeling like the same product. */
@@ -674,3 +543,44 @@ body {
 .dark .app-design-modal :focus-visible {
   outline-color: var(--color-pink-300);
 }
+
+
+/* More is a routed page; its rows use the existing shell's safe-area gutters. */
+.more-page { width: 100%; max-width: 640px; margin-inline: auto; }
+.more-page h1 { margin: 0 0 16px; font-size: 24px; line-height: 1.25; font-weight: 650; letter-spacing: -.025em; }
+.more-page h2 { margin: 16px 12px 8px; font-size: 14px; line-height: 1.5; font-weight: 600; color: var(--color-slate-600); }
+.more-group { overflow: hidden; border-radius: 16px; background: white; }
+.more-row { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 56px; padding: 12px 16px; text-align: left; touch-action: manipulation; scroll-margin-bottom: calc(var(--mobile-dock-height) + var(--mobile-safe-bottom) + 16px); font-size: 16px; line-height: 1.5; font-weight: 550; color: var(--color-slate-950); }
+.more-row > svg { flex-shrink: 0; color: var(--color-slate-600); stroke-width: 1.75; }
+.more-row-copy { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+.more-description { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; line-height: 1.45; color: var(--color-slate-600); }
+.more-profile { min-height: 72px; border-radius: 16px; background: var(--color-pink-50); }
+.more-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 650; }
+.more-avatar { display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; background: var(--color-pink-100); color: var(--color-pink-800); font-size: 18px; font-weight: 600; }
+.more-avatar img, .more-avatar-loading { width: 100%; height: 100%; object-fit: cover; }
+.more-avatar-loading { background: var(--color-slate-200); }
+.more-value { font-size: 14px; font-weight: 400; color: var(--color-slate-600); }
+.more-install summary { cursor: pointer; list-style: none; }
+.more-install summary::-webkit-details-marker { display: none; }
+.more-install[open] summary > svg:last-child { transform: rotate(90deg); }
+.more-install-copy { padding: 0 16px 16px 52px; font-size: 14px; line-height: 1.5; color: var(--color-slate-600); }
+.more-install-copy p + p { margin-top: 12px; }
+.more-sign-out { margin-top: 12px; border-radius: 16px; color: var(--color-pink-800); }
+.more-sign-out > svg { color: inherit; }
+.more-page :is(a, button, summary):focus-visible { outline: 2px solid var(--color-pink-700); outline-offset: -2px; border-radius: 12px; }
+.dark .more-group { background: var(--color-slate-900); }
+.dark .more-profile, .dark .more-avatar { background: var(--color-slate-800); }
+.dark .more-row { color: var(--color-slate-100); }
+.dark .more-page h2, .dark .more-description, .dark .more-value, .dark .more-row > svg, .dark .more-install-copy { color: var(--color-slate-300); }
+.dark .more-sign-out, .dark .more-sign-out > svg, .dark .more-avatar { color: var(--color-pink-400); }
+.dark .more-avatar-loading { background: var(--color-slate-700); }
+.dark .more-page :is(a, button, summary):focus-visible { outline-color: var(--color-pink-300); }
+.more-row:active { background: var(--color-pink-100); }
+.dark .more-row:active { background: var(--color-slate-800); }
+@media (hover: hover) {
+  .more-row:hover { background: var(--color-pink-50); }
+  .dark .more-row:hover { background: var(--color-slate-800); }
+}
+
+/* Route focus announces the title without treating it as an interactive control. */
+.more-page h1:focus { outline: none; }

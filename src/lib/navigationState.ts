@@ -1,4 +1,4 @@
-const protectedPaths = new Set(['/dashboard', '/accounts', '/transactions', '/reports', '/debts', '/monitoring', '/profile'])
+const protectedPaths = new Set(['/dashboard', '/accounts', '/transactions', '/reports', '/debts', '/monitoring', '/profile', '/more'])
 const returnKey = 'pennywings:return'
 const navigationKey = 'pennywings:navigation'
 let suppressReturnCapture = false

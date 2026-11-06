@@ -21,7 +21,6 @@ import { prefetchRoute } from '@/lib/routePrefetch'
 import type { SidebarInfo } from '@/types'
 
 type SidebarProps = {
-  onOpenAssistant: () => void
   onSignOut: () => void
   onToggleSidebar: () => void
   sidebarInfo: SidebarInfo
@@ -44,7 +43,6 @@ const inactiveClasses =
   'text-slate-600 hover:bg-pink-50 hover:text-slate-800 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-pink-400'
 
 export function Sidebar({
-  onOpenAssistant,
   onSignOut,
   onToggleSidebar,
   sidebarInfo,
@@ -61,11 +59,7 @@ export function Sidebar({
         sidebarInfo={sidebarInfo}
         sidebarOpen={sidebarOpen}
       />
-      <MobileNavigation
-        onOpenAssistant={onOpenAssistant}
-        onSignOut={onSignOut}
-        sidebarInfo={sidebarInfo}
-      />
+      <MobileNavigation />
     </>
   )
 }

@@ -1,9 +1,8 @@
 import { useState, type ReactNode } from 'react'
 
 import { useAuth } from '@/hooks/useAuth'
-import { useAssistant } from '@/hooks/useAssistant'
+import { useSignOutConfirmation } from '@/hooks/useSignOutConfirmation'
 import { useSidebarInfo } from '@/hooks/useSidebarInfo'
-import { alerts } from '@/lib/alert'
 import { AssistantWidget } from '@/sections/assistant'
 import { Sidebar } from '@/components/ui'
 import { useVisualViewport } from '@/hooks/useVisualViewport'
@@ -15,8 +14,8 @@ type LayoutProps = {
 
 export default function Layout({ children }: LayoutProps) {
   useVisualViewport()
-  const { loading, profile, signOut, user } = useAuth()
-  const { openAssistant } = useAssistant()
+  const { loading, profile, user } = useAuth()
+  const handleSignOut = useSignOutConfirmation()
   const sidebarInfo = useSidebarInfo(loading, user?.email, profile)
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     const saved = localStorage.getItem('sidebarOpen')
@@ -31,18 +30,9 @@ export default function Layout({ children }: LayoutProps) {
     })
   }
 
-  const handleSignOut = async () => {
-    const confirmed = await alerts.confirmLogout()
-
-    if (confirmed) {
-      void signOut()
-    }
-  }
-
   return (
     <div className="app-layout min-h-[100dvh] overflow-x-clip bg-paper font-geist text-slate-950 antialiased md:flex dark:bg-slate-950 dark:text-slate-100">
       <Sidebar
-        onOpenAssistant={openAssistant}
         onSignOut={handleSignOut}
         onToggleSidebar={toggleSidebar}
         sidebarInfo={sidebarInfo}

@@ -72,140 +72,124 @@ test.describe('Mobile bottom navigation', () => {
     }
   })
 
-  test('slides the active pill between tabs and never marks More as active', async ({ page }) => {
+
+  test('More is a page with persistent tabs, history, and no scroll lock', async ({ page }) => {
     const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
-    const indicator = nav.locator('.mobile-dock-indicator')
-    await expect(indicator).toHaveCount(1)
-    await expect(indicator).toHaveAttribute('aria-hidden', 'true')
-
-    const indicatorState = () => indicator.evaluate((element) => {
-      const style = getComputedStyle(element)
-      return `${style.transform}|${style.width}|${style.opacity}`
-    })
-
-    // The dock lives in the persistent shell and glides the pill with a CSS
-    // transform transition. Reading the transform immediately after the URL
-    // changes can catch it mid-glide, so wait for the pill to settle before
-    // capturing a state for later comparison.
-    const waitForSettledIndicator = async () => {
-      await expect.poll(() => indicator.evaluate(
-        (element) => `${element.isConnected}|${getComputedStyle(element).opacity}`,
-      )).toBe('true|1')
-      await expect.poll(async () => {
-        const first = await indicatorState()
-        if (first.split('|')[2] !== '1') return 'unsettled'
-        await page.waitForTimeout(150)
-        const second = await indicatorState()
-        return first === second ? first : 'unsettled'
-      }).not.toBe('unsettled')
-    }
-
-    await waitForSettledIndicator()
-    const dashboardState = await indicatorState()
-
-    await nav.getByRole('link', { name: /Accounts/ }).click()
-    await expect(page).toHaveURL(/\/accounts$/)
-    await waitForSettledIndicator()
-    const accountsState = await indicatorState()
-    expect(accountsState).not.toBe(dashboardState)
-
-    await nav.getByRole('link', { name: /Activity/ }).click()
-    await expect(page).toHaveURL(/\/transactions$/)
-    await waitForSettledIndicator()
-    const activityState = await indicatorState()
-    expect(activityState).not.toBe(dashboardState)
-    expect(activityState).not.toBe(accountsState)
-    expect(activityState.split('|')[2]).toBe('1')
-
-    const more = page.getByRole('button', { name: 'Open more navigation' })
-    await expect(more).not.toHaveAttribute('data-selected', 'true')
+    const more = nav.getByRole('link', { name: 'More', exact: true })
+    await page.evaluate(() => window.scrollTo(0, 200))
+    const dashboardScroll = await page.evaluate(() => scrollY)
     await more.click()
-    await expect(page.getByRole('dialog', { name: 'Your space' })).toBeVisible()
-    await expect(more).not.toHaveAttribute('data-selected', 'true')
-    await expect.poll(indicatorState).toBe(activityState)
-    await page.keyboard.press('Escape')
-  })
-
-  test('More contains focus, closes with Escape and backdrop, and restores scroll and focus', async ({ page }, testInfo) => {
-    const more = page.getByRole('button', { name: 'Open more navigation' })
-    await page.evaluate(() => window.scrollTo({ top: 250, behavior: 'instant' }))
-    const scrollY = await page.evaluate(() => window.scrollY)
-    await more.click()
-    const panel = page.getByRole('dialog', { name: 'Your space' })
-    await expect(panel).toBeVisible()
-    await expect(more).toHaveAttribute('aria-expanded', 'true')
-    await expect(page.getByRole('button', { name: 'Close more navigation' })).toBeFocused()
-    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).toBe('hidden')
-    await panel.evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)))
-    const navBox = await page.getByRole('navigation', { name: 'Primary mobile navigation' }).boundingBox()
-    const panelBox = await panel.boundingBox()
-    expect(navBox!.y - panelBox!.y - panelBox!.height).toBeCloseTo(12, 1)
-    for (let index = 0; index < 7; index += 1) {
-      await page.keyboard.press('Tab')
-      expect(await panel.evaluate((element) => element.contains(document.activeElement))).toBe(true)
-    }
-    await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-more-light.png') })
-    await page.keyboard.press('Escape')
-    await expect(panel).not.toBeVisible()
-    await expect(more).toBeFocused()
-    expect(await page.evaluate(() => window.scrollY)).toBe(scrollY)
-    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
-    await more.click()
-    await panel.click({ position: { x: -5, y: -5 }, force: true })
-    await expect(panel).not.toBeVisible()
-  })
-
-  test('supports dark mode, profile selection, and assistant handoff', async ({ page }, testInfo) => {
-    const more = page.getByRole('button', { name: 'Open more navigation' })
-    await more.click()
-    const panel = page.getByRole('dialog', { name: 'Your space' })
-    await panel.getByRole('button', { name: 'Switch to dark mode' }).click()
-    await expect(page.locator('html')).toHaveClass(/dark/)
-    await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-more-dark.png') })
-    await panel.getByRole('link', { name: /Profile & settings/ }).click()
-    await expect(page).toHaveURL(/\/profile$/)
-    await expect(panel).not.toBeVisible()
-    await expect(more).toHaveAttribute('data-selected', 'true')
-    await expect.poll(() => page.getByRole('navigation', { name: 'Primary mobile navigation' }).locator('.mobile-dock-indicator').evaluate((element) => getComputedStyle(element).opacity)).toBe('1')
-    await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('mobile-dock-dark.png') })
-    await more.click()
-    await panel.getByRole('button', { name: /AI Assistant/ }).click()
-    await expect(panel).not.toBeVisible()
-    const assistant = page.getByRole('dialog').filter({ hasNot: page.getByText('Your space', { exact: true }) })
-    await expect(assistant).toBeVisible()
-    await expect.poll(() => assistant.evaluate((element) => element.contains(document.activeElement))).toBe(true)
-  })
-
-  test('restores page before sign-out confirmation and lets the user cancel', async ({ page }) => {
-    await page.getByRole('button', { name: 'Open more navigation' }).click()
-    await page.getByRole('dialog', { name: 'Your space' }).getByRole('button', { name: 'Sign out' }).click()
-    await expect(page.getByRole('dialog', { name: 'Your space' })).not.toBeVisible()
-    await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await expect(page).toHaveURL(/\/more$/)
+    await expect(page.getByRole('heading', { name: 'More', exact: true })).toBeFocused()
+    await expect(more).toHaveAttribute('aria-current', 'page')
+    await expect(more).not.toHaveAttribute('aria-haspopup')
+    await expect(nav.locator('[data-selected="true"]')).toHaveCount(1)
+    await expect(page.getByRole('dialog')).toHaveCount(0)
+    expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
+    await page.keyboard.press('Tab')
+    await expect(page.locator('.more-profile')).toBeFocused()
+    await page.goBack()
     await expect(page).toHaveURL(/\/dashboard$/)
-    await expect(page.getByRole('navigation', { name: 'Primary mobile navigation' })).toBeVisible()
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(dashboardScroll)
+    await page.goForward()
+    await expect(page).toHaveURL(/\/more$/)
+    const entries = await page.evaluate(() => history.length)
+    await more.click()
+    expect(await page.evaluate(() => history.length)).toBe(entries)
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+    await page.reload()
+    await expect(page.getByRole('heading', { name: 'More', exact: true })).toBeVisible()
+    for (const [label, path] of [['Debts', '/debts'], ['Monitoring', '/monitoring'], ['Profile & settings', '/profile']]) {
+      await page.locator('.more-page').getByRole('link', { name: new RegExp(label) }).click()
+      await expect(page).toHaveURL(new RegExp(`${path}$`))
+      await expect(more).toHaveAttribute('aria-current', 'location')
+      await expect(more).toHaveAttribute('data-selected', 'true')
+      await more.click()
+      await expect(page).toHaveURL(/\/more$/)
+    }
   })
 
-  test('fits short screens and dismisses the modal when switching to desktop', async ({ page }, testInfo) => {
-    await page.setViewportSize({ width: 667, height: 320 })
-    await page.emulateMedia({ reducedMotion: 'reduce' })
-    await page.getByRole('button', { name: 'Open more navigation' }).click()
-    const panel = page.getByRole('dialog', { name: 'Your space' })
-    await expect(panel).toBeVisible()
-    const bounds = await panel.boundingBox()
-    expect(bounds!.y).toBeGreaterThanOrEqual(12)
-    await panel.getByRole('button', { name: 'Sign out' }).scrollIntoViewIfNeeded()
-    await expect(panel.getByRole('button', { name: 'Sign out' })).toBeInViewport()
-    expect(await panel.evaluate((element) => getComputedStyle(element).animationName)).toBe('none')
-    await page.setViewportSize({ width: 768, height: 1024 })
-    await expect(panel).not.toBeVisible()
-    await expect(page.getByRole('navigation', { name: 'Primary mobile navigation' })).not.toBeVisible()
-    await expect(page.getByRole('button', { name: 'Expand sidebar' })).toBeVisible()
-    await expect.poll(() => page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
-    await page.setViewportSize({ width: 1280, height: 800 })
-    await page.screenshot({ animations: 'disabled', path: testInfo.outputPath('desktop-sidebar.png') })
-    await page.setViewportSize({ width: 375, height: 667 })
-    await expect(panel).not.toBeVisible()
-    await page.getByRole('button', { name: 'Open more navigation' }).click()
-    await expect(panel).toBeVisible()
+  test('theme, assistant, and sign-out preserve the page and restore focus', async ({ page }) => {
+    await page.goto('/more')
+    const screen = page.locator('.more-page')
+    await screen.getByRole('button', { name: 'Switch to dark mode' }).click()
+    await page.reload()
+    await expect(page.locator('html')).toHaveClass(/dark/)
+    const assistantTrigger = screen.getByRole('button', { name: /AI Assistant/ })
+    await assistantTrigger.click()
+    const assistant = page.getByRole('dialog')
+    await expect(assistant).toBeVisible()
+    await expect.poll(() => assistant.evaluate(el => el.contains(document.activeElement))).toBe(true)
+    await page.keyboard.press('Escape')
+    await expect(assistant).not.toBeVisible()
+    await expect(assistantTrigger).toBeFocused()
+    const signOut = screen.getByRole('button', { name: 'Sign out' })
+    await signOut.click()
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click()
+    await expect(page).toHaveURL(/\/more$/)
+    await expect(signOut).toBeFocused()
+    expect(await page.evaluate(() => document.body.style.overflow)).not.toBe('hidden')
   })
+
+  test('fits phones, expanded help, dark mode, and desktop without hiding the route', async ({ page }, testInfo) => {
+    await page.goto('/more')
+    const screen = page.locator('.more-page')
+    for (const [width, height] of [[375, 667], [390, 844], [430, 932], [667, 320], [768, 1024], [1280, 800]]) {
+      await page.setViewportSize({ width, height })
+      await page.emulateMedia({ reducedMotion: 'reduce' })
+      await expect(screen).toBeVisible()
+      await expect(page).toHaveURL(/\/more$/)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width)
+      const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
+      if (width < 768) await expect(nav).toBeVisible()
+      else await expect(nav).not.toBeVisible()
+      for (const target of await screen.locator('a, button, summary').all()) {
+        const box = await target.boundingBox()
+        expect(box!.height).toBeGreaterThanOrEqual(44)
+      }
+      await page.evaluate(() => window.scrollTo(0, 0))
+      await page.screenshot({ animations: 'disabled', path: testInfo.outputPath(`more-${width}-light.png`), fullPage: true })
+      await screen.getByRole('button', { name: 'Switch to dark mode' }).click()
+      await page.screenshot({ animations: 'disabled', path: testInfo.outputPath(`more-${width}-dark.png`), fullPage: true })
+      await screen.getByRole('button', { name: 'Switch to light mode' }).click()
+    }
+    await page.setViewportSize({ width: 375, height: 667 })
+    await screen.getByText('Install on iPhone', { exact: true }).click()
+    await expect(screen.getByText(/Turn on Open as Web App/)).toBeVisible()
+    await screen.getByRole('button', { name: 'Sign out' }).scrollIntoViewIfNeeded()
+    const row = await screen.getByRole('button', { name: 'Sign out' }).boundingBox()
+    const dock = await page.getByRole('navigation', { name: 'Primary mobile navigation' }).boundingBox()
+    expect(row!.y + row!.height).toBeLessThanOrEqual(dock!.y)
+    await page.getByRole('link', { name: 'More', exact: true }).click()
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
+  })
+
+  test('confirmed sign-out leaves the protected More page', async ({ page }) => {
+    await page.route('**/auth/v1/logout*', route => route.fulfill({ status: 204 }))
+    await page.goto('/more')
+    await page.locator('.more-page').getByRole('button', { name: 'Sign out' }).click()
+    await page.getByRole('button', { name: 'Yes, Log Me Out' }).click()
+    await expect(page).toHaveURL(/\/login$/)
+    await expect(page.locator('.more-page')).toHaveCount(0)
+  })
+
+  test('broken avatars fall back and long profile names stay contained', async ({ page }) => {
+    await page.route('**/rest/v1/profiles*', route => route.fulfill({ json: {
+      id: 'test-user-id', full_name: 'A very long name '.repeat(12), avatar_url: 'https://avatar.invalid/missing.png',
+    } }))
+    await page.route('https://avatar.invalid/**', route => route.abort())
+    await page.goto('/more')
+    await expect(page.locator('.more-avatar')).toHaveText('A')
+    expect(await page.locator('.more-page').evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true)
+  })
+})
+
+test('unauthenticated More links return to More after signing in', async ({ page }) => {
+  await page.goto('/more')
+  await expect(page).toHaveURL(/\/login$/)
+  expect(await page.evaluate(() => sessionStorage.getItem('pennywings:return'))).toBe('/more')
+  await setupAuthenticatedMocks(page)
+  await page.goto('/dashboard')
+  await expect(page).toHaveURL(/\/more$/)
+  await expect(page.getByRole('heading', { name: 'More', exact: true })).toBeVisible()
 })

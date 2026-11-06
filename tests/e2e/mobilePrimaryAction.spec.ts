@@ -150,17 +150,18 @@ test.describe('Page actions without duplicate mobile buttons', () => {
       const content = await page.locator('.app-content > :last-child').boundingBox()
       expect(content!.y + content!.height).toBeLessThanOrEqual(bar!.y - 32 + 1)
 
-      await page.getByRole('button', { name: 'Open more navigation' }).click()
-      const panel = page.getByRole('dialog', { name: 'Your space' })
-      const panelBox = await panel.boundingBox()
-      expect(bar!.y - panelBox!.y - panelBox!.height).toBeCloseTo(12, 1)
-      expect(panelBox!.y).toBeGreaterThanOrEqual(12)
+      await page.getByRole('link', { name: 'More', exact: true }).click()
+      const panel = page.locator('.more-page')
+      await expect(page).toHaveURL(/\/more$/)
+      await panel.getByRole('button', { name: 'Sign out' }).scrollIntoViewIfNeeded()
+      const signOutBox = await panel.getByRole('button', { name: 'Sign out' }).boundingBox()
+      expect(signOutBox!.y + signOutBox!.height).toBeLessThanOrEqual(bar!.y)
       await panel.getByRole('button', { name: 'Switch to dark mode' }).click()
       expect(await shell.evaluate(element => getComputedStyle(element).backgroundColor)).toBe(
         await navigation(page).evaluate(element => getComputedStyle(element).backgroundColor),
       )
       await panel.getByRole('button', { name: 'Switch to light mode' }).click()
-      await page.keyboard.press('Escape')
+      await navigation(page).getByRole('link', { name: /Home/ }).click()
 
       // Exercise the real toast integration without changing account data.
       await page.evaluate(async () => {
@@ -178,18 +179,18 @@ test.describe('Page actions without duplicate mobile buttons', () => {
     }
   })
 
-  test('More sheet stays reachable with enlarged text and long profile names', async ({ page }) => {
+  test('More page stays reachable with enlarged text and long profile names', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 667 })
     await page.route('**/rest/v1/profiles*', route => route.fulfill({ json: { id: 'test-user-id', full_name: 'A very long profile name '.repeat(8), avatar_url: null } }))
     await ready(page, '/dashboard')
     await page.addStyleTag({ content: 'html { font-size: 200%; }' })
     await noDuplicateAction(page)
-    await page.getByRole('button', { name: 'Open more navigation' }).click()
-    const panel = page.getByRole('dialog', { name: 'Your space' })
+    await page.getByRole('link', { name: 'More', exact: true }).click()
+    const panel = page.locator('.more-page')
     expect(await panel.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true)
     await panel.getByRole('button', { name: 'Sign out' }).scrollIntoViewIfNeeded()
     await expect(panel.getByRole('button', { name: 'Sign out' })).toBeInViewport()
-    await page.keyboard.press('Escape')
-    await expect(page.getByRole('button', { name: 'Open more navigation' })).toBeFocused()
+    await page.getByRole('link', { name: 'More', exact: true }).click()
+    await expect.poll(() => page.evaluate(() => scrollY)).toBe(0)
   })
 })

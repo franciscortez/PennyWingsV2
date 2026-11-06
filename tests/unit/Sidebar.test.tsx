@@ -40,7 +40,6 @@ function Harness({ expanded, info, onSignOut }: {
       sidebarInfo={info}
       onToggleSidebar={() => setOpen((current) => !current)}
       onSignOut={onSignOut}
-      onOpenAssistant={() => undefined}
     />
   )
 }

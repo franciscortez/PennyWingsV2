@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 
 import AppShell from '@/components/AppShell'
+import More from '@/pages/More'
 import PublicRoute from '@/components/PublicRoute'
 import { PageLoader } from '@/components/ui'
 import { AuthProvider } from '@/context/AuthContext'
@@ -56,6 +57,7 @@ function AppRoutes() {
             <Route path="/accounts" element={<Accounts />} />
             <Route path="/debts" element={<Debts />} />
             <Route path="/transactions" element={<Transactions />} />
+            <Route path="/more" element={<More />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/monitoring" element={<Monitoring />} />

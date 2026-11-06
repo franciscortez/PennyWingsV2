@@ -3,10 +3,10 @@
 Current source, `package.json`, `src/lib/database.types.ts`, and ordered migrations are authoritative.
 
 - `src/main.tsx` initializes React/query infrastructure; `src/App.tsx` owns guards and routes.
-- Public: `/`, auth/recovery routes, and terms. Protected: dashboard, accounts (including archived accounts), transactions, debts, profile, reports, and monitoring.
+- Public: `/`, auth/recovery routes, and terms. Protected: dashboard, accounts (including archived accounts), transactions, debts, profile, reports, monitoring, and `/more` (mobile tools/preferences hub, also accessible on desktop).
 - `AuthProvider` wraps routing; `AssistantProvider` is keyed per user to isolate conversations.
 - Dependency flow: `page -> section/component -> hook/context -> service -> Supabase`.
-- `Layout` composes the desktop `Sidebar` and `MobileNavigation` below 768px. The five labeled dock controls are Home, Accounts, Activity, Reports, and More; Debts, Monitoring, and Profile remain available in More. Creation actions remain in page content. The native More dialog owns focus and shares the scroll lock; keyboard detection hides the dock. Shell-owned visual viewport measurements size portaled form sheets and Assistant.
+- `Layout` composes the desktop `Sidebar` and `MobileNavigation` below 768px. The five labeled dock links are Home, Accounts, Activity, Reports, and More; Debts, Monitoring, and Profile remain available on `/more`. More uses page-heading focus and no modal scroll lock. A pink top indicator marks the selected tab, including More subpages; keyboard detection hides the dock. Creation actions remain in page content. Shell-owned visual viewport measurements size portaled form sheets and Assistant.
 - `ModalFrame` supports opt-in mobile bottom sheets with the existing focus/scroll ownership. Account creation uses a content-height sheet. Desktop forms retain their dialog presentation. `src/mobile.css` contains navigation and overlay behavior, not a replacement page design.
 - `navigationState` validates login return targets and isolates session tab URLs/scroll by user. `ProtectedRoute` consumes the login destination once; explicit sign-out suppresses recapturing the departing route. Reports stores its selected `month` in the URL.
 - `connectivity` and QueryClient mutation defaults reject offline writes immediately, disable automatic retries, and require refreshed records after an unconfirmed network save. Assistant marks its mutation as read-only. No financial changes are queued for replay.

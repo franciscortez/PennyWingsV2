@@ -228,7 +228,7 @@ test.describe('Debts Page & Workflows', () => {
     await expect(dialog).toContainText('+₱3,000.00')
   })
 
-  test('navigates to /debts via the mobile dock, not the More sheet', async ({ page }, testInfo) => {
+  test('navigates to /debts through More and keeps More selected', async ({ page }, testInfo) => {
     test.skip(
       !testInfo.project.name.startsWith('Mobile'),
       'Mobile navigation uses mobile browser projects.',
@@ -236,17 +236,19 @@ test.describe('Debts Page & Workflows', () => {
 
     await page.goto('/dashboard')
     const dock = page.getByRole('navigation', { name: 'Primary mobile navigation' })
-    const debtsLink = dock.getByRole('link', { name: /Debts/i })
+    const more = dock.getByRole('link', { name: 'More', exact: true })
+    await more.click()
+    const debtsLink = page.locator('.more-page').getByRole('link', { name: 'Debts', exact: true })
     await expect(debtsLink).toBeVisible()
     await debtsLink.click()
 
     await expect(page).toHaveURL(/\/debts$/)
     await expect(page.getByRole('heading', { level: 1, name: 'Debts' })).toBeVisible()
-    await expect(debtsLink).toHaveAttribute('aria-current', 'page')
+    await expect(more).toHaveAttribute('aria-current', 'location')
 
-    await dock.getByRole('button', { name: 'Open more navigation' }).click()
+    await dock.getByRole('link', { name: 'More', exact: true }).click()
     await expect(
-      page.locator('#mobile-more-panel').getByRole('link', { name: /Debts/i }),
-    ).toHaveCount(0)
+      page.locator('.more-page').getByRole('link', { name: /Debts/i }),
+    ).toHaveCount(1)
   })
 })

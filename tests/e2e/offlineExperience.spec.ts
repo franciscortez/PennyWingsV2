@@ -80,8 +80,8 @@ test('unloaded financial pages show unavailable records instead of empty balance
   const nav = page.getByRole('navigation', { name: 'Primary mobile navigation' })
   for (const name of ['Dashboard', 'Accounts', 'Activity', 'Reports', 'Monitoring', 'Debts']) {
     if (['Monitoring', 'Debts'].includes(name)) {
-      await nav.getByRole('button', { name: 'Open more navigation' }).click()
-      await page.getByRole('dialog', { name: 'Your space' }).getByRole('link', { name, exact: true }).click()
+      await nav.getByRole('link', { name: 'More', exact: true }).click()
+      await page.locator('.more-page').getByRole('link', { name, exact: true }).click()
     } else {
       await nav.getByRole('link', { name: new RegExp(name) }).click()
     }
@@ -128,8 +128,8 @@ test('offline route download failures preserve the dock after navigating away an
   await nav.getByRole('link', { name: 'Reports', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Reconnect to open this page' })).toBeVisible()
   await expect(nav).toBeVisible()
-  await nav.getByRole('button', { name: 'Open more navigation' }).click()
-  await page.getByRole('dialog', { name: 'Your space' }).getByRole('link', { name: /Profile/ }).click()
+  await nav.getByRole('link', { name: 'More', exact: true }).click()
+  await page.locator('.more-page').getByRole('link', { name: /Profile/ }).click()
   await context.setOffline(false)
   await nav.getByRole('link', { name: 'Reports', exact: true }).click()
   await expect(page.getByRole('heading', { name: "This page couldn't load" })).toBeVisible()

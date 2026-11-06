@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react'
+import { useLayoutEffect, type ReactNode } from 'react'
 import { useLocation, useNavigationType } from 'react-router'
 import { savePosition, savedPosition } from '@/lib/navigationState'
 
@@ -16,7 +16,7 @@ export default function RouteTransition({ children }: RouteTransitionProps) {
   const location = useLocation()
   const navigationType = useNavigationType()
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previousRestoration = history.scrollRestoration
     history.scrollRestoration = 'manual'
     const { key, pathname, search, hash, state } = location

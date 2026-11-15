@@ -133,3 +133,15 @@ for (const path of ['/', '/login']) {
     expect(layout.pageWidth).toBe(320)
   })
 }
+
+test('auth back link switches to arrow-only exactly where the compact header starts', async ({ page }) => {
+  await page.goto('/login')
+  const back = page.getByRole('link', { name: 'Back to home' })
+  await expect(back).toBeVisible()
+  const labelVisible = () => back.locator('span').evaluate(span => span.getBoundingClientRect().width > 1)
+  // min-[384px] restores the roomy header, so everything narrower must be arrow-only.
+  for (const [width, visible] of [[320, false], [383, false], [384, true]] as const) {
+    await page.setViewportSize({ width, height: 640 })
+    expect(await labelVisible(), `label visible at ${width}`).toBe(visible)
+  }
+})

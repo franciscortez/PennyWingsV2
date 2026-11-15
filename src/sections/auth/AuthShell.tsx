@@ -63,7 +63,7 @@ export function AuthShell({
               aria-hidden="true"
             />
             {/* Arrow-only below 384px so the wordmark keeps its room; the label stays for screen readers. */}
-            <span className="max-[383px]:sr-only">{backLabel}</span>
+            <span className="max-[384px]:sr-only">{backLabel}</span>
           </Link>
         </header>
 

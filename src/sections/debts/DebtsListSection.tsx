@@ -90,11 +90,11 @@ export function DebtsListSection({
       {/* Controls: Tabs & Search Bar */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         {/* Status Tabs */}
-        <div className="flex rounded-full border border-pink-100 bg-white p-1 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex w-full rounded-full border border-pink-100 bg-white p-1 shadow-sm sm:w-auto dark:border-slate-800 dark:bg-slate-900">
           <button
             type="button"
             onClick={() => setActiveTab('outstanding')}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:flex-none sm:px-4 ${
               activeTab === 'outstanding'
                 ? 'bg-pink-700 text-white shadow-wing dark:bg-pink-600'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
@@ -115,7 +115,7 @@ export function DebtsListSection({
           <button
             type="button"
             onClick={() => setActiveTab('paid')}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:flex-none sm:px-4 ${
               activeTab === 'paid'
                 ? 'bg-pink-700 text-white shadow-wing dark:bg-pink-600'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
@@ -136,7 +136,7 @@ export function DebtsListSection({
           <button
             type="button"
             onClick={() => setActiveTab('archived')}
-            className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all ${
+            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:flex-none sm:px-4 ${
               activeTab === 'archived'
                 ? 'bg-pink-700 text-white shadow-wing dark:bg-pink-600'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
@@ -156,8 +156,8 @@ export function DebtsListSection({
         </div>
 
         {/* Search & Type Filter */}
-        <div className="flex flex-1 items-center gap-2 sm:max-w-md sm:justify-end">
-          <div className="relative flex-1">
+        <div className="flex flex-1 flex-wrap items-center gap-2 sm:max-w-md sm:flex-nowrap sm:justify-end">
+          <div className="relative min-w-40 flex-1 sm:min-w-0">
             <Search
               size={16}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
@@ -168,16 +168,16 @@ export function DebtsListSection({
               placeholder="Search debts..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className={fieldInput(false, 'h-10 pl-9 pr-4 text-xs')}
+              className={fieldInput(false, 'h-11 pl-9 pr-4')}
             />
           </div>
 
-          <div className="relative">
+          <div className="relative shrink-0">
             <select
               aria-label="Filter by debt type"
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as DebtType | 'all')}
-              className={fieldInput(false, 'h-10 px-3 pr-8 text-xs font-medium')}
+              className={fieldInput(false, 'h-11 px-3 pr-8 font-medium')}
             >
               <option value="all">All Types</option>
               <option value="bnpl">BNPL</option>

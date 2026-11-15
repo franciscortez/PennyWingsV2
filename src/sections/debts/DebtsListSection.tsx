@@ -94,7 +94,7 @@ export function DebtsListSection({
           <button
             type="button"
             onClick={() => setActiveTab('outstanding')}
-            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-all sm:flex-none sm:px-4 ${
+            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:flex-none sm:px-4 ${
               activeTab === 'outstanding'
                 ? 'bg-pink-700 text-white shadow-wing dark:bg-pink-600'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
@@ -115,7 +115,7 @@ export function DebtsListSection({
           <button
             type="button"
             onClick={() => setActiveTab('paid')}
-            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-all sm:flex-none sm:px-4 ${
+            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:flex-none sm:px-4 ${
               activeTab === 'paid'
                 ? 'bg-pink-700 text-white shadow-wing dark:bg-pink-600'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
@@ -136,7 +136,7 @@ export function DebtsListSection({
           <button
             type="button"
             onClick={() => setActiveTab('archived')}
-            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-all sm:flex-none sm:px-4 ${
+            className={`flex min-h-11 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:min-h-0 sm:flex-none sm:px-4 ${
               activeTab === 'archived'
                 ? 'bg-pink-700 text-white shadow-wing dark:bg-pink-600'
                 : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100'
@@ -157,7 +157,7 @@ export function DebtsListSection({
 
         {/* Search & Type Filter */}
         <div className="flex flex-1 flex-wrap items-center gap-2 sm:max-w-md sm:flex-nowrap sm:justify-end">
-          <div className="relative min-w-40 flex-1">
+          <div className="relative min-w-40 flex-1 sm:min-w-0">
             <Search
               size={16}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
@@ -172,7 +172,7 @@ export function DebtsListSection({
             />
           </div>
 
-          <div className="relative">
+          <div className="relative shrink-0">
             <select
               aria-label="Filter by debt type"
               value={typeFilter}

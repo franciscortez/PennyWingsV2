@@ -224,3 +224,25 @@ test('debts filter bar fits iPhone widths without zoom-prone fields', async ({ p
     expect(layout.pageWidth, `page width at ${width}`).toBe(width)
   }
 })
+
+test('debts filter bar keeps the type filter readable on tablet and desktop widths', async ({ page }) => {
+  await mockDebts(page)
+  await page.goto('/debts')
+  const typeFilter = page.getByLabel('Filter by debt type')
+  await expect(typeFilter).toBeVisible()
+  await typeFilter.selectOption('personal_loan')
+  const tabs = page.getByRole('region', { name: 'Debts list' }).getByRole('button', { name: /^(Active|Settled|Archived)/ })
+  for (const width of [640, 744, 768, 820, 1024, 1280]) {
+    await page.setViewportSize({ width, height: 900 })
+    const room = await typeFilter.evaluate((select: HTMLSelectElement) => {
+      const style = getComputedStyle(select)
+      const ctx = document.createElement('canvas').getContext('2d')!
+      ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+      const content = select.getBoundingClientRect().width - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth) - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+      return content - ctx.measureText(select.selectedOptions[0].text).width
+    })
+    expect(room, `type filter text room at ${width}`).toBeGreaterThanOrEqual(0)
+    // Desktop keeps the compact pill; the 44px minimum is a phone affordance.
+    expect(Math.max(...await tabs.evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().height))), `tab height at ${width}`).toBeLessThan(44)
+  }
+})

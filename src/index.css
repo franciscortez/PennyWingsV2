@@ -2,6 +2,19 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* iOS Safari sizes natively styled date/time inputs as content-box, so a
+   `w-full` field grows by its padding and border (+42px with fieldInput) and
+   pushes modals into a sideways scroll. Dropping the native appearance makes
+   it honour border-box like every other field; desktop engines keep their
+   picker indicator. min-width: 0 clears the UA's 105px floor in flex/grid. */
+@layer base {
+  input:is([type='date'], [type='datetime-local'], [type='month'], [type='time'], [type='week']) {
+    -webkit-appearance: none;
+    appearance: none;
+    min-width: 0;
+  }
+}
+
 @theme {
   --color-pink-50: #fff0f5;
   --color-pink-100: #ffe4e9;

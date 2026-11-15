@@ -44,10 +44,10 @@ export function AuthShell({
   return (
     <MotionConfig reducedMotion="user">
       <div className="min-h-[100dvh] overflow-x-clip bg-paper font-geist text-slate-950 antialiased">
-        <header className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+        <header className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 min-[384px]:gap-4 sm:px-6 lg:px-8">
           <Link
             to="/"
-            className="flex items-center gap-2 rounded-full text-lg font-semibold tracking-tight text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pink-800"
+            className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full text-base font-semibold min-[384px]:text-lg tracking-tight text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-pink-800"
           >
             <PennyWingsMark className="h-8 w-11" />
             PennyWings
@@ -55,14 +55,15 @@ export function AuthShell({
 
           <Link
             to={backTo}
-            className="group inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-semibold text-slate-700 transition-colors hover:bg-pink-100/70 hover:text-pink-900 focus-visible:outline-2 focus-visible:outline-pink-800"
+            className="group inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-3 text-sm font-semibold min-[384px]:px-4 text-slate-700 transition-colors hover:bg-pink-100/70 hover:text-pink-900 focus-visible:outline-2 focus-visible:outline-pink-800"
           >
             <ArrowLeft
               className="h-4 w-4 transition-transform duration-200 group-hover:-translate-x-0.5"
               strokeWidth={1.75}
               aria-hidden="true"
             />
-            {backLabel}
+            {/* Arrow-only below 384px so the wordmark keeps its room; the label stays for screen readers. */}
+            <span className="max-[383px]:sr-only">{backLabel}</span>
           </Link>
         </header>
 

@@ -88,3 +88,48 @@ test('signup still requires the terms checkbox', async ({ page }) => {
   await expect(page.getByText('Please accept the Terms and Agreement.')).toBeVisible()
   await expect(page).toHaveURL(/.*signup/)
 })
+
+for (const path of ['/', '/login']) {
+  test(`brand logo fits the header at 320px on ${path}`, async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 640 })
+    await page.goto(path)
+    const brand = page.locator('header a[href="/"]').first()
+    await expect(brand).toBeVisible()
+    await page.evaluate(() => document.fonts.ready)
+    const layout = await brand.evaluate(link => {
+      const row = link.parentElement!
+      const items = [...row.children].filter(child => child.getClientRects().length && getComputedStyle(child).display !== 'none')
+      const boxes = items.map(child => child.getBoundingClientRect())
+      const rowStyle = getComputedStyle(row)
+      const rowBox = row.getBoundingClientRect()
+      const gutterLeft = rowBox.left + parseFloat(rowStyle.paddingLeft)
+      const gutterRight = rowBox.right - parseFloat(rowStyle.paddingRight)
+      return {
+        spill: link.scrollWidth - link.clientWidth,
+        brandWidth: Math.round(link.getBoundingClientRect().width),
+        // Items stay inside the header's side gutters, not merely on screen.
+        outside: boxes.filter(box => box.left < gutterLeft - 0.5 || box.right > gutterRight + 0.5).length,
+        overlaps: boxes.slice(1).filter((box, index) => box.left < boxes[index].right - 0.5).length,
+        pageWidth: document.documentElement.scrollWidth,
+        // Visible text in each header item stays on one line (no wrapped labels).
+        wrapped: items.flatMap(item => {
+          const walker = document.createTreeWalker(item, NodeFilter.SHOW_TEXT)
+          const wrappedText: string[] = []
+          for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+            if (!node.textContent?.trim()) continue
+            const range = document.createRange()
+            range.selectNodeContents(node)
+            const lines = new Set([...range.getClientRects()].filter(rect => rect.width > 1).map(rect => Math.round(rect.top)))
+            if (lines.size > 1) wrappedText.push(node.textContent.trim())
+          }
+          return wrappedText
+        }),
+      }
+    })
+    expect(layout.spill, 'brand text overflow').toBeLessThanOrEqual(0)
+    expect(layout.outside, `header items outside gutters (brand ${layout.brandWidth}px)`).toBe(0)
+    expect(layout.overlaps, 'header items overlapping').toBe(0)
+    expect(layout.wrapped, 'wrapped header labels').toEqual([])
+    expect(layout.pageWidth).toBe(320)
+  })
+}

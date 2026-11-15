@@ -12,6 +12,7 @@ import { twMerge } from 'tailwind-merge'
 import { fieldError, fieldInput } from '@/components/ui/fieldStyles'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { figure, textMuted } from '@/components/ui/surfaces'
+import { darkChipKeys, getAccountLogo, type AccountLogo } from '@/sections/accounts/bankLogos'
 import type { Account, FormPaymentMethod } from '@/types'
 
 type PaymentSourcePickerProps = {
@@ -95,6 +96,41 @@ function IconChip({ method }: { method: FormPaymentMethod }) {
   return (
     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pink-50 text-pink-800 dark:bg-slate-800 dark:text-pink-300">
       <MethodIcon method={method} />
+    </span>
+  )
+}
+
+/** White chip with the provider's wordmark, sized to keep the row height. */
+function LogoChip({ logo }: { logo: AccountLogo }) {
+  const tone = darkChipKeys.has(logo.key)
+    ? 'border-slate-700 bg-slate-900'
+    : 'border-slate-200 bg-white dark:border-slate-600'
+
+  return (
+    <span
+      className={`flex h-10 w-14 shrink-0 items-center justify-center rounded-xl border p-1.5 ${tone}`}
+    >
+      <img
+        src={logo.src}
+        alt=""
+        aria-hidden="true"
+        data-logo={logo.key}
+        decoding="async"
+        className="max-h-full max-w-full object-contain"
+      />
+    </span>
+  )
+}
+
+/** Provider logo when the account has one, otherwise the method icon. */
+function AccountChip({ account, method }: { account: Account; method: FormPaymentMethod }) {
+  const logo = getAccountLogo(account)
+  if (logo) return <LogoChip logo={logo} />
+
+  // Same width as a logo chip, so names line up in a mixed list.
+  return (
+    <span className="flex w-14 shrink-0 justify-center">
+      <IconChip method={method} />
     </span>
   )
 }
@@ -216,7 +252,11 @@ export function PaymentSourcePicker({
           'flex h-auto min-h-14 items-center gap-3 rounded-[1.25rem] px-4 py-2.5 text-left active:scale-[0.99] motion-reduce:transform-none',
         )}
       >
-        <IconChip method={unselected ? 'ewallet' : method} />
+        {!unselected && (method === 'card' || method === 'ewallet') && selectedAccount ? (
+          <AccountChip account={selectedAccount} method={method} />
+        ) : (
+          <IconChip method={unselected ? 'ewallet' : method} />
+        )}
         <span className="min-w-0 flex-1">
           <span className={`block text-xs font-medium ${textMuted}`}>
             {tileEyebrow}
@@ -343,7 +383,7 @@ export function PaymentSourcePicker({
                         onClick={() => choose(pickedMethod, account.id)}
                         className={twMerge(rowClass, selected ? rowSelected : rowIdle)}
                       >
-                        <IconChip method={pickedMethod} />
+                        <AccountChip account={account} method={pickedMethod} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-sm font-semibold text-slate-950 dark:text-slate-100">
                             {account.name}

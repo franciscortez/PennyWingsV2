@@ -246,3 +246,43 @@ test('debts filter bar keeps the type filter readable on tablet and desktop widt
     expect(Math.max(...await tabs.evaluateAll(buttons => buttons.map(button => button.getBoundingClientRect().height))), `tab height at ${width}`).toBeLessThan(44)
   }
 })
+
+// iOS Safari sizes a natively-styled date input as content-box (width + padding +
+// border), so `w-full` overflows its shell by ~42px and the modal scrolls sideways.
+// Desktop engines don't reproduce that rendering, so pin the styles that prevent it
+// (verified in the iOS Simulator) plus containment in the field shell and modal body.
+test('debt modal date fields stay inside the modal on iPhone', async ({ page }) => {
+  await mockDebts(page)
+  await page.goto('/debts')
+  const card = page.getByRole('article', { name: 'Debt: Atome' })
+  await expect(card).toBeVisible()
+  const flows: { name: string; open: () => Promise<void> }[] = [
+    { name: 'Pay', open: () => card.getByRole('button', { name: 'Pay', exact: true }).click() },
+    { name: 'Add Debt', open: () => page.getByRole('button', { name: 'Add Debt' }).click() },
+    { name: 'Add purchase', open: () => card.getByTitle('Add purchase').click() },
+  ]
+  for (const flow of flows) {
+    await flow.open()
+    const dialog = page.getByRole('dialog')
+    const date = dialog.locator('input[type="date"]').first()
+    await expect(date, `${flow.name} date field`).toBeVisible()
+    const geometry = await date.evaluate(input => {
+      const style = getComputedStyle(input)
+      const width = (element: Element) => element.getBoundingClientRect().width
+      const body = input.closest('.modal-body')!
+      return {
+        appearance: style.appearance || style.webkitAppearance,
+        minWidth: style.minWidth,
+        inputWidth: width(input),
+        shellWidth: width(input.parentElement!),
+        bodyOverflow: body.scrollWidth - body.clientWidth,
+      }
+    })
+    expect(geometry.appearance, `${flow.name} date appearance`).toBe('none')
+    expect(geometry.minWidth, `${flow.name} date min-width`).toBe('0px')
+    expect(Math.abs(geometry.inputWidth - geometry.shellWidth), `${flow.name} date vs shell`).toBeLessThanOrEqual(1)
+    expect(geometry.bodyOverflow, `${flow.name} modal body sideways scroll`).toBeLessThanOrEqual(0)
+    await page.keyboard.press('Escape')
+    await expect(dialog).toHaveCount(0)
+  }
+})

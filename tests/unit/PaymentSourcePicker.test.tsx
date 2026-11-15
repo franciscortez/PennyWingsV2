@@ -227,3 +227,71 @@ describe('PaymentSourcePicker', () => {
     expect(tile).toHaveAttribute('aria-describedby', 'picker-error')
   })
 })
+
+describe('PaymentSourcePicker provider logos', () => {
+  const bpi: Account = { ...base, id: 'card-bpi', name: 'BPI', accountType: 'savings', color: '#9E1014' }
+  const xmas: Account = { ...base, id: 'card-x', name: 'Christmas Present', color: '#F472B6' }
+  const wise: Account = { ...base, id: 'card-w', name: 'Wise', color: '#3B82F6' }
+  const uno: Account = { ...base, id: 'card-u', name: 'UNO Savings', color: '#6C4BD3' }
+  const lentBpi: Account = { ...lent, id: 'lent-b', name: 'Lent to BPI' }
+  const cards = [bpi, xmas, wise, uno]
+
+  const imgsIn = (element: HTMLElement) => Array.from(element.querySelectorAll('img'))
+
+  it('shows the provider logo on branded card rows', async () => {
+    const { user } = renderPicker({ cardAccounts: cards })
+    const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+
+    const [bpiLogo] = imgsIn(screen.getByRole('button', { name: /^BPI/ }))
+    const [wiseLogo] = imgsIn(screen.getByRole('button', { name: /^Wise/ }))
+    expect(bpiLogo).toHaveAttribute('data-logo', 'bpi')
+    expect(wiseLogo).toHaveAttribute('data-logo', 'wise')
+  })
+
+  it('keeps the generic icon for unbranded and logo-less accounts', async () => {
+    const { user } = renderPicker({ cardAccounts: cards })
+    const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+
+    expect(imgsIn(screen.getByRole('button', { name: /Christmas Present/ }))).toHaveLength(0)
+    expect(imgsIn(screen.getByRole('button', { name: /UNO Savings/ }))).toHaveLength(0)
+  })
+
+  it('shows the logo on the tile for a selected card', () => {
+    renderPicker({ cardAccounts: cards, cardId: 'card-bpi', method: 'card' })
+
+    const [logo] = imgsIn(screen.getByRole('button', { name: /Payment Method/ }))
+    expect(logo).toHaveAttribute('data-logo', 'bpi')
+  })
+
+  it('puts light-on-white logos on a dark chip', async () => {
+    const maya: Account = { ...gcash, id: 'wallet-maya', accountType: 'maya', name: 'Maya' }
+    const { user } = renderPicker({ walletAccounts: [maya] })
+    const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('button', { name: /E-Wallet/ }))
+
+    const [logo] = imgsIn(screen.getByRole('button', { name: /^Maya/ }))
+    expect(logo).toHaveAttribute('data-logo', 'maya')
+    expect(logo?.parentElement).toHaveClass('bg-slate-900')
+  })
+
+  it('aligns icon and logo chips to the same width', async () => {
+    const { user } = renderPicker({ cardAccounts: cards })
+    const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+
+    const firstChip = (name: RegExp) => screen.getByRole('button', { name }).firstElementChild
+    expect(firstChip(/^BPI/)).toHaveClass('w-14')
+    expect(firstChip(/Christmas Present/)).toHaveClass('w-14')
+  })
+
+  it('never shows logos on method rows or lent accounts', async () => {
+    const { user } = renderPicker({ allowLent: true, cardAccounts: cards, lentAccounts: [lentBpi] })
+    const sheet = await openSheet(user)
+
+    expect(imgsIn(sheet)).toHaveLength(0)
+    await user.click(within(sheet).getByRole('button', { name: /Lent/ }))
+    expect(imgsIn(screen.getByRole('button', { name: /Lent to BPI/ }))).toHaveLength(0)
+  })
+})

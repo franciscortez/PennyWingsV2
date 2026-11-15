@@ -132,7 +132,7 @@ export function DebtCard({
             <button
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
-              className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              className="flex h-11 w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
               aria-label="Debt actions"
               aria-expanded={menuOpen}
             >
@@ -250,7 +250,7 @@ export function DebtCard({
           <AppButton
             variant="secondary"
             onClick={() => onAddPurchase(debt)}
-            className="px-3"
+            className="min-w-11 px-3"
             title="Add purchase"
           >
             <Plus size={16} aria-hidden="true" />
@@ -271,7 +271,7 @@ export function DebtCard({
         <AppButton
           variant="secondary"
           onClick={() => onHistory(debt)}
-          className={debt.status === 'outstanding' ? 'px-3' : 'flex-1'}
+          className={debt.status === 'outstanding' ? 'min-w-11 px-3' : 'flex-1'}
           title="Activity history"
         >
           <History size={16} aria-hidden="true" />

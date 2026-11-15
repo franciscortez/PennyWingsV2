@@ -14,14 +14,14 @@ bounds (`99 174 596 263`). No paths or colors were changed.
 | unionbank | unionbank.svg | https://commons.wikimedia.org/wiki/File:UnionBank_PH_logo.svg | commons | |
 | securitybank | securitybank.svg | https://commons.wikimedia.org/wiki/File:Security_Bank_logo.svg | commons | |
 | pnb | pnb.svg | https://commons.wikimedia.org/wiki/File:Philippine-National-Bank-logo.svg | commons | |
-| landbank | landbank.svg | https://commons.wikimedia.org/wiki/File:Landbank.svg | commons | |
-| maya | maya.svg | https://commons.wikimedia.org/wiki/File:Maya_logo.svg | commons | Light green wordmark; rendered on a dark chip in the picker. |
-| gotyme | gotyme.svg | https://commons.wikimedia.org/wiki/File:GoTyme_Bank_logo.svg | commons | Dark text; low contrast on dark surfaces. |
+| landbank | landbank.png | https://www.landbank.com/assets/landbank-logo.png | official (site header) | Current flat green `#74BC44` logo. PNG (241×38) because Landbank publishes no vector file and Commons only has the previous emblem. |
+| maya | maya.svg | https://www.maya.ph/hubfs/Maya/MAYA-Mint%20Green.svg | official (site header) | Current mint green `#2FF19E` (the Commons file had the older `#75EEA5`); rendered on a dark chip in the picker. |
+| gotyme | gotyme.svg | https://www.gotyme.com.ph/static-assets/images/gotymebank-logo-primary-white.svg | official (site header) | Official logo is single-color (white or near-black, no blue). White version, rendered on a dark chip in the picker. |
 | maribank | maribank.svg | https://banking-aka-storage.maribank.com.sg/maribank/sg/app_infra/live/ccf/logo/logo_text.svg | official (maribank.sg) | maribank.com.ph showed a bot check; same brand mark. |
 | tonik | tonik.svg | https://tonikbank.com/themes/tonikbankv1/logo.svg | official | |
 | cimb | cimb.svg | https://www.cimbbank.com.ph/content/dam/cimbph/images/global/logo-cimb-islamic.svg | official (site header) | White "CIMB BANK" text; invisible on light surfaces. Commons file rejected (embedded PNGs). |
 | gcash | gcash.svg | https://commons.wikimedia.org/wiki/File:GCash_logo.svg | commons | |
 | grabpay | grabpay.svg | https://commons.wikimedia.org/wiki/File:Grab_Logo.svg | commons (fallback) | Grab parent wordmark; no GrabPay-specific SVG found. |
 | paypal | paypal.svg | https://commons.wikimedia.org/wiki/File:PayPal_2024.svg | commons | Black 2024 wordmark; low contrast on dark surfaces. |
-| wise | wise.svg | https://commons.wikimedia.org/wiki/File:New_Wise_(formerly_TransferWise)_logo.svg | commons | Extra: Wise has no entry in `bankCardDesigns` yet. |
+| wise | wise.svg | https://wise.com/ph/ (header logo, inline SVG) | official (site header) | Current Forest Green `#163300` logo; the fill was a CSS variable and is written as its resolved value. Extra: Wise has no entry in `bankCardDesigns` yet. |
 | uno | — | MISSING | — | uno.bank and unobank.asia return 403 to automation; no Commons or Wikipedia file. |

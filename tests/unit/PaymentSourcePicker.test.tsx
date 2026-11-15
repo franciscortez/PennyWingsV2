@@ -276,6 +276,17 @@ describe('PaymentSourcePicker provider logos', () => {
     expect(logo?.parentElement).toHaveClass('bg-slate-900')
   })
 
+  it('puts the white GoTyme logo on a dark chip', async () => {
+    const gotyme: Account = { ...base, id: 'card-go', name: 'GoSave (Invesment)', color: '#071D2B' }
+    const { user } = renderPicker({ cardAccounts: [gotyme] })
+    const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+
+    const [logo] = imgsIn(screen.getByRole('button', { name: /GoSave/ }))
+    expect(logo).toHaveAttribute('data-logo', 'gotyme')
+    expect(logo?.parentElement).toHaveClass('bg-slate-900')
+  })
+
   it('aligns icon and logo chips to the same width', async () => {
     const { user } = renderPicker({ cardAccounts: cards })
     const sheet = await openSheet(user)
@@ -284,6 +295,17 @@ describe('PaymentSourcePicker provider logos', () => {
     const firstChip = (name: RegExp) => screen.getByRole('button', { name }).firstElementChild
     expect(firstChip(/^BPI/)).toHaveClass('w-14')
     expect(firstChip(/Christmas Present/)).toHaveClass('w-14')
+  })
+
+  it('loads the official PNG logo for Landbank', async () => {
+    const landbank: Account = { ...base, id: 'card-lb', name: 'Landbank', color: '#00702F' }
+    const { user } = renderPicker({ cardAccounts: [landbank] })
+    const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+
+    const [logo] = imgsIn(screen.getByRole('button', { name: /Landbank/ }))
+    expect(logo).toHaveAttribute('data-logo', 'landbank')
+    expect(logo?.getAttribute('src')).toMatch(/png/i)
   })
 
   it('never shows logos on method rows or lent accounts', async () => {

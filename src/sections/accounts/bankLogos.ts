@@ -9,19 +9,22 @@ export type AccountLogo = {
   src: string
 }
 
-/** Logo URLs keyed by file name, e.g. `maribank` -> `/assets/maribank-xxxx.svg`. */
+/**
+ * Logo URLs keyed by file name, e.g. `maribank` -> `/assets/maribank-xxxx.svg`.
+ * Logos are SVG, except where the provider publishes no vector file (Landbank).
+ */
 const logoUrls: Record<string, string> = Object.fromEntries(
   Object.entries(
-    import.meta.glob<string>('@/assets/bank-logos/*.svg', {
+    import.meta.glob<string>('@/assets/bank-logos/*.{svg,png}', {
       eager: true,
       import: 'default',
       query: '?url',
     }),
-  ).map(([path, url]) => [path.replace(/^.*\/(.+)\.svg$/, '$1'), url]),
+  ).map(([path, url]) => [path.replace(/^.*\/(.+)\.(svg|png)$/, '$1'), url]),
 )
 
 /** Logos drawn in white or pale colors, which need a dark chip to stay visible. */
-export const darkChipKeys: ReadonlySet<string> = new Set(['cimb', 'maya'])
+export const darkChipKeys: ReadonlySet<string> = new Set(['cimb', 'gotyme', 'maya'])
 
 const WISE_PATTERN = /\bwise\b/i
 

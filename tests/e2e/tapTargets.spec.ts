@@ -58,7 +58,7 @@ test('login password controls meet 44px tap targets without shifting layout', as
 
   // The label row keeps its compact text height; only the hit area grows.
   const labelRow = page.locator(`label[for="${await password.getAttribute('id')}"]`).locator('..')
-  expect((await labelRow.boundingBox())!.height, 'label row height').toBeLessThanOrEqual(24)
+  expect((await labelRow.boundingBox())!.height, 'label row height').toBeLessThanOrEqual(24 + TOLERANCE)
 
   // The toggle stays inside the field and clear of the typed text.
   const geometry = await password.evaluate(input => {

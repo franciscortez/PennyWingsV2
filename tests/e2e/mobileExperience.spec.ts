@@ -1,5 +1,6 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { setupAuthenticatedMocks } from './helpers/authMock'
+import { createDebtReportingFixture } from '../helpers/debtReportingFixture'
 
 test.use({ viewport: { width: 390, height: 844 } })
 test.beforeEach(async ({ page }) => { await setupAuthenticatedMocks(page) })
@@ -171,4 +172,55 @@ test('tab return and browser Back restore scroll; reselecting a tab returns to i
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(700)
   await nav.getByRole('link', { name: 'Accounts', exact: true }).click()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0)
+})
+
+async function mockDebts(page: Page) {
+  const fixture = createDebtReportingFixture()
+  await page.route('**/rest/v1/**', async route => {
+    const request = route.request()
+    if (new URL(request.url()).pathname === '/rest/v1/profiles') return route.fallback()
+    const reply = fixture.respond(request.method(), request.url(), request.postDataJSON() ?? {})
+    await route.fulfill({ status: reply.status, headers: reply.headers, contentType: 'application/json', body: request.method() === 'HEAD' ? '' : JSON.stringify(reply.body) })
+  })
+}
+
+test('debts filter bar fits iPhone widths without zoom-prone fields', async ({ page }) => {
+  await mockDebts(page)
+  await page.goto('/debts')
+  const search = page.getByPlaceholder('Search debts...')
+  const typeFilter = page.getByLabel('Filter by debt type')
+  await expect(search).toBeVisible()
+  const tabs = page.getByRole('region', { name: 'Debts list' }).getByRole('button', { name: /^(Active|Settled|Archived)/ })
+  await expect(tabs).toHaveCount(3)
+  // Widest realistic badge: two-digit counts on every tab.
+  await tabs.evaluateAll(buttons => buttons.forEach(button => { button.lastElementChild!.textContent = '88' }))
+  for (const width of [320, 375, 390, 430]) {
+    await page.setViewportSize({ width, height: 844 })
+    for (const field of [search, typeFilter]) {
+      expect(await field.evaluate(element => parseFloat(getComputedStyle(element).fontSize)), `field font at ${width}`).toBeGreaterThanOrEqual(16)
+    }
+    const placeholderRoom = await search.evaluate((input: HTMLInputElement) => {
+      const style = getComputedStyle(input)
+      const ctx = document.createElement('canvas').getContext('2d')!
+      ctx.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`
+      // Firefox reports an input's clientWidth without padding, so measure the border box.
+      const content = input.getBoundingClientRect().width - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth) - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+      return content - ctx.measureText(input.placeholder).width
+    })
+    expect(placeholderRoom, `search placeholder room at ${width}`).toBeGreaterThanOrEqual(0)
+    const layout = await tabs.evaluateAll(buttons => {
+      const pill = buttons[0].parentElement!
+      const box = pill.getBoundingClientRect()
+      return {
+        pillOverflow: pill.scrollWidth - pill.clientWidth,
+        outside: buttons.filter(button => { const r = button.getBoundingClientRect(); return r.left < box.left - 0.5 || r.right > box.right + 0.5 }).map(button => button.textContent),
+        heights: buttons.map(button => button.getBoundingClientRect().height),
+        pageWidth: document.documentElement.scrollWidth,
+      }
+    })
+    expect(layout.pillOverflow, `pill overflow at ${width}`).toBeLessThanOrEqual(0)
+    expect(layout.outside, `tabs outside pill at ${width}`).toEqual([])
+    expect(Math.min(...layout.heights), `tab height at ${width}`).toBeGreaterThanOrEqual(44)
+    expect(layout.pageWidth, `page width at ${width}`).toBe(width)
+  }
 })

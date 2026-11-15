@@ -218,13 +218,13 @@ function AccountCard({
   return (
     <article
       aria-label={account.name}
-      className={`${surface} flex w-full min-w-0 max-w-96 flex-col overflow-hidden`}
+      className={`${surface} flex w-full min-w-0 max-w-md flex-col overflow-hidden sm:max-w-96`}
     >
       <header className="space-y-2 px-5 pt-5">
         <h3 className="break-words text-lg font-semibold tracking-tight text-slate-950 dark:text-white">{account.name}</h3>
         {accessBadge}
       </header>
-      <div className="p-4 pb-0" data-account-artwork>
+      <div className="p-3 pb-0 sm:p-4 sm:pb-0" data-account-artwork>
         {isBankCard ? (
           <BankCardFace
             className="aspect-[8/5] w-full"
@@ -251,7 +251,7 @@ function AccountCard({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-5 p-3 sm:p-5">
+      <div className="flex flex-1 flex-col gap-5 p-3 sm:p-4">
         <div className={`${surfaceNested} min-w-0 p-3 sm:p-4`}>
           <div className="mb-1 flex items-center gap-2">
             <FaMoneyBillWave

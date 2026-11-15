@@ -81,3 +81,23 @@ export async function colorsGeometry(page: Page) {
   }))
   expect(failures).toEqual([])
 }
+
+// Phone-width cards must span the full grid cell like every other section (up to
+// a 28rem cap, so landscape phones and small tablets don't get poster-sized
+// cards), and the card face must share the exact width of the balance panel.
+export async function accountsCardAlignment(page: Page, width: number) {
+  const failures = await page.locator('.accounts-design article[aria-label]').evaluateAll((articles, phone) => articles.flatMap(article => {
+    if (!article.getClientRects().length) return []
+    const name = article.getAttribute('aria-label')
+    const errors: string[] = []
+    const card = article.getBoundingClientRect().width
+    const cell = article.parentElement!.getBoundingClientRect().width
+    const face = article.querySelector('[data-account-artwork] > *')!.getBoundingClientRect().width
+    const panel = article.querySelector('[data-account-balance]')!.parentElement!.getBoundingClientRect().width
+    const expected = Math.min(cell, parseFloat(getComputedStyle(document.documentElement).fontSize) * 28)
+    if (phone && Math.abs(card - expected) > 1) errors.push(`${name}: card ${card} != expected ${expected} (grid ${cell})`)
+    if (Math.abs(face - panel) > 1) errors.push(`${name}: face ${face} != balance panel ${panel}`)
+    return errors
+  }), width < 640)
+  expect(failures).toEqual([])
+}

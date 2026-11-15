@@ -39,7 +39,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             {label}
           </label>
           {forgotPassword ? (
-            <Link to="/forgot-password" className={`text-sm ${textLink}`}>
+            <Link to="/forgot-password" className={`-mb-[7px] -mt-[13px] inline-flex min-h-11 items-center text-sm ${textLink}`}>
               Forgot password?
             </Link>
           ) : null}
@@ -58,7 +58,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
           <button
             type="button"
             onClick={() => setShowPassword((current) => !current)}
-            className="absolute right-1.5 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-pink-50 hover:text-pink-900 focus-visible:outline-2 focus-visible:outline-pink-800"
+            className="absolute right-0.5 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 transition-colors hover:bg-pink-50 hover:text-pink-900 focus-visible:outline-2 focus-visible:outline-pink-800"
             aria-label={showPassword ? 'Hide password' : 'Show password'}
           >
             {showPassword ? (

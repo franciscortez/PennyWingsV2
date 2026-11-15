@@ -141,7 +141,7 @@ export function DebtCard({
 
             {menuOpen && (
               <div
-                className="absolute right-0 top-9 z-20 w-36 rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                className="absolute right-0 top-full z-20 mt-1 w-36 rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
                 role="menu"
               >
                 {debt.status !== 'archived' && onEdit && (

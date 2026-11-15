@@ -39,7 +39,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             {label}
           </label>
           {forgotPassword ? (
-            <Link to="/forgot-password" className={`-my-3 inline-flex min-h-11 items-center text-sm ${textLink}`}>
+            <Link to="/forgot-password" className={`-mb-[7px] -mt-[13px] inline-flex min-h-11 items-center text-sm ${textLink}`}>
               Forgot password?
             </Link>
           ) : null}

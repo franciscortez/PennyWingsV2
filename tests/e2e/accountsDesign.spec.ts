@@ -3,7 +3,7 @@ import { expect, test, type Page, type Locator } from '@playwright/test'
 import { setupAuthenticatedMocks } from './helpers/authMock'
 import { blockUnmockedBackend } from './helpers/modalFixtures'
 import { mockAccountsDesign } from './helpers/accountsDesignFixtures'
-import { accountsContrastAudit, accountsGeometry, colorsGeometry } from './helpers/accountsDesignAssertions'
+import { accountsCardAlignment, accountsContrastAudit, accountsGeometry, colorsGeometry } from './helpers/accountsDesignAssertions'
 
 async function ready(page: Page, path = '/accounts') {
   await page.goto(path)
@@ -136,6 +136,15 @@ test.describe('Accounts design', () => {
       await compactCards(wallet)
       await compactCards(page.locator('#hidden-accounts article'))
       await accountsGeometry(page, width)
+    }
+  })
+
+  test('cards fill phone width and align the face with the balance panel', async ({ page }) => {
+    await mockAccountsDesign(page)
+    await ready(page)
+    for (const width of [375, 390, 393, 412, 430, 440, 1280]) {
+      await page.setViewportSize({ width, height: 900 })
+      await accountsCardAlignment(page, width)
     }
   })
 

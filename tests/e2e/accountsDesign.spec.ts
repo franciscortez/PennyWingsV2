@@ -142,7 +142,7 @@ test.describe('Accounts design', () => {
   test('cards fill phone width and align the face with the balance panel', async ({ page }) => {
     await mockAccountsDesign(page)
     await ready(page)
-    for (const width of [375, 390, 393, 412, 430, 440, 1280]) {
+    for (const width of [375, 390, 393, 412, 430, 440, 480, 600, 1280]) {
       await page.setViewportSize({ width, height: 900 })
       await accountsCardAlignment(page, width)
     }

@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSignOutConfirmation } from '@/hooks/useSignOutConfirmation'
 import { useSidebarInfo } from '@/hooks/useSidebarInfo'
 import { AssistantWidget } from '@/sections/assistant'
+import { QuickAddTransaction } from '@/sections/transactions/QuickAddTransaction'
 import { Sidebar } from '@/components/ui'
 import { useVisualViewport } from '@/hooks/useVisualViewport'
 import { ConnectionNotice } from '@/components/ConnectionNotice'
@@ -50,6 +51,7 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </main>
 
+      <QuickAddTransaction />
       <AssistantWidget />
     </div>
   )

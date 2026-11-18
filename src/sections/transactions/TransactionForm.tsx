@@ -23,6 +23,10 @@ import type {
   TransactionType,
 } from '@/types'
 import { transactionSchema } from '@/validation/transactionSchemas'
+import {
+  applyType,
+  type TransactionFormState,
+} from '@/sections/transactions/transactionFormState'
 
 type TransactionFormProps = {
   cardAccounts: Account[]
@@ -34,6 +38,8 @@ type TransactionFormProps = {
    * the mutation is in flight.
    */
   dismissDisabled: boolean
+  /** Type a new transaction opens on. Ignored when editing. */
+  initialType?: TransactionType
   lentAccounts: Account[]
   onClose: () => void
   onSubmit: (values: TransactionFormValues) => Promise<boolean>
@@ -41,11 +47,6 @@ type TransactionFormProps = {
   saving: boolean
   transaction: Transaction | null
   walletAccounts: Account[]
-}
-
-type TransactionFormState = Omit<TransactionFormValues, 'amount' | 'fee_amount'> & {
-  amount: string
-  fee_amount: string
 }
 
 const defaultFormState = (): TransactionFormState => ({
@@ -63,9 +64,16 @@ const defaultFormState = (): TransactionFormState => ({
   wallet_id: '',
 })
 
-const toFormState = (transaction: Transaction | null): TransactionFormState => {
+const toFormState = (
+  transaction: Transaction | null,
+  initialType: TransactionType = 'expense',
+  lentAccounts: Account[] = [],
+): TransactionFormState => {
   if (!transaction) {
-    return defaultFormState()
+    const initial = defaultFormState()
+    return initial.type === initialType
+      ? initial
+      : applyType(initial, initialType, lentAccounts)
   }
 
   return {
@@ -99,6 +107,7 @@ export function TransactionForm({
   cashAccount,
   categories,
   dismissDisabled,
+  initialType,
   lentAccounts,
   onClose,
   onSubmit,
@@ -115,7 +124,7 @@ export function TransactionForm({
     setValue,
     watch,
   } = useForm<TransactionFormState, unknown, TransactionFormValues>({
-    defaultValues: toFormState(transaction),
+    defaultValues: toFormState(transaction, initialType, lentAccounts),
     resolver: zodResolver(transactionSchema) as Resolver<
       TransactionFormState,
       unknown,
@@ -196,36 +205,7 @@ export function TransactionForm({
   }
 
   const updateType = (type: TransactionType) => {
-    const current = getValues()
-    reset(
-      {
-        ...current,
-        card_id: current.payment_method === 'card' ? current.card_id : '',
-        category_id: '',
-        fee_amount: type === current.type ? current.fee_amount : '0',
-        payment_method:
-          type === 'withdrawal' && current.payment_method === 'cash'
-            ? 'card'
-            : type !== 'transfer' &&
-                type !== 'withdrawal' &&
-                current.payment_method === 'lent'
-              ? 'ewallet'
-              : current.payment_method,
-        to_card_id: type === 'transfer' ? current.to_card_id : '',
-        to_wallet_id: type === 'transfer' ? current.to_wallet_id : '',
-        type,
-        wallet_id:
-          (current.payment_method === 'ewallet' ||
-            current.payment_method === 'lent') &&
-          (type === 'transfer' ||
-            type === 'withdrawal' ||
-            (current.payment_method === 'ewallet' &&
-              !lentAccounts.some((account) => account.id === current.wallet_id)))
-            ? current.wallet_id
-            : '',
-      },
-      { keepDirty: true },
-    )
+    reset(applyType(getValues(), type, lentAccounts), { keepDirty: true })
   }
 
   const updateSource = (paymentMethod: FormPaymentMethod, accountId: string) => {

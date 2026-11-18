@@ -6,6 +6,7 @@ import {
   mockTransactionPage,
   openInViewportEditForm,
 } from './helpers/modalFixtures'
+import { openNewTransactionForm } from './helpers/newTransaction'
 
 const transactionHeading = 'Transaction History'
 
@@ -165,9 +166,7 @@ async function openTransactionsPage(page: Page) {
 }
 
 async function openNewTransactionModal(page: Page) {
-  await page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true }).dispatchEvent('click')
-  const dialog = page.getByRole('dialog', { name: 'New Transaction' })
-  await expect(dialog).toBeVisible()
+  const dialog = await openNewTransactionForm(page, { dispatch: true })
   await expect(dialog.locator('#transaction-date')).toBeVisible()
   return dialog
 }

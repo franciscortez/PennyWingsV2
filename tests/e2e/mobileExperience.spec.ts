@@ -1,13 +1,14 @@
 import { expect, test, type Page } from '@playwright/test'
 import { setupAuthenticatedMocks } from './helpers/authMock'
 import { createDebtReportingFixture } from '../helpers/debtReportingFixture'
+import { openNewTransactionForm } from './helpers/newTransaction'
 
 test.use({ viewport: { width: 390, height: 844 } })
 test.beforeEach(async ({ page }) => { await setupAuthenticatedMocks(page) })
 
 test('money entry groups thousands while preserving cents and cursor edits', async ({ page }, testInfo) => {
   await page.goto('/transactions')
-  await page.getByRole('button', { name: 'New Transaction' }).click()
+  await openNewTransactionForm(page)
   const amount = page.getByRole('textbox', { name: 'Amount (PHP)' })
   await expect(amount).toHaveAttribute('inputmode', 'decimal')
   await amount.pressSequentially('22222.50')
@@ -39,7 +40,7 @@ test('new debt submits the unformatted numeric amount', async ({ page }) => {
 
 test('transaction sheet is bottom attached, preserves input through a nested picker, and remains bounded in landscape', async ({ page }) => {
   await page.goto('/transactions')
-  await page.getByRole('button', { name: 'New Transaction' }).click()
+  await openNewTransactionForm(page)
   const dialog = page.getByRole('dialog', { name: 'New Transaction' })
   await expect(dialog).toBeVisible()
   await expect.poll(async () => { const box = await dialog.boundingBox(); return Math.round(box!.y + box!.height) }).toBe(844)
@@ -121,7 +122,7 @@ test('report month and transaction filters survive tab switches; reselect keeps 
 
 test('warm offline notice retains the current form draft', async ({ page, context }) => {
   await page.goto('/transactions')
-  await page.getByRole('button', { name: 'New Transaction' }).click()
+  await openNewTransactionForm(page)
   await page.getByPlaceholder('Short note...').fill('Still here')
   await context.setOffline(true)
   await expect(page.getByPlaceholder('Short note...')).toHaveValue('Still here')

@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { OfflineDataState } from '@/components/OfflineDataState'
 import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useTransactionsData } from '@/hooks/useTransactionsData'
 import { alerts } from '@/lib/alert'
 import {
@@ -40,6 +41,9 @@ export default function Transactions() {
   const filterType = getTypeFromUrl(searchParams.get('type'))
   const searchQuery = searchParams.get('search') ?? ''
   const [formOpen, setFormOpen] = useState(false)
+  // Phones create through the shell's quick add button, so the header action
+  // only renders where that button does not (the same 768px breakpoint).
+  const isPhone = useMediaQuery('(max-width: 767px)')
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(
     null,
   )
@@ -190,10 +194,12 @@ export default function Transactions() {
           title="Transaction History"
           description="Manage your cashflow with precision."
           actions={
-            <AppButton type="button" onClick={openCreateForm} className="min-w-0 max-w-full">
-              <Plus className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span className="min-w-0 [overflow-wrap:anywhere]">New Transaction</span>
-            </AppButton>
+            isPhone ? undefined : (
+              <AppButton type="button" onClick={openCreateForm} className="min-w-0 max-w-full">
+                <Plus className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <span className="min-w-0 [overflow-wrap:anywhere]">New Transaction</span>
+              </AppButton>
+            )
           }
         />
 

@@ -12,6 +12,7 @@ import {
   mockTransactionPage,
   openInViewportEditForm,
 } from './helpers/modalFixtures'
+import { continueToTransactionForm, newTransactionOpener } from './helpers/newTransaction'
 
 /**
  * Issue #37: an open modal takes focus, keeps Tab and Shift+Tab inside, makes
@@ -44,6 +45,8 @@ async function openWithKeyboard(page: Page, opener: Locator, dialogName: string)
   // Captured after focusing, which may itself scroll the opener into view.
   const anchorBefore = await backgroundAnchor(page)
   await page.keyboard.press('Enter')
+  // Phones reach the transaction form through the quick add sheet.
+  if (dialogName === 'New Transaction') await continueToTransactionForm(page)
 
   const dialog = page.getByRole('dialog', { name: dialogName })
   await expect(dialog).toBeVisible()
@@ -95,7 +98,7 @@ test.describe('transaction and monitoring forms', () => {
       await page.goto('/transactions')
       await expect(page.getByRole('heading', { name: 'Transaction History' })).toBeVisible()
 
-      const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
+      const opener = newTransactionOpener(page)
       const { anchorBefore, dialog } = await openWithKeyboard(page, opener, 'New Transaction')
 
       expect(await rootIsInert(page)).toBe(true)
@@ -162,7 +165,7 @@ test.describe('transaction and monitoring forms', () => {
     // that finish before the test moves focus, or Enter lands in the textarea.
     await expect(assistant.getByLabel('Message PennyWings AI')).toBeFocused()
 
-    const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
+    const opener = newTransactionOpener(page)
     const { dialog } = await openWithKeyboard(page, opener, 'New Transaction')
 
     await expectTabContained(page, dialog)
@@ -241,7 +244,7 @@ test.describe('mobile', () => {
     await page.goto('/transactions')
     await expect(page.getByRole('heading', { name: 'Transaction History' })).toBeVisible()
 
-    const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
+    const opener = newTransactionOpener(page)
     const { dialog } = await openWithKeyboard(page, opener, 'New Transaction')
 
     expect(

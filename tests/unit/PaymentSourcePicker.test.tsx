@@ -15,7 +15,7 @@ const base: Account = {
 
 const otherCard: Account = { ...base, id: 'card-2', name: 'BPI Credit', accountType: 'credit', balance: 80 }
 const gcash: Account = { ...base, id: 'wallet-1', kind: 'wallet', accountType: 'gcash', name: 'GCash', balance: 300 }
-const cash: Account = { ...base, id: 'cash-1', kind: 'wallet', accountType: 'cash', name: 'Cash on Hand', balance: 0 }
+const cash: Account = { ...base, id: 'cash-1', kind: 'cash', accountType: 'cash', name: 'Cash on Hand', balance: 0 }
 const lent: Account = { ...base, id: 'lent-1', kind: 'lent', accountType: 'lent', name: 'Lent to Ana', balance: 500 }
 
 type Props = Parameters<typeof PaymentSourcePicker>[0]
@@ -72,101 +72,132 @@ describe('PaymentSourcePicker', () => {
     expect(tile).toHaveTextContent('₱1,250.50')
   })
 
-  it('lists the available methods in the sheet', async () => {
+  it('opens on the current account with its tab and card checked', async () => {
+    const { user } = renderPicker({ cardId: 'card-2', method: 'card' })
+    const sheet = await openSheet(user)
+
+    expect(within(sheet).getByRole('radio', { name: 'Cards 2' })).toHaveAttribute('aria-checked', 'true')
+    expect(within(sheet).getByRole('radio', { name: /^BPI Credit/ })).toHaveAttribute('aria-checked', 'true')
+    expect(within(sheet).getByRole('radio', { name: /^BPI Credit/ })).toHaveAccessibleName(/current/)
+    expect(within(sheet).getByText('Current')).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Use BPI Credit' })).toBeEnabled()
+  })
+
+  it('lists the account types as tabs', async () => {
     const { user } = renderPicker()
     const sheet = await openSheet(user)
 
-    expect(within(sheet).getByRole('button', { name: /Cash/ })).toBeEnabled()
-    expect(within(sheet).getByRole('button', { name: /Bank Card/ })).toBeEnabled()
-    expect(within(sheet).getByRole('button', { name: /E-Wallet/ })).toBeEnabled()
-    expect(within(sheet).queryByRole('button', { name: /Lent/ })).not.toBeInTheDocument()
+    const tabs = within(sheet).getByRole('radiogroup', { name: 'Account type' })
+    expect(within(tabs).getAllByRole('radio').map((tab) => tab.textContent)).toEqual([
+      'Cash',
+      'Cards 2',
+      'Wallets 1',
+    ])
   })
 
-  it('selects cash immediately and closes', async () => {
+  it('chooses cash with the Use button and closes', async () => {
     const { onChange, user } = renderPicker({ method: 'card', cardId: 'card-1' })
     const sheet = await openSheet(user)
 
-    await user.click(within(sheet).getByRole('button', { name: /Cash/ }))
+    await user.click(within(sheet).getByRole('radio', { name: 'Cash' }))
+    await user.click(within(sheet).getByRole('button', { name: 'Use Cash on Hand' }))
 
     expect(onChange).toHaveBeenCalledWith('cash', '')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('goes to the account step for a bank card and selects one', async () => {
+  it('brings a side card to the centre first, then uses it', async () => {
     const { onChange, user } = renderPicker()
     const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('radio', { name: 'Cards 2' }))
 
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+    await user.click(within(sheet).getByRole('radio', { name: /^BPI Credit/ }))
+    expect(onChange).not.toHaveBeenCalled()
+    expect(within(sheet).getByRole('radio', { name: /^BPI Credit/ })).toHaveAttribute('aria-checked', 'true')
 
-    const accounts = screen.getByRole('dialog', { name: 'Choose a bank card' })
-    expect(within(accounts).getByRole('button', { name: /BDO Debit/ })).toHaveTextContent('₱1,250.50')
-    await user.click(within(accounts).getByRole('button', { name: /BPI Credit/ }))
-
+    await user.click(within(sheet).getByRole('button', { name: 'Use BPI Credit' }))
     expect(onChange).toHaveBeenCalledWith('card', 'card-2')
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('uses the centred card when it is tapped', async () => {
+    const { onChange, user } = renderPicker()
+    const sheet = await openSheet(user)
+    await user.click(within(sheet).getByRole('radio', { name: 'Cards 2' }))
+
+    await user.click(within(sheet).getByRole('radio', { name: /^BDO Debit/ }))
+
+    expect(onChange).toHaveBeenCalledWith('card', 'card-1')
+  })
+
+  it('moves between cards with the arrow keys and confirms with Enter', async () => {
+    const { onChange, user } = renderPicker({ cardId: 'card-1', method: 'card' })
+    const sheet = await openSheet(user)
+    within(sheet).getByRole('radio', { name: /^BDO Debit/ }).focus()
+
+    await user.keyboard('{ArrowRight}')
+    const bpi = within(sheet).getByRole('radio', { name: /^BPI Credit/ })
+    expect(bpi).toHaveFocus()
+    expect(bpi).toHaveAttribute('aria-checked', 'true')
+
+    await user.keyboard('{Home}')
+    expect(within(sheet).getByRole('radio', { name: /^BDO Debit/ })).toHaveFocus()
+    await user.keyboard('{End}{Enter}')
+
+    expect(onChange).toHaveBeenCalledWith('card', 'card-2')
   })
 
   it('selects an e-wallet account', async () => {
     const { onChange, user } = renderPicker()
     const sheet = await openSheet(user)
 
-    await user.click(within(sheet).getByRole('button', { name: /E-Wallet/ }))
-    await user.click(screen.getByRole('button', { name: /GCash/ }))
+    await user.click(within(sheet).getByRole('radio', { name: 'Wallets 1' }))
+    await user.click(within(sheet).getByRole('button', { name: 'Use GCash' }))
 
     expect(onChange).toHaveBeenCalledWith('ewallet', 'wallet-1')
-  })
-
-  it('returns to the method step with the back button', async () => {
-    const { onChange, user } = renderPicker()
-    const sheet = await openSheet(user)
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
-
-    await user.click(screen.getByRole('button', { name: 'Back to payment methods' }))
-
-    expect(screen.getByRole('dialog', { name: 'Pay with' })).toBeInTheDocument()
-    expect(onChange).not.toHaveBeenCalled()
   })
 
   it('hides cash when it is not allowed', async () => {
     const { user } = renderPicker({ allowCash: false, method: 'card' })
     const sheet = await openSheet(user)
 
-    expect(within(sheet).queryByRole('button', { name: /^Cash/ })).not.toBeInTheDocument()
+    expect(within(sheet).queryByRole('radio', { name: 'Cash' })).not.toBeInTheDocument()
   })
 
   it('offers lent accounts when allowed', async () => {
     const { onChange, user } = renderPicker({ allowLent: true })
     const sheet = await openSheet(user)
 
-    await user.click(within(sheet).getByRole('button', { name: /Lent/ }))
-    await user.click(screen.getByRole('button', { name: /Lent to Ana/ }))
+    await user.click(within(sheet).getByRole('radio', { name: 'Lent 1' }))
+    await user.click(within(sheet).getByRole('button', { name: 'Use Lent to Ana' }))
 
     expect(onChange).toHaveBeenCalledWith('lent', 'lent-1')
   })
 
-  it('disables a method that has no accounts and explains why', async () => {
+  it('explains an empty tab and has nothing to use', async () => {
     const { user } = renderPicker({ walletAccounts: [] })
     const sheet = await openSheet(user)
 
-    const wallet = within(sheet).getByRole('button', { name: /E-Wallet/ })
-    expect(wallet).toBeDisabled()
-    expect(wallet).toHaveTextContent('No e-wallets yet')
+    await user.click(within(sheet).getByRole('radio', { name: 'Wallets 0' }))
+
+    expect(within(sheet).getByText('No e-wallets yet. Add one in Accounts.')).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Nothing to choose' })).toBeDisabled()
   })
 
-  it('disables cash when there is no cash account', async () => {
-    const { user } = renderPicker({ cashAccount: null, method: 'card' })
+  it('opens on a tab with accounts when the current method has none', async () => {
+    const { user } = renderPicker({ cashAccount: null })
     const sheet = await openSheet(user)
 
-    expect(within(sheet).getByRole('button', { name: /Cash/ })).toBeDisabled()
+    expect(within(sheet).getByRole('radio', { name: 'Cards 2' })).toHaveAttribute('aria-checked', 'true')
   })
 
   it('leaves out excluded accounts such as the source of a transfer', async () => {
-    const { user } = renderPicker({ excludeCardId: 'card-1', label: 'To Account' })
+    const { user } = renderPicker({ excludeCardId: 'card-1', label: 'To Account', method: 'card' })
     const sheet = await openSheet(user, 'To Account')
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
 
-    expect(screen.queryByRole('button', { name: /BDO Debit/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /BPI Credit/ })).toBeInTheDocument()
+    expect(within(sheet).getByRole('radio', { name: 'Cards 1' })).toBeInTheDocument()
+    expect(within(sheet).queryByRole('radio', { name: /^BDO Debit/ })).not.toBeInTheDocument()
+    expect(within(sheet).getByRole('radio', { name: /^BPI Credit/ })).toBeInTheDocument()
   })
 
   it('closes on Escape and returns focus to the tile', async () => {
@@ -189,22 +220,29 @@ describe('PaymentSourcePicker', () => {
     expect(tile).not.toHaveTextContent('₱')
   })
 
-  it('does not mark any method as current while unselected', async () => {
-    const { user } = renderPicker({ unselected: true })
-    const sheet = await openSheet(user)
+  it('does not mark any account as current while unselected', async () => {
+    const { user } = renderPicker({ unselected: true, label: 'Source Account' })
+    const sheet = await openSheet(user, 'Source Account')
 
-    expect(within(sheet).getByRole('button', { name: /^Cash/ })).not.toHaveAttribute('aria-current')
+    expect(within(sheet).queryByText('Current')).not.toBeInTheDocument()
+    expect(within(sheet).getByRole('radio', { name: /^Cash on Hand/ })).not.toHaveAccessibleName(/current/)
   })
 
   it('flags accounts that cannot cover the required amount', async () => {
     const { user } = renderPicker({ requiredAmount: 1000, cardAccounts: [base, otherCard] })
     const sheet = await openSheet(user)
 
-    expect(within(sheet).getByRole('button', { name: /^Cash/ })).toHaveTextContent('Insufficient')
+    expect(sheet).toHaveTextContent('Amount ₱1,000.00')
+    expect(within(sheet).getByText('Short by ₱1,000.00')).toBeInTheDocument()
+    expect(within(sheet).getByRole('button', { name: 'Use Cash on Hand anyway' })).toBeEnabled()
 
-    await user.click(within(sheet).getByRole('button', { name: /^Bank Card/ }))
-    expect(screen.getByRole('button', { name: /BPI Credit/ })).toHaveTextContent('Insufficient')
-    expect(screen.getByRole('button', { name: /BDO Debit/ })).not.toHaveTextContent('Insufficient')
+    await user.click(within(sheet).getByRole('radio', { name: 'Cards 2' }))
+    expect(within(sheet).getByRole('radio', { name: /^BDO Debit/ })).not.toHaveAccessibleName(/not enough balance/)
+    expect(within(sheet).getByRole('radio', { name: /^BPI Credit/ })).toHaveAccessibleName(/not enough balance/)
+    expect(within(sheet).queryByText(/Short by/)).not.toBeInTheDocument()
+
+    await user.click(within(sheet).getByRole('radio', { name: /^BPI Credit/ }))
+    expect(within(sheet).getByText('Short by ₱920.00')).toBeInTheDocument()
   })
 
   it('reports open and close so a parent modal can step aside', async () => {
@@ -238,26 +276,6 @@ describe('PaymentSourcePicker provider logos', () => {
 
   const imgsIn = (element: HTMLElement) => Array.from(element.querySelectorAll('img'))
 
-  it('shows the provider logo on branded card rows', async () => {
-    const { user } = renderPicker({ cardAccounts: cards })
-    const sheet = await openSheet(user)
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
-
-    const [bpiLogo] = imgsIn(screen.getByRole('button', { name: /^BPI/ }))
-    const [wiseLogo] = imgsIn(screen.getByRole('button', { name: /^Wise/ }))
-    expect(bpiLogo).toHaveAttribute('data-logo', 'bpi')
-    expect(wiseLogo).toHaveAttribute('data-logo', 'wise')
-  })
-
-  it('keeps the generic icon for unbranded and logo-less accounts', async () => {
-    const { user } = renderPicker({ cardAccounts: cards })
-    const sheet = await openSheet(user)
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
-
-    expect(imgsIn(screen.getByRole('button', { name: /Christmas Present/ }))).toHaveLength(0)
-    expect(imgsIn(screen.getByRole('button', { name: /UNO Savings/ }))).toHaveLength(0)
-  })
-
   it('shows the logo on the tile for a selected card', () => {
     renderPicker({ cardAccounts: cards, cardId: 'card-bpi', method: 'card' })
 
@@ -265,55 +283,47 @@ describe('PaymentSourcePicker provider logos', () => {
     expect(logo).toHaveAttribute('data-logo', 'bpi')
   })
 
-  it('puts light-on-white logos on a dark chip', async () => {
+  it('puts light-on-white logos on a dark chip', () => {
     const maya: Account = { ...gcash, id: 'wallet-maya', accountType: 'maya', name: 'Maya' }
-    const { user } = renderPicker({ walletAccounts: [maya] })
-    const sheet = await openSheet(user)
-    await user.click(within(sheet).getByRole('button', { name: /E-Wallet/ }))
+    renderPicker({ method: 'ewallet', walletAccounts: [maya], walletId: 'wallet-maya' })
 
-    const [logo] = imgsIn(screen.getByRole('button', { name: /^Maya/ }))
+    const [logo] = imgsIn(screen.getByRole('button', { name: /Payment Method/ }))
     expect(logo).toHaveAttribute('data-logo', 'maya')
     expect(logo?.parentElement).toHaveClass('bg-slate-900')
   })
 
-  it('puts the white GoTyme logo on a dark chip', async () => {
+  it('puts the white GoTyme logo on a dark chip', () => {
     const gotyme: Account = { ...base, id: 'card-go', name: 'GoSave (Invesment)', color: '#071D2B' }
-    const { user } = renderPicker({ cardAccounts: [gotyme] })
-    const sheet = await openSheet(user)
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+    renderPicker({ cardAccounts: [gotyme], cardId: 'card-go', method: 'card' })
 
-    const [logo] = imgsIn(screen.getByRole('button', { name: /GoSave/ }))
+    const [logo] = imgsIn(screen.getByRole('button', { name: /Payment Method/ }))
     expect(logo).toHaveAttribute('data-logo', 'gotyme')
     expect(logo?.parentElement).toHaveClass('bg-slate-900')
   })
 
-  it('aligns icon and logo chips to the same width', async () => {
-    const { user } = renderPicker({ cardAccounts: cards })
-    const sheet = await openSheet(user)
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+  it('keeps the generic icon on the tile for an unbranded card, at the logo width', () => {
+    renderPicker({ cardAccounts: cards, cardId: 'card-x', method: 'card' })
 
-    const firstChip = (name: RegExp) => screen.getByRole('button', { name }).firstElementChild
-    expect(firstChip(/^BPI/)).toHaveClass('w-14')
-    expect(firstChip(/Christmas Present/)).toHaveClass('w-14')
+    const tile = screen.getByRole('button', { name: /Payment Method/ })
+    expect(imgsIn(tile)).toHaveLength(0)
+    expect(tile.firstElementChild).toHaveClass('w-14')
   })
 
-  it('loads the official PNG logo for Landbank', async () => {
+  it('loads the official PNG logo for Landbank', () => {
     const landbank: Account = { ...base, id: 'card-lb', name: 'Landbank', color: '#00702F' }
-    const { user } = renderPicker({ cardAccounts: [landbank] })
-    const sheet = await openSheet(user)
-    await user.click(within(sheet).getByRole('button', { name: /Bank Card/ }))
+    renderPicker({ cardAccounts: [landbank], cardId: 'card-lb', method: 'card' })
 
-    const [logo] = imgsIn(screen.getByRole('button', { name: /Landbank/ }))
+    const [logo] = imgsIn(screen.getByRole('button', { name: /Payment Method/ }))
     expect(logo).toHaveAttribute('data-logo', 'landbank')
     expect(logo?.getAttribute('src')).toMatch(/png/i)
   })
 
-  it('never shows logos on method rows or lent accounts', async () => {
-    const { user } = renderPicker({ allowLent: true, cardAccounts: cards, lentAccounts: [lentBpi] })
+  it('shows the real card face for each account in the sheet', async () => {
+    const { user } = renderPicker({ cardAccounts: cards, method: 'card', cardId: 'card-bpi', allowLent: true, lentAccounts: [lentBpi] })
     const sheet = await openSheet(user)
 
-    expect(imgsIn(sheet)).toHaveLength(0)
-    await user.click(within(sheet).getByRole('button', { name: /Lent/ }))
-    expect(imgsIn(screen.getByRole('button', { name: /Lent to BPI/ }))).toHaveLength(0)
+    expect(within(sheet).getByRole('radio', { name: /^BPI,/ })).toHaveTextContent('BPI')
+    await user.click(within(sheet).getByRole('radio', { name: 'Lent 1' }))
+    expect(within(sheet).getByRole('radio', { name: /^Lent to BPI/ })).toHaveTextContent('Lent to BPI')
   })
 })

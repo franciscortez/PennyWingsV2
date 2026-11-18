@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { TransactionForm } from '@/sections/transactions/TransactionForm'
 import type { Account, Transaction, TransactionCategory, TransactionFormValues } from '@/types'
 
+import { chooseSourceSync } from './helpers/sourcePicker'
+
 const card: Account = {
   accessRole: 'owner', accountType: 'debit', balance: 100,
   canManage: true, canTransact: true, color: '#000000',
@@ -62,30 +64,22 @@ const renderForm = (transaction: Transaction | null = null) => {
   return { dialog: screen.getByRole('dialog'), onSubmit }
 }
 
-// The payment source is a tile that opens a sheet: pick a method, then an account.
-const chooseSource = (dialog: HTMLElement, tile: string, method: string, account?: string) => {
-  fireEvent.click(within(dialog).getByRole('button', { name: new RegExp(tile) }))
-  const sheet = screen.getAllByRole('dialog').at(-1) as HTMLElement
-  fireEvent.click(within(sheet).getByRole('button', { name: new RegExp(`^${method}`) }))
-  if (account) {
-    const accounts = screen.getAllByRole('dialog').at(-1) as HTMLElement
-    fireEvent.click(within(accounts).getByRole('button', { name: new RegExp(account) }))
-  }
-}
+// The payment source is a tile that opens a card carousel: tab, card, Use.
+const chooseSource = chooseSourceSync
 
 const completeNewTransfer = (dialog: HTMLElement) => {
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Transfer/Deposit' }))
+  fireEvent.click(within(dialog).getByRole('radio', { name: 'Transfer' }))
   fireEvent.change(within(dialog).getByRole('textbox', { name: 'Amount (PHP)' }), { target: { value: '40' } })
   chooseSource(dialog, 'From Account', 'Bank Card', 'Source card')
   chooseSource(dialog, 'To Account', 'E-Wallet', 'Destination wallet')
-  fireEvent.change(within(dialog).getByLabelText('Category'), { target: { value: category.id } })
+  fireEvent.click(within(dialog).getByRole('radio', { name: category.name }))
 }
 
 const completeNewWithdrawal = (dialog: HTMLElement) => {
-  fireEvent.click(within(dialog).getByRole('button', { name: 'withdrawal' }))
+  fireEvent.click(within(dialog).getByRole('radio', { name: 'Withdraw' }))
   fireEvent.change(within(dialog).getByRole('textbox', { name: 'Amount (PHP)' }), { target: { value: '40' } })
-  chooseSource(dialog, 'Payment Method', 'Bank Card', 'Source card')
-  fireEvent.change(within(dialog).getByLabelText('Category'), { target: { value: category.id } })
+  chooseSource(dialog, 'Withdraw From', 'Bank Card', 'Source card')
+  fireEvent.click(within(dialog).getByRole('radio', { name: category.name }))
 }
 
 describe('TransactionForm transfer fees', () => {
@@ -98,7 +92,7 @@ describe('TransactionForm transfer fees', () => {
     fireEvent.change(fee, { target: { value: '1,234.05' } })
     expect(amount).toHaveValue('22,222.50')
     expect(fee).toHaveValue('1,234.05')
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save Transaction' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Save / }))
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       amount: 22222.5, fee_amount: 1234.05,
     })))
@@ -110,7 +104,7 @@ describe('TransactionForm transfer fees', () => {
     fireEvent.change(within(dialog).getByLabelText('Transfer Fee (PHP)'), {
       target: { value: String(fee) },
     })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save Transaction' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Save / }))
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       amount: 40, fee_amount: fee, type: 'transfer',
@@ -132,10 +126,8 @@ describe('TransactionForm transfer fees', () => {
 
   it('clears the hidden fee when switching away from Transfer', async () => {
     const { dialog, onSubmit } = renderForm(existingTransfer)
-    fireEvent.click(within(dialog).getByRole('button', { name: 'expense' }))
-    fireEvent.change(within(dialog).getByLabelText('Category'), {
-      target: { value: category.id },
-    })
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Expense' }))
+    fireEvent.click(within(dialog).getByRole('radio', { name: category.name }))
     fireEvent.click(within(dialog).getByRole('button', { name: 'Update Transaction' }))
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
@@ -149,7 +141,7 @@ describe('TransactionForm transfer fees', () => {
     fireEvent.change(within(dialog).getByLabelText('Transfer Fee (PHP)'), {
       target: { value: fee },
     })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save Transaction' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Save / }))
 
     await waitFor(() => expect(within(dialog).getByText(/Fee (cannot be negative|must be a valid number)/)).toBeVisible())
     expect(onSubmit).not.toHaveBeenCalled()
@@ -163,7 +155,7 @@ describe('TransactionForm withdrawal fees', () => {
     fireEvent.change(within(dialog).getByLabelText('Withdrawal Fee (PHP)'), {
       target: { value: String(fee) },
     })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save Transaction' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Save / }))
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({
       amount: 40, fee_amount: fee, type: 'withdrawal',
@@ -192,28 +184,28 @@ describe('TransactionForm withdrawal fees', () => {
   it('clears the fee when the source card or payment method changes', () => {
     const { dialog } = renderForm(existingWithdrawal)
     const feeInput = within(dialog).getByLabelText('Withdrawal Fee (PHP)')
-    chooseSource(dialog, 'Payment Method', 'Bank Card', 'Other source card')
+    chooseSource(dialog, 'Withdraw From', 'Bank Card', 'Other source card')
     expect(feeInput).toHaveValue('0')
 
     fireEvent.change(feeInput, { target: { value: '25' } })
     // The method only commits together with an account, so the fee is kept
     // until the new source is chosen.
-    chooseSource(dialog, 'Payment Method', 'E-Wallet', 'Destination wallet')
+    chooseSource(dialog, 'Withdraw From', 'E-Wallet', 'Destination wallet')
     expect(feeInput).toHaveValue('0')
     expect(within(dialog).getByLabelText('Withdrawal Fee (PHP)')).toBeVisible()
   })
 
   it('shows the fee for lent withdrawals and clears it on transaction type changes', () => {
     const { dialog } = renderForm(existingWithdrawal)
-    chooseSource(dialog, 'Payment Method', 'Lent', 'Lent source')
+    chooseSource(dialog, 'Withdraw From', 'Lent', 'Lent source')
     const feeInput = within(dialog).getByLabelText('Withdrawal Fee (PHP)')
     fireEvent.change(feeInput, { target: { value: '12.34' } })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Transfer/Deposit' }))
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Transfer' }))
     expect(within(dialog).getByLabelText('Transfer Fee (PHP)')).toHaveValue('0')
     fireEvent.change(within(dialog).getByLabelText('Transfer Fee (PHP)'), {
       target: { value: '15' },
     })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'withdrawal' }))
+    fireEvent.click(within(dialog).getByRole('radio', { name: 'Withdraw' }))
     expect(within(dialog).getByLabelText('Withdrawal Fee (PHP)')).toHaveValue('0')
   })
 
@@ -223,7 +215,7 @@ describe('TransactionForm withdrawal fees', () => {
     fireEvent.change(within(dialog).getByLabelText('Withdrawal Fee (PHP)'), {
       target: { value: fee },
     })
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Save Transaction' }))
+    fireEvent.click(within(dialog).getByRole('button', { name: /^Save / }))
 
     await waitFor(() => expect(within(dialog).getByText(/Fee (cannot be negative|must be a valid number)/)).toBeVisible())
     expect(onSubmit).not.toHaveBeenCalled()

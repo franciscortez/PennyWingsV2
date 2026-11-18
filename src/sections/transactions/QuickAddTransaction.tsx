@@ -1,52 +1,51 @@
 import {
   ArrowDownLeft,
   ArrowLeftRight,
-  ArrowUpRight,
   Banknote,
-  ChevronRight,
+  Check,
   Plus,
   type LucideIcon,
 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from 'react'
 
-import { ModalFrame } from '@/components/ui/ModalFrame'
 import { useAuth } from '@/hooks/useAuth'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useMobileKeyboard } from '@/hooks/useMobileKeyboard'
+import { useRecentCategoryIds } from '@/hooks/useRecentCategoryIds'
 import { useTransactionComposer } from '@/hooks/useTransactionComposer'
 import { alerts } from '@/lib/alert'
 import { TransactionForm } from '@/sections/transactions/TransactionForm'
 import type { TransactionFormValues, TransactionType } from '@/types'
 
-const quickAddOptions: Array<{
-  description: string
-  icon: LucideIcon
-  label: string
-  type: TransactionType
-}> = [
-  { type: 'expense', icon: ArrowUpRight, label: 'Expense', description: 'Pay for something' },
-  { type: 'income', icon: ArrowDownLeft, label: 'Income', description: 'Money coming in' },
-  {
-    type: 'transfer',
-    icon: ArrowLeftRight,
-    label: 'Transfer / Deposit',
-    description: 'Move money between accounts',
-  },
-  {
-    type: 'withdrawal',
-    icon: Banknote,
-    label: 'Withdrawal',
-    description: 'Cash out from a card or wallet',
-  },
+/** The other kinds, nearest the thumb first. Expense is the plain tap. */
+const dialOptions: Array<{ icon: LucideIcon; label: string; type: TransactionType }> = [
+  { type: 'income', icon: ArrowDownLeft, label: 'Income' },
+  { type: 'transfer', icon: ArrowLeftRight, label: 'Transfer' },
+  { type: 'withdrawal', icon: Banknote, label: 'Withdraw' },
 ]
 
-type QuickAddState = { step: 'closed' } | { step: 'menu' } | { step: 'form'; type: TransactionType }
+const LONG_PRESS_MS = 450
+const SAVED_PULSE_MS = 900
+
+type QuickAddState =
+  | { step: 'closed' }
+  | { step: 'dial' }
+  | { step: 'form'; type: TransactionType }
 
 /**
  * Phone-only floating "+" mounted once in the signed-in shell, on every page.
- * It opens a Quick add sheet in place (no navigation); picking a kind opens the
- * regular transaction form with that type selected. Desktop keeps the page
- * actions.
+ * A tap opens a new expense in place (no navigation). Press and hold, right
+ * click, Shift+Enter or the context-menu key fans out Income, Transfer and
+ * Withdraw. The form's own type switch covers every kind too, so the dial is
+ * only ever a shortcut. Desktop keeps the page actions.
  */
 export function QuickAddTransaction() {
   const isPhone = useMediaQuery('(max-width: 767px)')
@@ -62,10 +61,17 @@ function QuickAddLauncher() {
   const { user } = useAuth()
   const keyboardOpen = useMobileKeyboard()
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const pressTimer = useRef<number | undefined>(undefined)
+  const longPressed = useRef(false)
+  const dialId = useId()
+  const hintId = useId()
   const [state, setState] = useState<QuickAddState>({ step: 'closed' })
+  const [saved, setSaved] = useState(false)
   // Warmed on the first touch so accounts and categories are usually cached by
-  // the time a kind is chosen from the menu.
+  // the time the form opens.
   const [warm, setWarm] = useState(false)
+  const getRecentCategoryIds = useRecentCategoryIds(user?.id)
 
   const {
     cardAccounts,
@@ -78,8 +84,112 @@ function QuickAddLauncher() {
     walletAccounts,
   } = useTransactionComposer(user?.id, { enabled: warm || state.step !== 'closed' })
 
+  const dialOpen = state.step === 'dial'
+
+  useEffect(() => () => window.clearTimeout(pressTimer.current), [])
+
+  useEffect(() => {
+    if (!saved) return
+    const timer = window.setTimeout(() => setSaved(false), SAVED_PULSE_MS)
+    return () => window.clearTimeout(timer)
+  }, [saved])
+
+  // The dial is a light popover, not a modal: Escape, a tap on the scrim or
+  // moving focus away closes it. The scrim takes that tap, so dismissing never
+  // also activates whatever sits underneath.
+  useEffect(() => {
+    if (!dialOpen) return
+
+    itemRefs.current[0]?.focus()
+
+    // Functional updates: picking an item opens the form, whose dialog takes
+    // focus before these listeners are removed. That focus move must not
+    // read as "focus left the dial" and close the form it just opened.
+    const closeDialOnly = () =>
+      setState((current) => (current.step === 'dial' ? { step: 'closed' } : current))
+    const onKeyDown = (event: globalThis.KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        closeDialOnly()
+        buttonRef.current?.focus()
+      }
+    }
+    const onFocusIn = (event: FocusEvent) => {
+      const target = event.target as Node
+      if (buttonRef.current?.contains(target)) return
+      if (itemRefs.current.some((item) => item?.contains(target))) return
+      closeDialOnly()
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('focusin', onFocusIn)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('focusin', onFocusIn)
+    }
+  }, [dialOpen])
+
+  const openDial = () => {
+    setWarm(true)
+    setState({ step: 'dial' })
+  }
+
+  const openForm = (type: TransactionType) => setState({ step: 'form', type })
+
   const close = () => {
     if (!creating) setState({ step: 'closed' })
+  }
+
+  const cancelPress = () => window.clearTimeout(pressTimer.current)
+
+  const handlePointerDown = (event: PointerEvent<HTMLButtonElement>) => {
+    setWarm(true)
+    longPressed.current = false
+    if (event.pointerType === 'mouse') return
+    cancelPress()
+    pressTimer.current = window.setTimeout(() => {
+      longPressed.current = true
+      navigator.vibrate?.(10)
+      openDial()
+    }, LONG_PRESS_MS)
+  }
+
+  const handleClick = () => {
+    // The release that ends a long press must not also open the form.
+    if (longPressed.current) {
+      longPressed.current = false
+      return
+    }
+    if (dialOpen) {
+      setState({ step: 'closed' })
+      return
+    }
+    openForm('expense')
+  }
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'Enter' && event.shiftKey) {
+      event.preventDefault()
+      openDial()
+    }
+  }
+
+  const handleDialKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    const last = dialOptions.length - 1
+    // Items stack upward from the button, so Up moves away from it.
+    const next =
+      event.key === 'ArrowUp'
+        ? (index === last ? 0 : index + 1)
+        : event.key === 'ArrowDown'
+          ? (index === 0 ? last : index - 1)
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? last
+              : null
+    if (next === null) return
+    event.preventDefault()
+    itemRefs.current[next]?.focus()
   }
 
   const handleSubmit = async (values: TransactionFormValues) => {
@@ -91,6 +201,7 @@ function QuickAddLauncher() {
     }
 
     alerts.success('Transaction created.')
+    setSaved(true)
     return true
   }
 
@@ -104,49 +215,66 @@ function QuickAddLauncher() {
         // keyboard when nothing of its own is open (focus returns to it).
         hidden={keyboardOpen && state.step === 'closed'}
         aria-label="Quick add transaction"
+        aria-describedby={hintId}
         aria-haspopup="dialog"
         aria-expanded={state.step !== 'closed'}
+        aria-controls={dialOpen ? dialId : undefined}
+        aria-keyshortcuts="Shift+Enter"
+        data-open={dialOpen ? 'true' : undefined}
+        data-saved={saved ? 'true' : undefined}
+        onClick={handleClick}
+        onContextMenu={(event) => {
+          event.preventDefault()
+          cancelPress()
+          longPressed.current = false
+          openDial()
+        }}
         onFocus={() => setWarm(true)}
-        onPointerDown={() => setWarm(true)}
-        onClick={() => setState({ step: 'menu' })}
+        onKeyDown={handleKeyDown}
+        onPointerCancel={cancelPress}
+        onPointerDown={handlePointerDown}
+        onPointerLeave={cancelPress}
+        onPointerUp={cancelPress}
       >
-        <Plus aria-hidden="true" size={24} strokeWidth={2.25} />
+        <span className="quick-add-fab-icon" aria-hidden="true">
+          {saved ? <Check size={24} strokeWidth={2.5} /> : <Plus size={24} strokeWidth={2.25} />}
+        </span>
       </button>
+      <span id={hintId} hidden>
+        Opens a new expense. Press and hold, or Shift+Enter, for income, transfer or withdrawal.
+      </span>
 
-      {state.step === 'menu' ? (
-        <ModalFrame
-          mobilePresentation="sheet"
-          closeLabel="Close quick add"
-          onClose={close}
-          returnFocusRef={buttonRef}
-          title="Quick add"
-          titleId="quick-add-title"
-          description="What would you like to record?"
-          panelClassName="font-geist md:max-w-sm shadow-wing-lg dark:shadow-none focus-visible:ring-pink-800 dark:focus-visible:ring-pink-300"
-          headerClassName="[&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-slate-950 dark:[&_h2]:text-slate-100 [&_button]:h-11 [&_button]:w-11 [&_button]:text-slate-600 dark:[&_button]:text-slate-300 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-pink-800 dark:[&_button]:focus-visible:outline-pink-300"
-        >
-          <ul className="quick-add-options" aria-label="Transaction kinds">
-            {quickAddOptions.map(({ description, icon: Icon, label, type }) => (
-              <li key={type}>
-                <button
-                  type="button"
-                  className="quick-add-option"
-                  data-kind={type}
-                  onClick={() => setState({ step: 'form', type })}
-                >
-                  <span className="quick-add-option-icon" aria-hidden="true">
-                    <Icon size={20} strokeWidth={2} />
-                  </span>
-                  <span className="quick-add-option-copy">
-                    <span className="quick-add-option-label">{label}</span>
-                    <span className="quick-add-option-description">{description}</span>
-                  </span>
-                  <ChevronRight aria-hidden="true" size={18} className="quick-add-option-chevron" />
-                </button>
-              </li>
+      {dialOpen ? (
+        <>
+          <div
+            className="quick-add-scrim"
+            aria-hidden="true"
+            onClick={() => setState({ step: 'closed' })}
+          />
+          <div id={dialId} role="menu" aria-label="Add another kind" className="quick-add-dial">
+            {dialOptions.map(({ icon: Icon, label, type }, index) => (
+              <button
+                key={type}
+                ref={(element) => {
+                  itemRefs.current[index] = element
+                }}
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                className="quick-add-dial-item"
+                data-kind={type}
+                style={{ '--dial-index': index } as CSSProperties}
+                onClick={() => openForm(type)}
+                onKeyDown={(event) => handleDialKeyDown(event, index)}
+              >
+                <span className="quick-add-dial-label">{label}</span>
+                <span className="quick-add-dial-icon" aria-hidden="true">
+                  <Icon size={20} strokeWidth={2} />
+                </span>
+              </button>
             ))}
-          </ul>
-        </ModalFrame>
+          </div>
+        </>
       ) : null}
 
       {state.step === 'form' ? (
@@ -156,8 +284,11 @@ function QuickAddLauncher() {
           cashAccount={cashAccount}
           categories={categories}
           dismissDisabled={creating}
+          enterFrom="fab"
+          getRecentCategoryIds={getRecentCategoryIds}
           initialType={state.type}
           lentAccounts={lentAccounts}
+          returnFocusRef={buttonRef}
           saving={creating || optionsLoading}
           transaction={null}
           walletAccounts={walletAccounts}

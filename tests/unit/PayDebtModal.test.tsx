@@ -5,6 +5,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { PayDebtModal } from '@/sections/debts/PayDebtModal'
 import type { Account, Debt } from '@/types'
 
+import { chooseSource as chooseSourceWith, openSheet, sourceTab } from './helpers/sourcePicker'
+
 const mockDebt: Debt = {
   id: 'debt-1',
   userId: 'user-1',
@@ -103,21 +105,13 @@ const renderModal = (overrides: Partial<Parameters<typeof PayDebtModal>[0]> = {}
   return { onClose, onSubmit, repay: screen.getByRole('dialog', { name: /Repay Atome/i }) }
 }
 
-// The source account is a tile that opens its own modal: method, then account.
-const chooseSource = async (
+// The source account is a tile that opens a card carousel: tab, card, Use.
+const chooseSource = (
   user: ReturnType<typeof userEvent.setup>,
   repay: HTMLElement,
   method: string,
   account?: string,
-) => {
-  await user.click(within(repay).getByRole('button', { name: /Source Account/ }))
-  const sheet = screen.getAllByRole('dialog').at(-1) as HTMLElement
-  await user.click(within(sheet).getByRole('button', { name: new RegExp(`^${method}`) }))
-  if (account) {
-    const accounts = screen.getAllByRole('dialog').at(-1) as HTMLElement
-    await user.click(within(accounts).getByRole('button', { name: new RegExp(account) }))
-  }
-}
+) => chooseSourceWith(user, repay, 'Source Account', method, account)
 
 describe('PayDebtModal', () => {
   it('renders remaining balance and defaults payment amount to outstanding balance', () => {
@@ -145,7 +139,8 @@ describe('PayDebtModal', () => {
     expect(overlay).toHaveClass('invisible')
     expect(screen.getByRole('dialog', { name: 'Pay from' })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /^Cash/ }))
+    await user.click(sourceTab(openSheet(), 'Cash'))
+    await user.click(screen.getByRole('button', { name: 'Use Cash on Hand' }))
     expect(overlay).not.toHaveClass('invisible')
     expect(within(repay).getByRole('button', { name: /Source Account/ })).toHaveFocus()
   })
@@ -156,10 +151,10 @@ describe('PayDebtModal', () => {
     await user.click(within(repay).getByRole('button', { name: /Source Account/ }))
     const sheet = screen.getAllByRole('dialog').at(-1) as HTMLElement
 
-    expect(within(sheet).queryByRole('button', { name: /^Lent/ })).not.toBeInTheDocument()
-    await user.click(within(sheet).getByRole('button', { name: /^E-Wallet/ }))
-    expect(screen.queryByRole('button', { name: /Lent to Ana/ })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /GCash/ })).toBeInTheDocument()
+    expect(within(sheet).queryByRole('radio', { name: /^Lent/ })).not.toBeInTheDocument()
+    await user.click(sourceTab(sheet, 'E-Wallet'))
+    expect(screen.queryByRole('radio', { name: /Lent to Ana/ })).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /^GCash/ })).toBeInTheDocument()
   })
 
   it('marks accounts that cannot cover the payment in the picker', async () => {
@@ -167,9 +162,10 @@ describe('PayDebtModal', () => {
     const { repay } = renderModal()
     await user.click(within(repay).getByRole('button', { name: /Source Account/ }))
     const sheet = screen.getAllByRole('dialog').at(-1) as HTMLElement
-    await user.click(within(sheet).getByRole('button', { name: /^E-Wallet/ }))
+    await user.click(sourceTab(sheet, 'E-Wallet'))
 
-    expect(screen.getByRole('button', { name: /GCash/ })).toHaveTextContent('Insufficient')
+    expect(screen.getByRole('radio', { name: /^GCash/ })).toHaveAccessibleName(/not enough balance/)
+    expect(within(sheet).getByText(/^Short by/)).toBeInTheDocument()
   })
 
   it('warns when the chosen account has insufficient funds', async () => {

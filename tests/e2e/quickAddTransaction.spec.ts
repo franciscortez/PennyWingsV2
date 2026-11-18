@@ -4,7 +4,7 @@ import { setupAuthenticatedMocks } from './helpers/authMock'
 import { pickSource } from './helpers/paymentPicker'
 
 const quickAdd = (page: Page) => page.getByRole('button', { name: 'Quick add transaction', exact: true })
-const menu = (page: Page) => page.getByRole('dialog', { name: 'Quick add', exact: true })
+const dial = (page: Page) => page.getByRole('menu', { name: 'Add another kind', exact: true })
 const form = (page: Page) => page.getByRole('dialog', { name: 'New Transaction', exact: true })
 
 const ready = async (page: Page, path: string) => {
@@ -16,8 +16,13 @@ test.describe('Mobile quick add', () => {
   test.use({ viewport: { width: 390, height: 844 } })
   test.beforeEach(async ({ page }) => { await setupAuthenticatedMocks(page) })
 
-  test('records an income from Dashboard without leaving the page', async ({ page }) => {
+  test('a tap opens a new expense in place and records it', async ({ page }) => {
     let payload: Record<string, unknown> | undefined
+    // An expense checks the source balance first (a single-row select).
+    await page.route(
+      (url) => url.pathname.endsWith('/rest/v1/e_wallets') && url.searchParams.get('select') === 'balance',
+      (route) => route.fulfill({ status: 200, contentType: 'application/vnd.pgrst.object+json', body: JSON.stringify({ balance: 3500 }) }),
+    )
     await page.route('**/rest/v1/rpc/process_transaction_checked*', async (route) => {
       payload = route.request().postDataJSON()
       await route.fulfill({ status: 200, contentType: 'application/json', body: 'null' })
@@ -25,48 +30,76 @@ test.describe('Mobile quick add', () => {
 
     await ready(page, '/dashboard')
     await quickAdd(page).click()
-    await expect(menu(page)).toBeVisible()
-    const options = menu(page).getByRole('list', { name: 'Transaction kinds' }).getByRole('button')
-    await expect(options).toHaveText([/^Expense/, /^Income/, /^Transfer \/ Deposit/, /^Withdrawal/])
-    await expect(menu(page).locator('.quick-add-option-icon svg')).toHaveCount(4)
-
-    await options.filter({ hasText: /^Income/ }).click()
-    await expect(menu(page)).toHaveCount(0)
     const dialog = form(page)
     await expect(dialog).toBeVisible()
-    await expect(dialog.getByRole('button', { name: 'income', exact: true })).toHaveAttribute('aria-pressed', 'true')
+    await expect(dial(page)).toHaveCount(0)
+    await expect(dialog.getByRole('radio', { name: 'Expense', exact: true })).toHaveAttribute('aria-checked', 'true')
+    // Phones type the amount with the system number keyboard, not a keypad.
+    const amount = dialog.getByRole('textbox', { name: 'Amount (PHP)' })
+    await expect(amount).toHaveAttribute('inputmode', 'decimal')
+    await expect(dialog.getByRole('group', { name: 'Amount keypad' })).toHaveCount(0)
 
-    await dialog.getByRole('textbox', { name: 'Amount (PHP)' }).fill('250')
+    await amount.fill('1250.75')
     await pickSource(page, dialog, 'Payment Method', 'E-Wallet', 'GCash')
-    await dialog.locator('#transaction-category').selectOption('cat-1')
-    await dialog.getByRole('button', { name: 'Save Transaction' }).click()
+    await dialog.getByRole('radio', { name: 'Groceries', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Save expense' }).click()
 
     await expect(dialog).toHaveCount(0)
-    await expect.poll(() => payload?.p_type).toBe('income')
-    expect(payload?.p_amount).toBe(250)
+    await expect.poll(() => payload?.p_type).toBe('expense')
+    expect(payload?.p_amount).toBe(1250.75)
     await expect(page.locator('.swal2-toast')).toContainText('Transaction created.')
     await expect(page).toHaveURL(/\/dashboard$/)
   })
 
-  test('each kind opens the form on that type and focus returns to the button', async ({ page }) => {
+  test('the dial opens other kinds and the type switch covers every kind', async ({ page }) => {
+    let payload: Record<string, unknown> | undefined
+    await page.route('**/rest/v1/rpc/process_transaction_checked*', async (route) => {
+      payload = route.request().postDataJSON()
+      await route.fulfill({ status: 200, contentType: 'application/json', body: 'null' })
+    })
+
     await ready(page, '/accounts')
-    for (const [option, type] of [
-      ['Expense', 'expense'],
-      ['Transfer / Deposit', 'Transfer/Deposit'],
-      ['Withdrawal', 'withdrawal'],
-    ] as const) {
+    // Right click (and press and hold on touch) fans out the other kinds.
+    await quickAdd(page).click({ button: 'right' })
+    await expect(dial(page).getByRole('menuitem')).toHaveText(['Income', 'Transfer', 'Withdraw'])
+    await expect(dial(page).getByRole('menuitem', { name: 'Income' })).toBeFocused()
+    await expect(quickAdd(page)).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Escape')
+    await expect(dial(page)).toHaveCount(0)
+    await expect(quickAdd(page)).toBeFocused()
+
+    // Shift+Enter is the keyboard route to the same dial.
+    await page.keyboard.press('Shift+Enter')
+    await page.keyboard.press('ArrowUp')
+    await expect(dial(page).getByRole('menuitem', { name: 'Transfer' })).toBeFocused()
+    await page.keyboard.press('ArrowDown')
+    await page.keyboard.press('Enter')
+    const dialog = form(page)
+    await expect(dialog.getByRole('radio', { name: 'Income', exact: true })).toHaveAttribute('aria-checked', 'true')
+
+    await dialog.getByRole('textbox', { name: 'Amount (PHP)' }).fill('250')
+    await pickSource(page, dialog, 'Deposit To', 'E-Wallet', 'GCash')
+    await dialog.getByRole('radio', { name: 'Salary', exact: true }).click()
+    await dialog.getByRole('button', { name: 'Save income' }).click()
+    await expect(dialog).toHaveCount(0)
+    await expect.poll(() => payload?.p_type).toBe('income')
+    expect(payload?.p_amount).toBe(250)
+
+    for (const type of ['Transfer', 'Withdraw'] as const) {
       await quickAdd(page).click()
-      await menu(page).getByRole('button', { name: new RegExp(`^${option.replace('/', '\\/')}`) }).click()
-      await expect(form(page).getByRole('button', { name: type, exact: true })).toHaveAttribute('aria-pressed', 'true')
+      await form(page).getByRole('radio', { name: type, exact: true }).click()
+      await expect(form(page).getByRole('radio', { name: type, exact: true })).toHaveAttribute('aria-checked', 'true')
       await page.getByRole('button', { name: 'Close transaction form' }).click()
       await expect(form(page)).toHaveCount(0)
       await expect(quickAdd(page)).toBeFocused()
     }
 
-    await quickAdd(page).click()
-    await page.keyboard.press('Escape')
-    await expect(menu(page)).toHaveCount(0)
-    await expect(quickAdd(page)).toBeFocused()
+    // A tap outside closes the dial without opening anything.
+    await quickAdd(page).click({ button: 'right' })
+    await expect(dial(page)).toBeVisible()
+    await page.mouse.click(20, 200)
+    await expect(dial(page)).toHaveCount(0)
+    await expect(form(page)).toHaveCount(0)
   })
 
   test('sits above the dock on the right, clears content, shows on Activity and is absent on desktop', async ({ page }) => {
@@ -89,8 +122,8 @@ test.describe('Mobile quick add', () => {
 
     expect(await quickAdd(page).evaluate(element => getComputedStyle(element).transitionDuration)).toBe('0s')
 
-    await quickAdd(page).click()
-    for (const option of await menu(page).getByRole('button').all()) {
+    await quickAdd(page).click({ button: 'right' })
+    for (const option of await dial(page).getByRole('menuitem').all()) {
       const box = await option.boundingBox()
       expect(box!.height).toBeGreaterThanOrEqual(44)
     }
@@ -100,7 +133,6 @@ test.describe('Mobile quick add', () => {
     await expect(page).toHaveURL(/\/transactions/)
     await expect(quickAdd(page)).toHaveCount(1)
     await quickAdd(page).click()
-    await menu(page).getByRole('button', { name: /^Expense/ }).click()
     await expect(form(page)).toBeVisible()
     await expect(page).toHaveURL(/\/transactions/)
     await page.getByRole('button', { name: 'Close transaction form' }).click()

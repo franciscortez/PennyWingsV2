@@ -59,8 +59,8 @@ test('transaction sheet is bottom attached, preserves input through a nested pic
     const box = await dialog.boundingBox()
     expect(box!.y).toBeGreaterThanOrEqual(0)
     expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 1)
-    await dialog.getByRole('button', { name: 'Save Transaction' }).scrollIntoViewIfNeeded()
-    await expect(dialog.getByRole('button', { name: 'Save Transaction' })).toBeInViewport()
+    await dialog.getByRole('button', { name: /^Save / }).scrollIntoViewIfNeeded()
+    await expect(dialog.getByRole('button', { name: /^Save / })).toBeInViewport()
   }
 })
 

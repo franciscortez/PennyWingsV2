@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest'
 import { TransactionForm } from '@/sections/transactions/TransactionForm'
 import type { Account, TransactionCategory, TransactionFormValues } from '@/types'
 
+import { chooseSourceSync } from './helpers/sourcePicker'
+
 const card: Account = {
   accessRole: 'owner', accountType: 'debit', balance: 100,
   canManage: true, canTransact: true, color: '#000000',
@@ -55,7 +57,7 @@ describe('TransactionForm payment picker', () => {
     expect(overlay).toHaveClass('invisible')
     expect(screen.getByRole('dialog', { name: 'Pay with' })).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: /^Cash/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Use Cash on Hand' }))
     expect(overlay).not.toHaveClass('invisible')
     expect(within(formDialog).getByRole('button', { name: /Payment Method/ })).toHaveFocus()
   })
@@ -65,9 +67,7 @@ describe('TransactionForm payment picker', () => {
     const amount = within(formDialog).getByPlaceholderText('0.00')
     fireEvent.change(amount, { target: { value: '125.5' } })
 
-    fireEvent.click(within(formDialog).getByRole('button', { name: /Payment Method/ }))
-    fireEvent.click(screen.getByRole('button', { name: /^Bank Card/ }))
-    fireEvent.click(screen.getByRole('button', { name: /BDO Debit/ }))
+    chooseSourceSync(formDialog, 'Payment Method', 'Bank Card', 'BDO Debit')
 
     expect(amount).toHaveValue('125.5')
     expect(within(formDialog).getByRole('button', { name: /Payment Method/ })).toHaveTextContent(
@@ -78,13 +78,9 @@ describe('TransactionForm payment picker', () => {
   it('submits the picked card', async () => {
     const { formDialog, onSubmit } = renderForm()
     fireEvent.change(within(formDialog).getByPlaceholderText('0.00'), { target: { value: '40' } })
-    fireEvent.click(within(formDialog).getByRole('button', { name: /Payment Method/ }))
-    fireEvent.click(screen.getByRole('button', { name: /^Bank Card/ }))
-    fireEvent.click(screen.getByRole('button', { name: /BDO Debit/ }))
-    fireEvent.change(within(formDialog).getByLabelText('Category'), {
-      target: { value: category.id },
-    })
-    fireEvent.click(within(formDialog).getByRole('button', { name: 'Save Transaction' }))
+    chooseSourceSync(formDialog, 'Payment Method', 'Bank Card', 'BDO Debit')
+    fireEvent.click(within(formDialog).getByRole('radio', { name: category.name }))
+    fireEvent.click(within(formDialog).getByRole('button', { name: /^Save / }))
 
     await waitFor(() =>
       expect(onSubmit).toHaveBeenCalledWith(

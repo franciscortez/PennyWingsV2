@@ -8,6 +8,7 @@ import { OfflineDataState } from '@/components/OfflineDataState'
 import { useUnavailableOfflineData } from '@/hooks/useUnavailableOfflineData'
 import { useErrorAlert } from '@/hooks/useErrorAlert'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useRecentCategoryIds } from '@/hooks/useRecentCategoryIds'
 import { useTransactionsData } from '@/hooks/useTransactionsData'
 import { alerts } from '@/lib/alert'
 import {
@@ -36,6 +37,7 @@ const getTypeFromUrl = (value: string | null): TransactionFilterType =>
 
 export default function Transactions() {
   const { user } = useAuth()
+  const getRecentCategoryIds = useRecentCategoryIds(user?.id)
   const [searchParams, setSearchParams] = useSearchParams()
   const page = getPageFromUrl(searchParams.get('page'))
   const filterType = getTypeFromUrl(searchParams.get('type'))
@@ -229,6 +231,7 @@ export default function Transactions() {
           cashAccount={cashAccount}
           categories={categories}
           dismissDisabled={saving}
+          getRecentCategoryIds={getRecentCategoryIds}
           lentAccounts={lentAccounts}
           saving={saving || optionsLoading}
           transaction={editingTransaction}

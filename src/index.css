@@ -494,6 +494,108 @@ body {
     }
   }
 
+  .quick-add-fab {
+    -webkit-touch-callout: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .quick-add-fab-icon {
+    display: grid;
+    place-items: center;
+    transition: transform var(--motion-enter) var(--motion-ease-out);
+  }
+
+  /* Open dial: the button sits above the scrim and its plus turns to a close. */
+  .quick-add-fab[data-open='true'] { z-index: 61; }
+  .quick-add-fab[data-open='true'] .quick-add-fab-icon { transform: rotate(45deg); }
+
+  /* Saved: the plus briefly becomes a check, alongside the toast. */
+  .quick-add-fab[data-saved='true'] .quick-add-fab-icon {
+    animation: quick-add-saved 420ms var(--motion-ease-out);
+  }
+
+  .quick-add-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgb(255 250 253 / 0.82);
+    animation: quick-add-scrim-in 160ms ease-out;
+  }
+
+  .dark .quick-add-scrim { background: rgb(2 6 23 / 0.72); }
+
+  .quick-add-dial {
+    position: fixed;
+    right: max(var(--quick-add-gap), var(--mobile-safe-right));
+    bottom: calc(var(--mobile-dock-height) + var(--mobile-safe-bottom) + var(--quick-add-gap) + var(--quick-add-size) + 12px);
+    z-index: 61;
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  .quick-add-dial-item {
+    display: inline-flex;
+    min-height: 48px;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px 4px 18px;
+    border: 1px solid var(--color-pink-100);
+    border-radius: 999px;
+    background: white;
+    color: var(--color-slate-950);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08), 0 8px 20px rgb(157 23 77 / 0.14);
+    transform-origin: right bottom;
+    -webkit-tap-highlight-color: transparent;
+    animation: quick-add-dial-in 200ms var(--motion-ease-out) backwards;
+    animation-delay: calc(var(--dial-index) * 30ms);
+    transition: transform 120ms ease-out, background-color 160ms ease;
+  }
+
+  .quick-add-dial-item:active { background: var(--color-pink-50); transform: scale(0.97); }
+  .quick-add-dial-item:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: 2px; }
+
+  .quick-add-dial-icon {
+    display: grid;
+    width: 40px;
+    height: 40px;
+    flex: none;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--color-pink-50);
+    color: var(--color-pink-700);
+  }
+
+  /* Money in reads apart from money out at a glance. */
+  .quick-add-dial-item[data-kind='income'] .quick-add-dial-icon {
+    background: var(--color-emerald-50);
+    color: var(--color-emerald-700);
+  }
+
+  .dark .quick-add-dial-item {
+    border-color: var(--color-slate-700);
+    background: var(--color-slate-900);
+    color: var(--color-slate-100);
+    box-shadow: none;
+  }
+
+  .dark .quick-add-dial-item:active { background: var(--color-slate-800); }
+  .dark .quick-add-dial-item:focus-visible { outline-color: var(--color-pink-300); }
+  .dark .quick-add-dial-icon { background: var(--color-slate-800); color: var(--color-pink-300); }
+  .dark .quick-add-dial-item[data-kind='income'] .quick-add-dial-icon { background: var(--color-slate-800); color: var(--color-emerald-300); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .quick-add-fab-icon { transition: none; }
+    .quick-add-fab[data-saved='true'] .quick-add-fab-icon,
+    .quick-add-scrim,
+    .quick-add-dial-item { animation: none; }
+    .quick-add-dial-item:active { transform: none; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
 
     .mobile-dock-indicator,
@@ -537,105 +639,408 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Quick add sheet: four kinds as plain rows, label over a grey subline. */
-.quick-add-options {
+@keyframes quick-add-saved {
+  0% { opacity: 0; transform: scale(0.4); }
+  60% { opacity: 1; transform: scale(1.12); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes quick-add-scrim-in {
+  from { opacity: 0; }
+}
+
+@keyframes quick-add-dial-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.94); }
+}
+
+/* Segmented control: one pill track, a thumb that slides by transform only. */
+.segmented {
+  position: relative;
+  isolation: isolate;
   display: grid;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  grid-template-columns: repeat(var(--segment-count), minmax(0, 1fr));
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--color-slate-100);
 }
 
-.quick-add-option {
-  display: flex;
-  width: 100%;
-  min-height: 60px;
-  align-items: center;
-  gap: 12px;
-  border-radius: 16px;
-  padding: 10px 12px;
-  text-align: left;
-  color: var(--color-slate-950);
+.segmented-thumb {
+  position: absolute;
+  z-index: 0;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / var(--segment-count));
+  border-radius: 999px;
+  background: var(--color-pink-700);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.12), 0 4px 12px rgb(157 23 77 / 0.2);
+  transform: translateX(calc(var(--segment-index) * 100%));
+  transition: transform var(--motion-enter) var(--motion-ease-out);
+}
+
+.segmented-option {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding-inline: 4px;
+  border-radius: 999px;
+  color: var(--color-slate-600);
+  /* Four labels fit a 320px sheet without truncating. */
+  font-size: clamp(0.75rem, 3.6vw, 0.875rem);
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
   -webkit-tap-highlight-color: transparent;
-  transition: background-color 160ms ease, transform 120ms ease-out;
 }
 
-.quick-add-option:active {
+.segmented-option {
+  /* The chosen option takes its pink fill and white label the moment the
+     thumb arrives, so its label always sits on pink (contrast tools and
+     forced colours read it correctly) while the thumb does the visible
+     slide. A label leaving the thumb goes back to slate at once. */
+  transition: none;
+}
+
+.segmented-option[aria-checked='true'] {
+  background: var(--color-pink-700);
+  color: white;
+  transition: color 0s linear var(--motion-enter), background-color 0s linear var(--motion-enter);
+}
+.segmented-option:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: 2px; }
+.dark .segmented { background: var(--color-slate-800); }
+.dark .segmented-thumb { box-shadow: none; }
+.dark .segmented-option { color: var(--color-slate-300); }
+.dark .segmented-option[aria-checked='true'] { color: white; }
+.dark .segmented-option:focus-visible { outline-color: var(--color-pink-300); }
+
+@media (hover: hover) {
+  .segmented-option[aria-checked='false']:hover { color: var(--color-slate-950); }
+  .dark .segmented-option[aria-checked='false']:hover { color: white; }
+}
+
+/* Transaction entry: the amount is the headline, everything else is a
+   one-tap confirmation. One column on phones and narrow dialogs; from 60rem
+   the amount takes the left half and the details the right. */
+.txn-form {
+  display: grid;
+  gap: 16px;
+  grid-template-areas: "type" "amount" "details" "note";
+}
+
+.txn-area-type { grid-area: type; }
+.txn-area-amount { grid-area: amount; min-width: 0; }
+.txn-area-note { grid-area: note; }
+
+.txn-area-details {
+  grid-area: details;
+  display: grid;
+  min-width: 0;
+  align-content: start;
+  gap: 16px;
+}
+
+@media (min-width: 48rem) {
+  .txn-form, .txn-area-details { gap: 20px; }
+  .txn-form { padding-top: 8px; }
+}
+
+@media (min-width: 60rem) {
+  .txn-form {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "type details"
+      "amount details"
+      "note details";
+    column-gap: 32px;
+    row-gap: 24px;
+  }
+
+  .txn-area-amount { align-self: center; }
+
+  .txn-area-details {
+    padding-left: 32px;
+    border-left: 1px solid var(--color-pink-100);
+  }
+
+  .dark .txn-area-details { border-color: var(--color-slate-800); }
+}
+
+.txn-amount {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding-block: 12px 4px;
+}
+
+.txn-amount-field {
+  --amount-size: 3rem;
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 8px 12px;
+  cursor: text;
+  font-family: var(--font-geist-mono);
+}
+
+.txn-amount-field[data-size='lg'] { --amount-size: 2.5rem; }
+.txn-amount-field[data-size='md'] { --amount-size: 2rem; }
+.txn-amount-field[data-size='sm'] { --amount-size: 1.625rem; }
+
+.txn-amount-field::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-slate-200);
+  transition: background-color 160ms ease;
+}
+
+.txn-amount-field:focus-within::after { background: var(--color-pink-700); }
+.txn-amount-field[data-invalid='true']::after { background: var(--color-red-700); }
+
+.txn-amount-currency {
+  margin-top: calc(var(--amount-size) * 0.14);
+  margin-right: 0.15em;
+  color: var(--color-slate-500);
+  font-size: calc(var(--amount-size) * 0.5);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.txn-amount-field .txn-amount-input {
+  min-width: 0;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--color-slate-950);
+  caret-color: var(--color-pink-700);
+  font-family: inherit;
+  font-size: var(--amount-size);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  outline: none;
+}
+
+.txn-amount-input::placeholder { color: var(--color-slate-500); font-weight: 500; }
+.txn-amount-error { color: var(--color-red-700); font-size: 0.875rem; text-align: center; }
+
+.dark .txn-amount-field::after { background: var(--color-slate-700); }
+.dark .txn-amount-field:focus-within::after { background: var(--color-pink-300); }
+.dark .txn-amount-field[data-invalid='true']::after { background: var(--color-red-300); }
+.dark .txn-amount-currency { color: var(--color-slate-400); }
+.dark .txn-amount-field .txn-amount-input { color: var(--color-slate-100); caret-color: var(--color-pink-300); }
+.dark .txn-amount-input::placeholder { color: var(--color-slate-400); }
+.dark .txn-amount-error { color: var(--color-red-300); }
+
+/* Chips and pills share one selected look: pink wash, pink edge, darker
+   label. Filled pink stays reserved for the type thumb and Save. */
+.txn-chips {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  padding: 3px 24px 3px 3px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: 3px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+  /* The fade says "more this way" without a scrollbar. */
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
+.txn-chips::-webkit-scrollbar { display: none; }
+
+@media (pointer: fine), (min-width: 60rem) {
+  .txn-chips {
+    flex-wrap: wrap;
+    padding-right: 3px;
+    overflow: visible;
+    mask-image: none;
+  }
+}
+
+.txn-chip,
+.txn-pill {
+  display: inline-flex;
+  flex: none;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--color-slate-400);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-slate-800);
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 120ms ease-out;
+}
+
+.txn-chip { padding: 0 16px 0 13px; scroll-snap-align: start; }
+.txn-pill { padding: 0 16px; font-weight: 600; }
+
+.txn-chip[aria-checked='true'],
+.txn-pill[aria-pressed='true'],
+.txn-date-input[data-custom='true'] {
+  border-color: var(--color-pink-700);
   background: var(--color-pink-50);
-  transform: scale(0.99);
+  color: var(--color-pink-900);
+  font-weight: 600;
 }
 
-.quick-add-option:active .quick-add-option-icon {
-  transform: scale(0.94);
-}
+.txn-chip:active,
+.txn-pill:active { transform: scale(0.97); }
 
-.quick-add-option:focus-visible {
+.txn-chip:focus-visible,
+.txn-pill:focus-visible,
+.txn-date-input:focus-visible {
   outline: 2px solid var(--color-pink-800);
   outline-offset: 2px;
 }
 
-.quick-add-option-icon {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  place-items: center;
-  border-radius: 14px;
-  background: var(--color-pink-50);
-  color: var(--color-pink-700);
-  transition: transform 160ms var(--motion-ease-out);
+.txn-chips[data-invalid='true'] .txn-chip { border-color: var(--color-red-700); }
+
+.txn-chip-dot {
+  width: 10px;
+  height: 10px;
+  flex: none;
+  margin-inline: 3px;
+  border-radius: 999px;
+  background: var(--color-slate-400);
+  box-shadow: inset 0 0 0 1px rgb(15 23 42 / 0.1);
 }
 
-/* Money in reads apart from money out at a glance; the other kinds stay pink. */
-.quick-add-option[data-kind='income'] .quick-add-option-icon {
-  background: var(--color-emerald-50);
-  color: var(--color-emerald-700);
-}
+.txn-chip-check { flex: none; color: var(--color-pink-700); }
 
-.quick-add-option-copy {
-  display: grid;
+.txn-date-row,
+.txn-fee-row {
+  display: flex;
   min-width: 0;
-  flex: 1;
-  gap: 2px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-.quick-add-option-label {
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.375;
-  overflow-wrap: anywhere;
+.txn-fee-row > input { flex: 1 1 7rem; }
+
+.txn-date-shell {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 9.5rem;
 }
 
-.quick-add-option-description {
-  font-size: 0.8125rem;
-  line-height: 1.4;
-  color: var(--color-slate-600);
-  overflow-wrap: anywhere;
+.txn-date-input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 44px;
+  padding: 0 16px;
+  /* A form field: its edge needs 3:1 against the sheet (slate-500). */
+  border: 1px solid var(--color-slate-500);
+  border-radius: 999px;
+  background: white;
+  color: var(--color-slate-800);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  -webkit-appearance: none;
+  appearance: none;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
-.quick-add-option-chevron {
-  flex-shrink: 0;
-  color: var(--color-slate-500);
+.txn-date-input::-webkit-date-and-time-value { text-align: left; }
+
+.dark .txn-chip,
+.dark .txn-pill,
+.dark .txn-date-input {
+  border-color: var(--color-slate-500);
+  background: var(--color-slate-900);
+  color: var(--color-slate-200);
+  color-scheme: dark;
 }
 
-.dark .quick-add-option { color: var(--color-slate-100); }
-.dark .quick-add-option-icon { background: var(--color-slate-800); color: var(--color-pink-300); }
-.dark .quick-add-option[data-kind='income'] .quick-add-option-icon { background: var(--color-slate-800); color: var(--color-emerald-300); }
-.dark .quick-add-option:active { background: var(--color-slate-800); }
-.dark .quick-add-option:focus-visible { outline-color: var(--color-pink-300); }
-.dark .quick-add-option-description { color: var(--color-slate-400); }
-.dark .quick-add-option-chevron { color: var(--color-slate-400); }
+.dark .txn-chip[aria-checked='true'],
+.dark .txn-pill[aria-pressed='true'],
+.dark .txn-date-input[data-custom='true'] {
+  border-color: var(--color-pink-300);
+  background: rgb(201 68 102 / 0.18);
+  color: var(--color-pink-100);
+}
+
+.dark .txn-chip-check { color: var(--color-pink-300); }
+.dark .txn-chips[data-invalid='true'] .txn-chip { border-color: var(--color-red-300); }
+
+.dark .txn-chip:focus-visible,
+.dark .txn-pill:focus-visible,
+.dark .txn-date-input:focus-visible { outline-color: var(--color-pink-300); }
 
 @media (hover: hover) {
-  .quick-add-option:hover { background: var(--color-pink-50); }
-  .quick-add-option:hover .quick-add-option-icon { background: white; }
-  .dark .quick-add-option:hover .quick-add-option-icon { background: var(--color-slate-700); }
-  .dark .quick-add-option:hover { background: var(--color-slate-800); }
+  .txn-chip[aria-checked='false']:hover,
+  .txn-pill[aria-pressed='false']:hover {
+    border-color: var(--color-pink-300);
+    background: var(--color-pink-50);
+  }
+
+  /* A field keeps a 3:1 edge on hover too. */
+  .txn-date-input:not([data-custom='true']):hover {
+    border-color: var(--color-slate-600);
+    background: var(--color-pink-50);
+  }
+
+  .dark .txn-chip[aria-checked='false']:hover,
+  .dark .txn-pill[aria-pressed='false']:hover,
+  .dark .txn-date-input:not([data-custom='true']):hover {
+    border-color: var(--color-slate-400);
+    background: var(--color-slate-800);
+  }
+}
+
+/* Mouse and trackpad: every category stays on screen, at a compact size.
+   Touch keeps the 44px targets and the scrolling row. */
+@media (pointer: fine) {
+  .txn-chips { gap: 6px; }
+
+  .txn-chip {
+    min-height: 32px;
+    gap: 6px;
+    padding: 0 12px 0 9px;
+    font-size: 0.8125rem;
+  }
+
+  .txn-chip-dot { width: 8px; height: 8px; }
+  .txn-chip .txn-chip-check { width: 14px; height: 14px; }
+
+  .txn-pill,
+  .txn-date-input { min-height: 36px; height: 36px; font-size: 0.8125rem; }
+  .txn-pill { padding: 0 14px; }
+  .txn-fee-row > input { height: 36px; }
+}
+
+@media (pointer: fine) and (min-width: 48rem) {
+  .txn-area-details { gap: 18px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quick-add-option, .quick-add-option-icon { transition: none; }
-  .quick-add-option:active, .quick-add-option:active .quick-add-option-icon { transform: none; }
+  .segmented-thumb,
+  .segmented-option,
+  .txn-chip,
+  .txn-pill,
+  .txn-date-input,
+  .txn-amount-field::after { transition: none; }
+
+  .txn-chip:active,
+  .txn-pill:active { transform: none; }
 }
 
 /* Route change: the routed page fades in and rises a few pixels while the
@@ -796,3 +1201,158 @@ body {
 
 /* Route focus announces the title without treating it as an interactive control. */
 .more-page h1:focus { outline: none; }
+
+/* Account picker: a swipeable rail of the real card and banknote faces. The
+   rail bleeds to the sheet edges so the neighbours peek in; the centred card
+   is the candidate and the rest step back. */
+.source-sheet { --source-bleed: 16px; }
+
+@media (min-width: 48rem) {
+  .source-sheet { --source-bleed: 24px; }
+}
+
+.source-rail-wrap {
+  /* The rail's padding and card width both measure this box, so the active
+     card sits dead centre whatever the count. */
+  --source-card: 76cqw;
+  position: relative;
+  margin-inline: calc(var(--source-bleed) * -1);
+  container-type: inline-size;
+}
+
+.source-rail {
+  display: flex;
+  gap: 12px;
+  padding: 6px calc((100cqw - var(--source-card)) / 2) 22px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-padding-inline: calc((100cqw - var(--source-card)) / 2);
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.source-rail::-webkit-scrollbar { display: none; }
+
+.source-card {
+  flex: 0 0 var(--source-card);
+  min-width: 0;
+  border-radius: 1rem;
+  opacity: 0.55;
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+  transform: scale(0.92);
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 240ms var(--motion-ease-out), opacity 240ms ease;
+}
+
+.source-card[data-active='true'] { opacity: 1; transform: none; }
+.source-card:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: 4px; }
+.dark .source-card:focus-visible { outline-color: var(--color-pink-300); }
+
+@media (min-width: 48rem) {
+  .source-rail-wrap { --source-card: 64cqw; }
+}
+
+.source-rail-arrow { display: none; }
+
+@media (pointer: fine) {
+  .source-rail-arrow {
+    position: absolute;
+    top: calc(50% - 8px);
+    z-index: 1;
+    display: grid;
+    width: 36px;
+    height: 36px;
+    place-items: center;
+    border: 1px solid var(--color-pink-100);
+    border-radius: 999px;
+    background: white;
+    color: var(--color-slate-800);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.1), 0 6px 16px rgb(157 23 77 / 0.12);
+    transform: translateY(-50%);
+    transition: opacity 160ms ease, background-color 160ms ease;
+  }
+
+  .source-rail-arrow[data-side='prev'] { left: 10px; }
+  .source-rail-arrow[data-side='next'] { right: 10px; }
+  .source-rail-arrow:hover { background: var(--color-pink-50); }
+  .source-rail-arrow:disabled { opacity: 0; pointer-events: none; }
+  .source-rail-arrow:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: 2px; }
+
+  .dark .source-rail-arrow {
+    border-color: var(--color-slate-700);
+    background: var(--color-slate-800);
+    color: var(--color-slate-100);
+    box-shadow: none;
+  }
+
+  .dark .source-rail-arrow:hover { background: var(--color-slate-700); }
+  .dark .source-rail-arrow:focus-visible { outline-color: var(--color-pink-300); }
+}
+
+.source-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: -6px;
+}
+
+.source-dots > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--color-slate-300);
+  transition: background-color 200ms ease, transform 200ms var(--motion-ease-out);
+}
+
+.source-dots > span[data-active='true'] { background: var(--color-pink-700); transform: scale(1.35); }
+.dark .source-dots > span { background: var(--color-slate-600); }
+.dark .source-dots > span[data-active='true'] { background: var(--color-pink-300); }
+
+.source-details {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 1.25rem;
+  background: rgb(255 240 245 / 0.6);
+}
+
+.dark .source-details { background: rgb(30 41 59 / 0.6); }
+
+.source-current {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--color-emerald-50);
+  color: var(--color-emerald-800);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.dark .source-current { background: rgb(6 78 59 / 0.5); color: var(--color-emerald-200); }
+
+.source-empty {
+  display: grid;
+  width: 76%;
+  max-width: 22rem;
+  margin-inline: auto;
+  aspect-ratio: 8 / 5;
+  place-items: center;
+  padding: 16px;
+  border: 2px dashed var(--color-slate-300);
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.dark .source-empty { border-color: var(--color-slate-600); }
+
+@media (prefers-reduced-motion: reduce) {
+  .source-card,
+  .source-dots > span,
+  .source-rail-arrow { transition: none; }
+}

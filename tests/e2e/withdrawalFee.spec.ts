@@ -7,6 +7,7 @@ import {
   fixtureTransactionRows,
   mockTransactionPage,
 } from './helpers/modalFixtures'
+import { openNewTransactionForm } from './helpers/newTransaction'
 
 test.beforeEach(async ({ page }) => {
   await blockUnmockedBackend(page)
@@ -30,7 +31,7 @@ test('create sends the entered withdrawal fee to the checked RPC', async ({ page
   })
 
   await page.goto('/transactions')
-  await page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true }).click()
+  await openNewTransactionForm(page)
   const dialog = page.getByRole('dialog', { name: 'New Transaction' })
   await dialog.getByRole('button', { name: 'withdrawal' }).click()
   await dialog.locator('input[type="number"]').fill('40')

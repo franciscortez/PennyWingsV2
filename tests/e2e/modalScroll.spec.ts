@@ -7,6 +7,7 @@ import {
   mockTransactionPage,
   openInViewportEditForm,
 } from './helpers/modalFixtures'
+import { openNewTransactionForm } from './helpers/newTransaction'
 
 /** The production toast for a rejected mutation. */
 const settledMutationToast = 'Something went wrong.'
@@ -65,12 +66,7 @@ async function openScrollableTransactionsPage(page: Page, height: number) {
 }
 
 async function openTransactionForm(page: Page) {
-  await page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true }).dispatchEvent('click')
-
-  const dialog = page.getByRole('dialog', { name: 'New Transaction' })
-  await expect(dialog).toBeVisible()
-
-  return dialog
+  return openNewTransactionForm(page, { dispatch: true })
 }
 
 /**

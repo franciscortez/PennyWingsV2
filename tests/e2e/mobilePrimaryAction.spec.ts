@@ -34,15 +34,19 @@ test.describe('Page actions and the global quick add button', () => {
     })
   }
 
-  test('Activity keeps one working page composer; Dashboard navigation does not auto-open it', async ({ page }) => {
+  test('Activity creates through quick add on phones; Dashboard navigation does not auto-open it', async ({ page }) => {
     await ready(page, '/dashboard')
     await navigation(page).getByRole('link', { name: 'Activity', exact: true }).click()
-    const create = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
+    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible()
+    // The header button is desktop-only; the quick add is the single phone entry point.
+    await expect(page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })).toHaveCount(0)
+    const create = quickAdd(page)
     await expect(create).toBeVisible()
     await expect(create).toHaveCount(1)
     const dialog = page.getByRole('dialog', { name: 'New Transaction', exact: true })
     await expect(dialog).toHaveCount(0)
     await create.click()
+    await page.getByRole('dialog', { name: 'Quick add', exact: true }).getByRole('button', { name: /^Expense/ }).click()
     await expect(dialog).toBeVisible()
     await page.getByRole('button', { name: 'Close transaction form' }).click()
     await expect(dialog).toHaveCount(0)

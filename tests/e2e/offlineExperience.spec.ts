@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { setupAuthenticatedMocks } from './helpers/authMock'
+import { openNewTransactionForm } from './helpers/newTransaction'
 
 test.use({ viewport: { width: 390, height: 844 } })
 
@@ -42,7 +43,7 @@ test('offline form and nested picker show one status, retain a draft, and recove
   await setupAuthenticatedMocks(page)
   await page.addInitScript(() => localStorage.setItem('theme', 'dark'))
   await page.goto('/transactions')
-  await page.getByRole('button', { name: 'New Transaction' }).click()
+  await openNewTransactionForm(page)
   const form = page.getByRole('dialog', { name: 'New Transaction' })
   await form.getByPlaceholder('Short note...').fill('Keep my open draft')
   await form.getByRole('textbox', { name: 'Amount (PHP)' }).fill('22222.50')

@@ -3,6 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { setupAuthenticatedMocks } from './helpers/authMock'
 import { blockUnmockedBackend, fixtureTransactionRows } from './helpers/modalFixtures'
+import { continueToTransactionForm, newTransactionOpener } from './helpers/newTransaction'
 
 async function mockActivity(page: Page, extreme = false) {
   const types = ['income', 'expense', 'withdrawal', 'transfer']
@@ -132,10 +133,12 @@ test.describe('Activity design', () => {
       await geometry(page, 1024)
       await expect(page.getByRole('table')).not.toBeVisible()
       await page.setViewportSize({ width: 320, height: 667 })
-      const opener = page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })
+      // At 320px the shell's quick add is the only opener; the header button is desktop-only.
+      await expect(page.getByRole('main').getByRole('button', { name: 'New Transaction', exact: true })).toHaveCount(0)
+      const opener = newTransactionOpener(page)
       await expect(opener).toHaveCount(1)
       await opener.click()
-      const dialog = page.getByRole('dialog', { name: 'New Transaction' })
+      const dialog = await continueToTransactionForm(page)
       await dialog.getByRole('button', { name: 'Transfer/Deposit' }).click()
       await dialog.getByRole('button', { name: 'Save Transaction' }).click()
       await expect(dialog.locator('#transaction-amount-error')).toBeVisible()

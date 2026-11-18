@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState, type RefObject } from 'react'
 import {
   useForm,
   type FieldErrors,
@@ -8,11 +8,18 @@ import {
   type Resolver,
 } from 'react-hook-form'
 
-import { AppButton, fieldError, fieldInput, fieldLabel, surfaceNested } from '@/components/ui'
+import { twMerge } from 'tailwind-merge'
+
+import { AppButton, fieldError, fieldInput, fieldLabel } from '@/components/ui'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { MoneyInput } from '@/components/ui/MoneyInput'
-import { PaymentSourcePicker } from '@/sections/transactions/PaymentSourcePicker'
+import { SegmentedControl, type SegmentedOption } from '@/components/ui/SegmentedControl'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { toDateInputValue } from '@/lib/date'
+import { AmountHero } from '@/sections/transactions/AmountHero'
+import { CategoryChips } from '@/sections/transactions/CategoryChips'
+import { DateChips } from '@/sections/transactions/DateChips'
+import { PaymentSourcePicker } from '@/sections/transactions/PaymentSourcePicker'
 import type {
   Account,
   DestinationPaymentMethod,
@@ -38,11 +45,20 @@ type TransactionFormProps = {
    * the mutation is in flight.
    */
   dismissDisabled: boolean
+  /** Quick add: the sheet grows out of the floating button. */
+  enterFrom?: 'fab'
+  /**
+   * Category ids most recent first, read once on open. Recent categories lead
+   * the chip row; without it the incoming (alphabetical) order is kept.
+   */
+  getRecentCategoryIds?: () => string[]
   /** Type a new transaction opens on. Ignored when editing. */
   initialType?: TransactionType
   lentAccounts: Account[]
   onClose: () => void
   onSubmit: (values: TransactionFormValues) => Promise<boolean>
+  /** Where focus lands on close when the opener may be gone (quick add dial). */
+  returnFocusRef?: RefObject<HTMLElement | null>
   /** Busy submission: mutation saving plus option loading. */
   saving: boolean
   transaction: Transaction | null
@@ -107,10 +123,13 @@ export function TransactionForm({
   cashAccount,
   categories,
   dismissDisabled,
+  enterFrom,
+  getRecentCategoryIds,
   initialType,
   lentAccounts,
   onClose,
   onSubmit,
+  returnFocusRef,
   saving,
   transaction,
   walletAccounts,
@@ -263,6 +282,20 @@ export function TransactionForm({
 
   const formId = 'transaction-form'
 
+  const isPhone = useMediaQuery('(max-width: 767px)')
+  const amountRef = useRef<HTMLInputElement>(null)
+
+  // Read once when the form opens so chips never reshuffle mid-choice.
+  const [recentCategoryIds] = useState(() => getRecentCategoryIds?.() ?? [])
+
+  const saveLabel = saving
+    ? transaction
+      ? 'Updating...'
+      : 'Recording...'
+    : transaction
+      ? 'Update Transaction'
+      : `Save ${typeNouns[form.type]}`
+
   return (
     <ModalFrame
       mobilePresentation="sheet"
@@ -273,20 +306,21 @@ export function TransactionForm({
           type="submit"
           className="w-full"
         >
-          {saving
-            ? transaction
-              ? 'Updating...'
-              : 'Recording...'
-            : transaction
-              ? 'Update Transaction'
-              : 'Save Transaction'}
+          {saveLabel}
         </AppButton>
       }
       closeDisabled={dismissDisabled}
       closeLabel="Close transaction form"
+      // A new entry on a wide screen starts in the amount: type the number,
+      // press Enter. Phones and edits keep focus on the dialog itself.
+      initialFocusRef={!transaction && !isPhone ? amountRef : undefined}
       onClose={onClose}
       overlayClassName={pickerOpen ? 'invisible' : undefined}
-      panelClassName="font-geist motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none md:max-w-lg shadow-wing-lg dark:shadow-none focus-visible:ring-pink-800 dark:focus-visible:ring-pink-300"
+      returnFocusRef={returnFocusRef}
+      panelClassName={twMerge(
+        'txn-panel font-geist motion-reduce:[&_button]:transform-none motion-reduce:[&_button]:transition-none md:max-w-lg min-[60rem]:max-w-[56rem] shadow-wing-lg dark:shadow-none focus-visible:ring-pink-800 dark:focus-visible:ring-pink-300',
+        enterFrom === 'fab' ? 'txn-sheet-from-fab' : undefined,
+      )}
       headerClassName="[&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-slate-950 dark:[&_h2]:text-slate-100 [&_button]:h-11 [&_button]:w-11 [&_button]:text-slate-600 dark:[&_button]:text-slate-300 [&_button]:focus-visible:outline-2 [&_button]:focus-visible:outline-offset-2 [&_button]:focus-visible:outline-pink-800 dark:[&_button]:focus-visible:outline-pink-300"
       title={transaction ? 'Edit Transaction' : 'New Transaction'}
       titleId="transaction-form-title"
@@ -295,32 +329,27 @@ export function TransactionForm({
         id={formId}
         noValidate
         onSubmit={submitForm}
-        className="space-y-4 md:space-y-6"
+        className="txn-form"
       >
-          <TransactionTypePicker value={form.type} onChange={updateType} />
+        <SegmentedControl
+          className="txn-area-type"
+          label="Transaction type"
+          options={typeOptions}
+          value={form.type}
+          onChange={updateType}
+        />
 
-          <div className="text-center">
-            <div className="relative">
-              <span className="absolute left-5 top-1/2 -translate-y-1/2 text-sm font-medium text-slate-600 dark:text-slate-400">
-                PHP
-              </span>
-              <MoneyInput
-                aria-describedby={errors.amount ? 'transaction-amount-error' : undefined}
-                aria-invalid={Boolean(errors.amount)}
-                aria-label="Amount (PHP)"
-                placeholder="0.00"
-                value={form.amount}
-                onValueChange={(value) => updateField('amount', value)}
-                className={fieldInput(Boolean(errors.amount), 'pl-16 font-geist-mono tabular-nums text-xl')}
-              />
-            </div>
-            {errors.amount ? (
-              <p id="transaction-amount-error" className={`mt-2 text-left ${fieldError}`}>
-                {errors.amount.message}
-              </p>
-            ) : null}
-          </div>
+        <div className="txn-area-amount">
+          <AmountHero
+            error={errors.amount?.message}
+            errorId="transaction-amount-error"
+            inputRef={amountRef}
+            value={form.amount}
+            onValueChange={(value) => updateField('amount', value)}
+          />
+        </div>
 
+        <div className="txn-area-details">
           <AccountSourcePanel
             cardAccounts={cardAccounts}
             cashAccount={cashAccount}
@@ -353,68 +382,32 @@ export function TransactionForm({
             />
           ) : null}
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="min-w-0 space-y-1 md:space-y-2">
-              <label
-                htmlFor="transaction-category"
-                className={`${fieldLabel} ml-1 block`}
-              >
-                Category
-              </label>
-              <select
-                aria-describedby={errors.category_id ? 'transaction-category-error' : undefined}
-                aria-invalid={Boolean(errors.category_id)}
-                id="transaction-category"
-                value={form.category_id}
-                onChange={(event) =>
-                  updateField('category_id', event.target.value)
-                }
-                className={fieldInput(Boolean(errors.category_id))}
-              >
-                <option value="" className="dark:bg-slate-900">Choose a category</option>
-                {filteredCategories.map((category) => (
-                  <option key={category.id} value={category.id} className="dark:bg-slate-900">
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-              {errors.category_id ? (
-                <p id="transaction-category-error" className={fieldError}>
-                  {errors.category_id.message}
-                </p>
-              ) : null}
-            </div>
+          <CategoryChips
+            categories={filteredCategories}
+            error={errors.category_id?.message}
+            errorId="transaction-category-error"
+            recentIds={recentCategoryIds}
+            value={form.category_id}
+            onChange={(value) => updateField('category_id', value)}
+          />
 
-            <div className="min-w-0 space-y-1 md:space-y-2">
-              <label
-                htmlFor="transaction-date"
-                className={`${fieldLabel} ml-1 block`}
-              >
-                Date
-              </label>
-              <div className="min-w-0">
-                <input
-                  aria-describedby={errors.transaction_date ? 'transaction-date-error' : undefined}
-                  aria-invalid={Boolean(errors.transaction_date)}
-                  id="transaction-date"
-                  type="date"
-                  value={form.transaction_date}
-                  onChange={(event) =>
-                    updateField('transaction_date', event.target.value)
-                  }
-                  className={fieldInput(Boolean(errors.transaction_date), 'min-w-0 max-w-full appearance-none')}
-                />
-              </div>
-              {errors.transaction_date ? (
-                <p id="transaction-date-error" className={fieldError}>
-                  {errors.transaction_date.message}
-                </p>
-              ) : null}
-            </div>
-          </div>
+          <DateChips
+            error={errors.transaction_date?.message}
+            errorId="transaction-date-error"
+            value={form.transaction_date}
+            onChange={(value) => updateField('transaction_date', value)}
+          />
+        </div>
 
+        <div className="txn-area-note min-w-0 space-y-2">
+          <label htmlFor="transaction-note" className={`${fieldLabel} ml-1 block`}>
+            Note <span className="font-normal text-slate-600 dark:text-slate-400">(optional)</span>
+          </label>
           <input
+            id="transaction-note"
             type="text"
+            autoComplete="off"
+            enterKeyHint="done"
             placeholder="Short note..."
             value={form.description}
             onChange={(event) =>
@@ -422,54 +415,38 @@ export function TransactionForm({
             }
             className={fieldInput(false)}
           />
-
+        </div>
       </form>
     </ModalFrame>
   )
 }
 
-function TransactionTypePicker({
-  onChange,
-  value,
-}: {
-  onChange: (type: TransactionType) => void
-  value: TransactionType
-}) {
-  const rows: TransactionType[][] = [
-    ['income', 'expense'],
-    ['withdrawal', 'transfer'],
-  ]
-
-  return (
-    <div className="space-y-2">
-      {rows.map((row) => (
-        <div key={row.join('-')} className="flex gap-2">
-          {row.map((type) => (
-            <button
-              key={type}
-              type="button"
-              onClick={() => onChange(type)}
-              aria-pressed={value === type}
-              className={`relative min-h-11 min-w-0 flex-1 rounded-full px-3 py-2.5 [overflow-wrap:anywhere] text-sm font-semibold capitalize transition-[border-color] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800 dark:focus-visible:outline-pink-300 ${
-                value === type
-                  ? 'bg-pink-700 text-white'
-                  : 'border border-slate-500 bg-white text-slate-600 hover:bg-pink-50 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
-              }`}
-            >
-              {type === 'transfer' ? 'Transfer/Deposit' : type}
-            </button>
-          ))}
-        </div>
-      ))}
-    </div>
-  )
+const typeNouns: Record<TransactionType, string> = {
+  expense: 'expense',
+  income: 'income',
+  transfer: 'transfer',
+  withdrawal: 'withdrawal',
 }
+
+const typeOptions: ReadonlyArray<SegmentedOption<TransactionType>> = [
+  { value: 'expense', label: 'Expense' },
+  { value: 'income', label: 'Income' },
+  { value: 'transfer', label: 'Transfer' },
+  { value: 'withdrawal', label: 'Withdraw' },
+]
 
 const sourceSheetTitles: Record<TransactionType, string> = {
   expense: 'Pay with',
   income: 'Deposit to',
   transfer: 'Send from',
   withdrawal: 'Withdraw from',
+}
+
+const sourceLabels: Record<TransactionType, string> = {
+  expense: 'Payment Method',
+  income: 'Deposit To',
+  transfer: 'From Account',
+  withdrawal: 'Withdraw From',
 }
 
 function AccountSourcePanel({
@@ -495,11 +472,20 @@ function AccountSourcePanel({
     errors.payment_method?.message ??
     errors.card_id?.message ??
     errors.wallet_id?.message
+  const label = sourceLabels[form.type]
+  // Mirrors the composer's balance check (amount plus any fee) so the picker
+  // can flag short accounts. Display only: the checked RPC stays the authority.
+  const amount = Number(form.amount)
+  const fee = form.type === 'transfer' || form.type === 'withdrawal' ? Number(form.fee_amount || '0') : 0
+  const requiredAmount =
+    form.type !== 'income' && Number.isFinite(amount) && amount > 0 && Number.isFinite(fee)
+      ? amount + fee
+      : undefined
 
   return (
-    <div className={`${surfaceNested} space-y-3 p-4 sm:p-5`}>
-      <p className={`${fieldLabel} ml-1 block`}>
-        {form.type === 'transfer' ? 'From Account' : 'Payment Method'}
+    <div className="min-w-0 space-y-2">
+      <p className={`${fieldLabel} ml-1 block`} aria-hidden="true">
+        {label}
       </p>
       <PaymentSourcePicker
         allowCash={form.type !== 'withdrawal'}
@@ -509,11 +495,12 @@ function AccountSourcePanel({
         cashAccount={cashAccount}
         error={sourceError}
         errorId="transaction-source-error"
-        label={form.type === 'transfer' ? 'From Account' : 'Payment Method'}
+        label={label}
         lentAccounts={lentAccounts}
         method={form.payment_method}
         onChange={onSourceChange}
         onOpenChange={onPickerOpenChange}
+        requiredAmount={requiredAmount}
         sheetTitle={sourceSheetTitles[form.type]}
         walletAccounts={walletAccounts}
         walletId={form.wallet_id ?? ''}
@@ -551,8 +538,8 @@ function DestinationPanel({
     errors.to_wallet_id?.message
 
   return (
-    <div className={`${surfaceNested} space-y-3 p-4 sm:p-5`}>
-      <p className={`${fieldLabel} ml-1 block`}>
+    <div className="min-w-0 space-y-2">
+      <p className={`${fieldLabel} ml-1 block`} aria-hidden="true">
         To Account
       </p>
       <PaymentSourcePicker
@@ -594,43 +581,37 @@ function TransactionFeePanel({
   const currentFee = Number(form.fee_amount || '0')
 
   return (
-    <div className={`${surfaceNested} space-y-3 p-4 sm:p-5`}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <label
-          htmlFor="transaction-fee"
-          className={`${fieldLabel} ml-1 block`}
-        >
-          {form.type === 'withdrawal' ? 'Withdrawal' : 'Transfer'} Fee (PHP)
-        </label>
-        <div className="flex flex-wrap gap-1.5">
-          {presets.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              onClick={() => onUpdate('fee_amount', String(preset))}
-              aria-pressed={currentFee === preset}
-              className={`min-h-11 min-w-11 rounded-full px-3 py-2 text-sm font-semibold transition-[border-color] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-800 dark:focus-visible:outline-pink-300 ${
-                currentFee === preset
-                  ? 'bg-pink-700 text-white'
-                  : 'border border-slate-500 bg-white text-slate-600 hover:bg-pink-50 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800'
-              }`}
-            >
-              ₱{preset}
-            </button>
-          ))}
-        </div>
+    <div className="min-w-0 space-y-2">
+      <label
+        htmlFor="transaction-fee"
+        className={`${fieldLabel} ml-1 block`}
+      >
+        {form.type === 'withdrawal' ? 'Withdrawal' : 'Transfer'} Fee (PHP)
+      </label>
+      <div className="txn-fee-row">
+        {presets.map((preset) => (
+          <button
+            key={preset}
+            type="button"
+            onClick={() => onUpdate('fee_amount', String(preset))}
+            aria-pressed={currentFee === preset}
+            className="txn-pill"
+          >
+            ₱{preset}
+          </button>
+        ))}
+        <MoneyInput
+          aria-describedby={errors.fee_amount ? 'transaction-fee-error' : undefined}
+          aria-invalid={Boolean(errors.fee_amount)}
+          id="transaction-fee"
+          placeholder="0.00"
+          value={form.fee_amount}
+          onValueChange={(value) => onUpdate('fee_amount', value)}
+          className={fieldInput(Boolean(errors.fee_amount), 'h-11 min-w-0 flex-1 px-4 font-geist-mono tabular-nums')}
+        />
       </div>
-      <MoneyInput
-        aria-describedby={errors.fee_amount ? 'transaction-fee-error' : undefined}
-        aria-invalid={Boolean(errors.fee_amount)}
-        id="transaction-fee"
-        placeholder="0.00"
-        value={form.fee_amount}
-        onValueChange={(value) => onUpdate('fee_amount', value)}
-        className={fieldInput(Boolean(errors.fee_amount), 'font-geist-mono tabular-nums')}
-      />
       {errors.fee_amount ? (
-        <p id="transaction-fee-error" className={fieldError}>
+        <p id="transaction-fee-error" className={`ml-1 ${fieldError}`}>
           {errors.fee_amount.message}
         </p>
       ) : null}

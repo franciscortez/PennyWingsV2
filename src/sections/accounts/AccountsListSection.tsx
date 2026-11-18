@@ -18,14 +18,7 @@ import { AppButton } from '@/components/ui/Button'
 import { FormattedFigure } from '@/components/ui/FormattedFigure'
 import { surface, surfaceNested, textMuted } from '@/components/ui/surfaces'
 
-import { BankCardFace } from '@/sections/accounts/BankCardFace'
-import { MoneyNoteFace } from '@/sections/accounts/MoneyNoteFace'
-import {
-  buildCustomCardDesign,
-  getAccountCardDesign,
-  getNoteSerial,
-  noteColors,
-} from '@/sections/accounts/bankCardDesigns'
+import { AccountFace } from '@/sections/accounts/AccountFace'
 import type { Account, AccountKind } from '@/types'
 
 type AccountsListSectionProps = {
@@ -51,29 +44,6 @@ const currency = new Intl.NumberFormat('en-PH', {
   minimumFractionDigits: 2,
   style: 'currency',
 })
-
-const formatAccountType = (value: string) =>
-  value
-    .split(/[-_\s]/)
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-
-const getAccountSubtitle = (account: Account) => {
-  if (account.kind === 'cash') {
-    return 'Cash on hand'
-  }
-
-  if (account.kind === 'lent') {
-    return 'Money lent out'
-  }
-
-  if (account.lastFour) {
-    return `**** **** **** ${account.lastFour}`
-  }
-
-  return account.accountIdentifier ?? formatAccountType(account.accountType)
-}
 
 export function AccountsListSection({
   accounts,
@@ -189,18 +159,6 @@ function AccountCard({
   const isRestoring = restoringId === account.id
   const isOwner = account.canManage || !currentUserId
   const isShared = !isOwner
-  const isBankCard = account.kind === 'card' || account.kind === 'wallet'
-  const design = getAccountCardDesign(account)
-  const primaryColor = isBankCard
-    ? (design?.primary ?? (account.color || '#F472B6'))
-    : noteColors[account.kind === 'lent' ? 'lent' : 'cash']
-  const faceDesign =
-    design ?? buildCustomCardDesign(primaryColor, account.textColor || '#ffffff')
-  const numberLine =
-    account.kind === 'card'
-      ? `••••  ••••  ••••  ${account.lastFour || '••••'}`
-      : account.accountIdentifier || '••••  ••••  ••••  ••••'
-
   const accessBadge = isShared ? (
     <span className={`flex flex-wrap items-center gap-1.5 text-sm ${textMuted}`}>
       <FaUsers className="h-3 w-3" aria-hidden="true" />
@@ -225,30 +183,7 @@ function AccountCard({
         {accessBadge}
       </header>
       <div className="p-3 pb-0 sm:p-4 sm:pb-0" data-account-artwork>
-        {isBankCard ? (
-          <BankCardFace
-            className="aspect-[8/5] w-full"
-            design={faceDesign}
-            holderName={account.name}
-            numberLine={numberLine}
-            typeLabel={
-              account.kind === 'wallet'
-                ? 'Wallet'
-                : formatAccountType(account.accountType)
-            }
-          />
-        ) : (
-          <MoneyNoteFace
-            className="aspect-[8/5] w-full"
-            serial={getNoteSerial(
-              account.kind === 'lent' ? 'lent' : 'cash',
-              account.id,
-            )}
-            subtitle={getAccountSubtitle(account)}
-            title={account.name}
-            variant={account.kind === 'lent' ? 'lent' : 'cash'}
-          />
-        )}
+        <AccountFace account={account} />
       </div>
 
       <div className="flex flex-1 flex-col gap-5 p-3 sm:p-4">

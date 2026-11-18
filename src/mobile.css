@@ -143,12 +143,24 @@
     .modal-overlay:not([data-mobile-presentation="dialog"]) .modal-body { overflow: visible; flex: none; }
   }
 }
+/* Quick add: the entry sheet grows up out of the floating button's corner. */
+@media (max-width: 767px) {
+  .modal-overlay[data-mobile-presentation="sheet"] .modal-panel.txn-sheet-from-fab {
+    transform-origin: calc(100% - 44px) 100%;
+    animation: txn-sheet-from-fab 240ms var(--motion-ease-out, ease-out);
+  }
+}
+@keyframes txn-sheet-from-fab {
+  from { opacity: .4; transform: translateY(40px) scale(.96); }
+  to { opacity: 1; transform: none; }
+}
 @keyframes mobile-form-sheet-in {
   from { opacity: .5; transform: translateY(32px); }
   to { opacity: 1; transform: translateY(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .modal-overlay .modal-panel { animation: none; }
+  .modal-overlay .modal-panel,
+  .modal-overlay[data-mobile-presentation="sheet"] .modal-panel.txn-sheet-from-fab { animation: none; }
 }
 
 @media (max-width: 767px) {

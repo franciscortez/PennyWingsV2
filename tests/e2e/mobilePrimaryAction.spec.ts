@@ -2,10 +2,14 @@ import { expect, test, type Page } from '@playwright/test'
 import { setupAuthenticatedMocks } from './helpers/authMock'
 
 const navigation = (page: Page) => page.getByRole('navigation', { name: 'Primary mobile navigation' })
+const quickAdd = (page: Page) => page.getByRole('button', { name: 'Quick add transaction', exact: true })
+// The dock holds only the five destinations; the one global action is the
+// quick add button floating above it, never a contextual pill inside it.
 const noDuplicateAction = async (page: Page) => {
   await expect(page.locator('[data-mobile-primary-action], .mobile-primary-action')).toHaveCount(0)
-  await expect(page.locator('.mobile-navigation-shell').getByRole('button', { name: /New transaction|Add account|New budget|New goal/i })).toHaveCount(0)
+  await expect(page.locator('.mobile-navigation-shell').getByRole('button', { name: /New transaction|Add account|New budget|New goal|Quick add/i })).toHaveCount(0)
   await expect(navigation(page).locator('a, button')).toHaveCount(5)
+  await expect(quickAdd(page)).toHaveCount(1)
 }
 
 const ready = async (page: Page, path: string) => {
@@ -15,12 +19,12 @@ const ready = async (page: Page, path: string) => {
   await expect(navigation(page)).toBeVisible()
 }
 
-test.describe('Page actions without duplicate mobile buttons', () => {
+test.describe('Page actions and the global quick add button', () => {
   test.use({ viewport: { width: 375, height: 667 } })
   test.beforeEach(async ({ page }) => { await setupAuthenticatedMocks(page) })
 
   for (const dark of [false, true]) {
-    test(`no contextual pill on any authenticated page in ${dark ? 'dark' : 'light'} mode`, async ({ page }) => {
+    test(`one quick add and no contextual pill on any authenticated page in ${dark ? 'dark' : 'light'} mode`, async ({ page }) => {
       test.setTimeout(90_000)
       await page.addInitScript(dark => localStorage.setItem('theme', dark ? 'dark' : 'light'), dark)
       for (const path of ['/dashboard', '/transactions', '/accounts', '/accounts?tab=cards', '/accounts?tab=wallets', '/accounts?tab=cash', '/accounts?tab=lent', '/monitoring?tab=budgets', '/monitoring?tab=goals', '/reports', '/profile']) {
@@ -85,9 +89,11 @@ test.describe('Page actions without duplicate mobile buttons', () => {
     const padding = await page.locator('.app-content').evaluate(element => getComputedStyle(element).paddingBottom)
     await setViewport(300)
     await expect(navigation(page)).not.toBeVisible()
+    await expect(quickAdd(page)).toBeHidden()
     expect(await page.locator('.app-content').evaluate(element => getComputedStyle(element).paddingBottom)).toBe(padding)
     await setViewport(0)
     await expect(navigation(page)).toBeVisible()
+    await expect(quickAdd(page)).toBeVisible()
     await noDuplicateAction(page)
   })
 
@@ -108,7 +114,8 @@ test.describe('Page actions without duplicate mobile buttons', () => {
     const shell = await page.locator('.mobile-navigation-shell').boundingBox()
     expect(shell!.y + shell!.height).toBeCloseTo(667, 1)
     expect(shell!.height).toBe(68 + 34)
-    expect(await page.locator('.app-content').evaluate(element => getComputedStyle(element).paddingBottom)).toBe('134px')
+    // Dock 68 + safe area 34 + 32 of air, plus the quick add button (56) and its 16px gap.
+    expect(await page.locator('.app-content').evaluate(element => getComputedStyle(element).paddingBottom)).toBe('206px')
     const indicator = await navigation(page).locator('.mobile-dock-indicator').boundingBox()
     expect(indicator!.y + indicator!.height).toBeLessThanOrEqual(box!.y + box!.height)
     await page.screenshot({ path: testInfo.outputPath('mobile-dock-no-action.png'), animations: 'disabled' })
@@ -116,6 +123,7 @@ test.describe('Page actions without duplicate mobile buttons', () => {
     expect(await navigation(page).locator('.mobile-dock-indicator').evaluate(element => getComputedStyle(element).transitionDuration)).toBe('0s')
     await page.setViewportSize({ width: 768, height: 1024 })
     await expect(navigation(page)).not.toBeVisible()
+    await expect(quickAdd(page)).toHaveCount(0)
   })
 
   test('bar fills the safe area while More and toasts stay above it in portrait and landscape', async ({ page }) => {
@@ -172,7 +180,8 @@ test.describe('Page actions without duplicate mobile buttons', () => {
       const toast = page.locator('.mobile-alert-toast')
       await expect(toast).toBeVisible()
       const toastBox = await toast.boundingBox()
-      expect(bar!.y - toastBox!.y - toastBox!.height).toBeCloseTo(12, 1)
+      // Toasts clear the quick add button: dock gap 16 + button 56 + 12.
+      expect(bar!.y - toastBox!.y - toastBox!.height).toBeCloseTo(84, 1)
       expect(toastBox!.x).toBeGreaterThanOrEqual(44)
       expect(toastBox!.x + toastBox!.width).toBeLessThanOrEqual(viewport.width - 44)
       await expect(toast).toHaveCount(0)

@@ -33,12 +33,12 @@ test('create sends the entered withdrawal fee to the checked RPC', async ({ page
   await page.goto('/transactions')
   await openNewTransactionForm(page)
   const dialog = page.getByRole('dialog', { name: 'New Transaction' })
-  await dialog.getByRole('button', { name: 'withdrawal' }).click()
-  await dialog.locator('input[type="number"]').fill('40')
-  await pickSource(page, dialog, 'Payment Method', 'Bank Card', 'BDO Debit')
-  await dialog.locator('#transaction-category').selectOption('cat-2')
+  await dialog.getByRole('radio', { name: 'Withdraw', exact: true }).click()
+  await dialog.getByRole('textbox', { name: 'Amount (PHP)' }).fill('40')
+  await pickSource(page, dialog, 'Withdraw From', 'Bank Card', 'BDO Debit')
+  await dialog.getByRole('radio', { name: 'Groceries', exact: true }).click()
   await dialog.getByRole('textbox', { name: 'Withdrawal Fee (PHP)' }).fill('12.34')
-  await dialog.getByRole('button', { name: 'Save Transaction' }).click()
+  await dialog.getByRole('button', { name: /^Save / }).click()
 
   await expect(dialog).not.toBeVisible()
   expect(requestBody).toMatchObject({

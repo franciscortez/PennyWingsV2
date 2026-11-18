@@ -139,8 +139,8 @@ test.describe('Activity design', () => {
       await expect(opener).toHaveCount(1)
       await opener.click()
       const dialog = await continueToTransactionForm(page)
-      await dialog.getByRole('button', { name: 'Transfer/Deposit' }).click()
-      await dialog.getByRole('button', { name: 'Save Transaction' }).click()
+      await dialog.getByRole('radio', { name: 'Transfer', exact: true }).click()
+      await dialog.getByRole('button', { name: /^Save / }).click()
       await expect(dialog.locator('#transaction-amount-error')).toBeVisible()
       for (const width of [320, 375, 768, 1280, 1920]) {
         await page.setViewportSize({ width, height: 900 })

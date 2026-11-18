@@ -46,7 +46,6 @@ test.describe('Page actions and the global quick add button', () => {
     const dialog = page.getByRole('dialog', { name: 'New Transaction', exact: true })
     await expect(dialog).toHaveCount(0)
     await create.click()
-    await page.getByRole('dialog', { name: 'Quick add', exact: true }).getByRole('button', { name: /^Expense/ }).click()
     await expect(dialog).toBeVisible()
     await page.getByRole('button', { name: 'Close transaction form' }).click()
     await expect(dialog).toHaveCount(0)

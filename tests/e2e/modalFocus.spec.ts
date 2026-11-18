@@ -45,12 +45,16 @@ async function openWithKeyboard(page: Page, opener: Locator, dialogName: string)
   // Captured after focusing, which may itself scroll the opener into view.
   const anchorBefore = await backgroundAnchor(page)
   await page.keyboard.press('Enter')
-  // Phones reach the transaction form through the quick add sheet.
   if (dialogName === 'New Transaction') await continueToTransactionForm(page)
 
   const dialog = page.getByRole('dialog', { name: dialogName })
   await expect(dialog).toBeVisible()
-  await expect.poll(() => activeIsDialog(dialog)).toBe(true)
+  if (dialogName === 'New Transaction' && (page.viewportSize()?.width ?? 0) >= 768) {
+    // Wide screens start a new entry in the amount: type the number, press Enter.
+    await expect(dialog.getByRole('textbox', { name: 'Amount (PHP)' })).toBeFocused()
+  } else {
+    await expect.poll(() => activeIsDialog(dialog)).toBe(true)
+  }
 
   return { anchorBefore, dialog }
 }
@@ -91,7 +95,7 @@ test.describe('transaction and monitoring forms', () => {
     await mockTransactionPage(page)
   })
 
-  for (const variant of ['Expense', 'Transfer/Deposit'] as const) {
+  for (const variant of ['Expense', 'Transfer'] as const) {
     test(`contains and restores focus for the ${variant} transaction form`, async ({
       page,
     }) => {
@@ -103,9 +107,9 @@ test.describe('transaction and monitoring forms', () => {
 
       expect(await rootIsInert(page)).toBe(true)
 
-      if (variant === 'Transfer/Deposit') {
+      if (variant === 'Transfer') {
         // The long form: tab through every Transfer field too.
-        await dialog.getByRole('button', { name: 'Transfer/Deposit' }).click()
+        await dialog.getByRole('radio', { name: 'Transfer', exact: true }).click()
       }
 
       await expectTabContained(page, dialog)

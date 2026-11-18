@@ -12,18 +12,11 @@ export const newTransactionOpener = (page: Page): Locator =>
     .or(page.getByRole('button', { name: 'Quick add transaction', exact: true }))
 
 /**
- * Call after activating the opener. On phones the quick add first shows its
- * Quick add sheet, so choose Expense (the form's own default) to reach the
- * same New Transaction form the header button opens.
+ * Call after activating the opener. Both the header button and a tap on the
+ * phone quick add open the New Transaction form directly, on Expense.
  */
 export async function continueToTransactionForm(page: Page): Promise<Locator> {
-  const menu = page.getByRole('dialog', { name: 'Quick add', exact: true })
   const form = page.getByRole('dialog', { name: 'New Transaction', exact: true })
-
-  await expect(menu.or(form)).toBeVisible()
-  if (await menu.isVisible()) {
-    await menu.getByRole('button', { name: /^Expense/ }).click()
-  }
   await expect(form).toBeVisible()
 
   return form

@@ -70,7 +70,8 @@ async function assertNoHorizontalOverflow(page: Page) {
 
 /**
  * Asserts that the native date input is strictly contained within its shell
- * and that on single-column layouts it aligns with the sibling category select.
+ * and that on single-column layouts the date row stays inside the form, in
+ * line with the category chips above it.
  */
 async function assertDateFieldGeometry(
   page: Page,
@@ -79,7 +80,9 @@ async function assertDateFieldGeometry(
   const geom = await page.evaluate(() => {
     const input = document.getElementById('transaction-date')
     const shell = input?.parentElement
-    const select = document.getElementById('transaction-category')
+    // The category chips' radio group shares the date row's left edge and
+    // the form's width in single-column layouts.
+    const select = document.querySelector('[aria-labelledby="transaction-category-label"]')
     if (!input || !shell) return null
 
     const inputRect = input.getBoundingClientRect()
@@ -120,14 +123,14 @@ async function assertDateFieldGeometry(
   if (options.isSingleColumn && geom.selectWidth !== null && geom.selectLeft !== null) {
     // Single-column alignment with category select
     expect(
-      Math.abs(geom.shellWidth - geom.selectWidth),
-      'Date shell width must match Category select width in single-column layout',
-    ).toBeLessThanOrEqual(2)
+      geom.shellRight,
+      'Date shell must not extend past the category row in single-column layout',
+    ).toBeLessThanOrEqual(geom.selectLeft + geom.selectWidth + 4)
 
     expect(
-      Math.abs(geom.shellLeft - geom.selectLeft),
-      'Date shell left position must align with Category select',
-    ).toBeLessThanOrEqual(2)
+      geom.shellLeft,
+      'Date shell must start inside the category row',
+    ).toBeGreaterThanOrEqual(geom.selectLeft - 4)
   }
 }
 
@@ -229,21 +232,16 @@ test.describe('Transaction Date Field Overflow & Modal Containment', () => {
   test.describe('Transaction Types Coverage', () => {
     test.use({ viewport: { width: 375, height: 667 } })
 
-    const types: Array<{ name: string; pattern: RegExp }> = [
-      { name: 'Expense', pattern: /^expense$/i },
-      { name: 'Income', pattern: /^income$/i },
-      { name: 'Withdrawal', pattern: /^withdrawal$/i },
-      { name: 'Transfer/Deposit', pattern: /^transfer/i },
-    ]
+    const types = ['Expense', 'Income', 'Withdraw', 'Transfer'] as const
 
-    for (const { name, pattern } of types) {
+    for (const name of types) {
       test(`maintains geometry and containment for ${name}`, async ({
         page,
       }) => {
         await openTransactionsPage(page)
         const dialog = await openNewTransactionModal(page)
 
-        await dialog.getByRole('button', { name: pattern }).click()
+        await dialog.getByRole('radio', { name, exact: true }).click()
         // Allow form options to settle
         await page.waitForTimeout(100)
 
@@ -274,7 +272,7 @@ test.describe('Transaction Date Field Overflow & Modal Containment', () => {
       const dialog = await openNewTransactionModal(page)
 
       // Submit without required fields to trigger validation messages
-      await dialog.getByRole('button', { name: 'Save Transaction' }).click()
+      await dialog.getByRole('button', { name: /^Save / }).click()
 
       // Error message should appear without causing overflow
       await expect(dialog.locator('#transaction-category-error')).toBeVisible()
@@ -315,7 +313,7 @@ test.describe('Transaction Date Field Overflow & Modal Containment', () => {
       await assertNoHorizontalOverflow(page)
 
       // Save button must be reachable
-      const saveButton = dialog.getByRole('button', { name: 'Save Transaction' })
+      const saveButton = dialog.getByRole('button', { name: /^Save / })
       await saveButton.scrollIntoViewIfNeeded()
       await expect(saveButton).toBeVisible()
 

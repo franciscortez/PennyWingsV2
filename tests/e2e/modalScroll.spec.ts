@@ -126,7 +126,7 @@ test('keeps the page stationary behind the long transfer form', async ({
   expect(await backgroundAnchor(page)).toBe(anchorBefore)
 
   await dialog
-    .getByRole('button', { name: 'Transfer/Deposit' })
+    .getByRole('radio', { name: 'Transfer', exact: true })
     .dispatchEvent('click')
 
   const region = dialog.locator('.modal-body')
@@ -219,8 +219,11 @@ test('locks the page behind a short form that stays reachable', async ({
 
   const dialog = await openTransactionForm(page)
   const region = dialog.locator('.modal-body')
+  // Transfer is the longest form (destination and fee rows on top of the
+  // rest); the compact expense layout now fits this panel outright.
+  await dialog.getByRole('radio', { name: 'Transfer', exact: true }).click()
 
-  // The whole income/expense form is taller than the panel allows, so it owns
+  // The whole transfer form is taller than the panel allows, so it owns
   // the scroll region. The header and the submit path must stay pinned outside
   // it, never scrolled away.
   await expect
@@ -230,7 +233,7 @@ test('locks the page behind a short form that stays reachable', async ({
       ),
     )
     .toBe(true)
-  const submitButton = dialog.getByRole('button', { name: 'Save Transaction' })
+  const submitButton = dialog.getByRole('button', { name: /^Save / })
   await expect(submitButton).toBeInViewport()
   await expect(
     dialog.getByRole('button', { name: 'Close transaction form' }),

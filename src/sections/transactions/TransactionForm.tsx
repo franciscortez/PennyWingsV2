@@ -389,6 +389,7 @@ export function TransactionForm({
             recentIds={recentCategoryIds}
             value={form.category_id}
             onChange={(value) => updateField('category_id', value)}
+            onSheetOpenChange={setPickerOpen}
           />
 
           <DateChips

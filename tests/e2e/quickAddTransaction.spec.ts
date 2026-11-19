@@ -51,6 +51,50 @@ test.describe('Mobile quick add', () => {
     await expect(page).toHaveURL(/\/dashboard$/)
   })
 
+  test('"View all" shows every category on touch and scrolls the row to the choice', async ({ page, isMobile }) => {
+    const names = ['Bills', 'Coffee', 'Eating Out', 'Groceries', 'Health', 'Pets', 'Rent', 'Shopping', 'Subscriptions', 'Transport', 'Travel', 'Utilities']
+    await page.route('**/rest/v1/categories*', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(names.map((name, index) => ({ id: `cat-x${index}`, name, type: 'expense', icon: null, color: '#f472b6' }))),
+    }))
+
+    await ready(page, '/dashboard')
+    await quickAdd(page).click()
+    const dialog = form(page)
+    const viewAll = dialog.getByRole('button', { name: 'View all 12 categories' })
+
+    // Mouse and trackpad already see every chip, so the link is touch only.
+    if (!isMobile) {
+      await expect(dialog.getByRole('radio', { name: 'Utilities', exact: true })).toBeVisible()
+      await expect(viewAll).toBeHidden()
+      return
+    }
+
+    const row = dialog.getByRole('radiogroup', { name: 'Category' })
+    const last = row.getByRole('radio', { name: 'Utilities', exact: true })
+    // The last chip starts out past the row's edge.
+    const outOfRow = async () => {
+      const [rowBox, chipBox] = await Promise.all([row.boundingBox(), last.boundingBox()])
+      return chipBox!.x + chipBox!.width > rowBox!.x + rowBox!.width + 1
+    }
+    expect(await outOfRow()).toBe(true)
+
+    await viewAll.click()
+    const sheet = page.getByRole('dialog', { name: 'Choose category' })
+    await expect(sheet).toContainText('12 expense categories')
+    await expect(sheet.getByRole('option')).toHaveCount(12)
+
+    await sheet.getByRole('searchbox', { name: 'Search categories' }).fill('util')
+    await expect(sheet.getByRole('option')).toHaveText(['Utilities'])
+    await sheet.getByRole('option', { name: 'Utilities' }).click()
+
+    await expect(sheet).toHaveCount(0)
+    await expect(last).toHaveAttribute('aria-checked', 'true')
+    await expect(viewAll).toBeFocused()
+    await expect.poll(outOfRow).toBe(false)
+  })
+
   test('the dial opens other kinds and the type switch covers every kind', async ({ page }) => {
     let payload: Record<string, unknown> | undefined
     await page.route('**/rest/v1/rpc/process_transaction_checked*', async (route) => {

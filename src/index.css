@@ -1465,7 +1465,8 @@ body {
 
 .dark .source-empty { border-color: var(--color-slate-600); }
 
-/* "View all": every account as a vertical stack of full card faces. */
+/* "View all": every account as a grid of full card faces — one column on
+   phones, two on desktop. */
 .source-all-link {
   display: inline-flex;
   min-height: 44px;

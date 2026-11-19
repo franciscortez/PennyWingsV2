@@ -1465,8 +1465,88 @@ body {
 
 .dark .source-empty { border-color: var(--color-slate-600); }
 
+/* "View all": every account as a vertical stack of full card faces. */
+.source-all-link {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 2px;
+  margin: -14px -6px -10px 0;
+  padding: 0 6px 0 10px;
+  border-radius: 999px;
+  color: var(--color-pink-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.source-all-link:active { background: var(--color-pink-50); }
+.source-all-link:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: -2px; }
+.dark .source-all-link { color: var(--color-pink-300); }
+.dark .source-all-link:active { background: rgb(201 68 102 / 0.18); }
+.dark .source-all-link:focus-visible { outline-color: var(--color-pink-300); }
+
+.source-all { display: grid; gap: 16px; }
+
+.source-all-back {
+  display: inline-flex;
+  min-height: 44px;
+  width: fit-content;
+  align-items: center;
+  gap: 2px;
+  margin: -8px 0 -8px -8px;
+  padding: 0 12px 0 6px;
+  border-radius: 999px;
+  color: var(--color-pink-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.source-all-back:active { background: var(--color-pink-50); }
+.source-all-back:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: -2px; }
+.dark .source-all-back { color: var(--color-pink-300); }
+.dark .source-all-back:active { background: rgb(201 68 102 / 0.18); }
+.dark .source-all-back:focus-visible { outline-color: var(--color-pink-300); }
+
+.source-all-item {
+  display: block;
+  width: 100%;
+  border-radius: 1.25rem;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 120ms ease-out;
+}
+
+.source-all-item:active { transform: scale(0.98); }
+.source-all-item:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: 4px; }
+.dark .source-all-item:focus-visible { outline-color: var(--color-pink-300); }
+
+.source-all-face {
+  display: block;
+  border-radius: 1rem;
+}
+
+.source-all-face[data-current='true'] {
+  box-shadow: 0 0 0 3px var(--color-pink-700);
+}
+
+.dark .source-all-face[data-current='true'] { box-shadow: 0 0 0 3px var(--color-pink-300); }
+
+.source-all-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 4px 0;
+}
+
+.source-all-empty { padding: 24px 4px; text-align: center; }
+
 @media (prefers-reduced-motion: reduce) {
   .source-card,
   .source-dots > span,
   .source-rail-arrow { transition: none; }
+  .source-all-item { transition: none; }
+  .source-all-item:active { transform: none; }
 }

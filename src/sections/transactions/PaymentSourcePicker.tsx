@@ -23,7 +23,11 @@ import { figure, textMuted } from '@/components/ui/surfaces'
 import { AccountFace } from '@/sections/accounts/AccountFace'
 import { getAccountKindLabel } from '@/sections/accounts/accountLabels'
 import { darkChipKeys, getAccountLogo, type AccountLogo } from '@/sections/accounts/bankLogos'
+import { SourceAllList } from '@/sections/transactions/SourceAllList'
 import type { Account, FormPaymentMethod } from '@/types'
+
+/** Below this the carousel shows everything at a glance, so "View all" adds nothing. */
+const VIEW_ALL_MIN = 3
 
 type PaymentSourcePickerProps = {
   allowCash: boolean
@@ -85,6 +89,13 @@ const tabLabels: Record<FormPaymentMethod, string> = {
   card: 'Cards',
   cash: 'Cash',
   ewallet: 'Wallets',
+  lent: 'Lent',
+}
+
+const tabHeadings: Record<FormPaymentMethod, string> = {
+  card: 'Bank cards',
+  cash: 'Cash',
+  ewallet: 'E-wallets',
   lent: 'Lent',
 }
 
@@ -327,6 +338,8 @@ function SourceSheet({
   const [activeIndex, setActiveIndex] = useState(() =>
     Math.max(0, accounts.findIndex((account) => account.id === initialAccountId)),
   )
+  const [view, setView] = useState<'carousel' | 'all'>('carousel')
+  const viewAllRef = useRef<HTMLButtonElement>(null)
   const railRef = useRef<HTMLDivElement>(null)
   const cardRefs = useRef<Array<HTMLButtonElement | null>>([])
   // Focus starts on the centred card, so arrow keys work straight away.
@@ -368,11 +381,12 @@ function SourceSheet({
     if (focus) cardRefs.current[next]?.focus({ preventScroll: true })
   }
 
-  // Open (and every tab change) lands on the chosen card with no animation.
+  // Open (and every tab change, and coming back from the full list) lands on
+  // the chosen card with no animation.
   useLayoutEffect(() => {
-    scrollToIndex(index, false)
+    if (view === 'carousel') scrollToIndex(index, false)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tab])
+  }, [tab, view])
 
   const handleScroll = () => {
     const rail = railRef.current
@@ -422,6 +436,18 @@ function SourceSheet({
     onChoose(tab, tab === 'cash' ? '' : active.id)
   }
 
+  const sections = tabs
+    .map((value) => ({ accounts: accountsFor(value), heading: tabHeadings[value], tab: value }))
+    .filter((section) => section.accounts.length > 0)
+  const totalAccounts = sections.reduce((sum, section) => sum + section.accounts.length, 0)
+  const showingAll = view === 'all'
+
+  const backToCarousel = () => {
+    setView('carousel')
+    // The button is back after this render; focus it on the next frame.
+    requestAnimationFrame(() => viewAllRef.current?.focus())
+  }
+
   const tabOptions = tabs.map((value) => {
     const count = accountsFor(value).length
     return {
@@ -434,21 +460,28 @@ function SourceSheet({
     <ModalFrame
       mobilePresentation="sheet"
       actions={
-        <AppButton
-          className="w-full"
-          disabled={!active}
-          onClick={confirm}
-          type="button"
-        >
-          {active ? `Use ${active.name}${shortBy !== null ? ' anyway' : ''}` : 'Nothing to choose'}
-        </AppButton>
+        showingAll ? undefined : (
+          <AppButton
+            className="w-full"
+            disabled={!active}
+            onClick={confirm}
+            type="button"
+          >
+            {active ? `Use ${active.name}${shortBy !== null ? ' anyway' : ''}` : 'Nothing to choose'}
+          </AppButton>
+        )
       }
       closeLabel={`Close ${label} picker`}
       contentClassName="space-y-4 px-4 pb-4 md:px-6 md:pb-6"
       description={
-        requiredAmount !== undefined && requiredAmount > 0
-          ? `Amount ${balanceFormatter.format(requiredAmount)}`
-          : undefined
+        [
+          showingAll ? `${totalAccounts} ${totalAccounts === 1 ? 'account' : 'accounts'}` : null,
+          requiredAmount !== undefined && requiredAmount > 0
+            ? `Amount ${balanceFormatter.format(requiredAmount)}`
+            : null,
+        ]
+          .filter(Boolean)
+          .join(' · ') || undefined
       }
       initialFocusRef={activeCardRef}
       headerClassName="px-4 pt-4 md:px-6 md:pt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight [&_p]:text-sm [&_p]:font-medium [&_p]:text-slate-600 dark:[&_p]:text-slate-400"
@@ -457,6 +490,20 @@ function SourceSheet({
       panelClassName="picker-sheet source-sheet font-geist rounded-b-none pb-[env(safe-area-inset-bottom)] shadow-wing-lg dark:shadow-none md:max-w-lg md:rounded-b-[2rem] md:pb-0"
       title={title}
     >
+      {showingAll ? (
+        <SourceAllList
+          balanceFormatter={balanceFormatter}
+          currentKey={
+            initialMethod && initialAccountId ? `${initialMethod}:${initialAccountId}` : null
+          }
+          fallbackKey={active ? `${tab}:${active.id}` : null}
+          requiredAmount={requiredAmount}
+          sections={sections}
+          onBack={backToCarousel}
+          onChoose={onChoose}
+        />
+      ) : (
+        <>
       {tabs.length > 1 ? (
         <SegmentedControl
           label="Account type"
@@ -464,6 +511,22 @@ function SourceSheet({
           value={tab}
           onChange={switchTab}
         />
+      ) : null}
+
+      {totalAccounts >= VIEW_ALL_MIN ? (
+        <div className="flex justify-end">
+          <button
+            ref={viewAllRef}
+            type="button"
+            className="source-all-link"
+            aria-haspopup="listbox"
+            aria-label={`View all ${totalAccounts} accounts`}
+            onClick={() => setView('all')}
+          >
+            View all <span className="tabular-nums">{totalAccounts}</span>
+            <ChevronRight aria-hidden="true" size={16} strokeWidth={2.25} />
+          </button>
+        </div>
       ) : null}
 
       {accounts.length === 0 ? (
@@ -581,6 +644,8 @@ function SourceSheet({
               </div>
             </div>
           ) : null}
+        </>
+      )}
         </>
       )}
     </ModalFrame>

@@ -163,7 +163,7 @@ export function SourceAllList({
                 <p id={headingId} className="category-sheet-heading">
                   {section.heading}
                 </p>
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2">
                   {section.accounts.map((account, offset) => {
                     const index = sectionStarts[sectionIndex] + offset
                     const key = keyOf(section.tab, account)

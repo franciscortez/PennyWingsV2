@@ -1,11 +1,28 @@
 import { expect, test, type Page } from '@playwright/test'
 
 import { setupAuthenticatedMocks } from './helpers/authMock'
+import { openNewTransactionForm } from './helpers/newTransaction'
 import { pickSource } from './helpers/paymentPicker'
 
 const quickAdd = (page: Page) => page.getByRole('button', { name: 'Quick add transaction', exact: true })
 const dial = (page: Page) => page.getByRole('menu', { name: 'Add another kind', exact: true })
 const form = (page: Page) => page.getByRole('dialog', { name: 'New Transaction', exact: true })
+
+const wallet = (id: string, name: string, type: string, color: string, balance: number) => ({
+  id, user_id: 'test-user-id', wallet_name: name, wallet_type: type, account_identifier: '09123456789',
+  color, text_color: '#ffffff', balance, is_active: true,
+})
+
+const mockWalletAccounts = (page: Page) =>
+  page.route('**/rest/v1/e_wallets*', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify([
+      wallet('wallet-1', 'GCash', 'gcash', '#0052cc', 3500),
+      wallet('wallet-2', 'Maya', 'maya', '#16a34a', 900),
+      wallet('wallet-3', 'Seabank', 'other', '#ea580c', 120),
+    ]),
+  }))
 
 const ready = async (page: Page, path: string) => {
   await page.goto(path)
@@ -96,19 +113,7 @@ test.describe('Mobile quick add', () => {
   })
 
   test('"View all" lists every account as a scrollable stack and picks one', async ({ page }) => {
-    const wallet = (id: string, name: string, type: string, color: string, balance: number) => ({
-      id, user_id: 'test-user-id', wallet_name: name, wallet_type: type, account_identifier: '09123456789',
-      color, text_color: '#ffffff', balance, is_active: true,
-    })
-    await page.route('**/rest/v1/e_wallets*', (route) => route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        wallet('wallet-1', 'GCash', 'gcash', '#0052cc', 3500),
-        wallet('wallet-2', 'Maya', 'maya', '#16a34a', 900),
-        wallet('wallet-3', 'Seabank', 'other', '#ea580c', 120),
-      ]),
-    }))
+    await mockWalletAccounts(page)
     await ready(page, '/dashboard')
     await quickAdd(page).click()
     const dialog = form(page)
@@ -225,5 +230,52 @@ test.describe('Mobile quick add', () => {
     await page.setViewportSize({ width: 768, height: 1024 })
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeVisible({ timeout: 30_000 })
     await expect(quickAdd(page)).toHaveCount(0)
+  })
+})
+
+test.describe('Desktop account picker', () => {
+  test.use({ viewport: { width: 1280, height: 900 } })
+
+  test.beforeEach(async ({ page }) => { await setupAuthenticatedMocks(page) })
+
+  test('"View all" arranges accounts in two columns and picks one', async ({ page }) => {
+    await mockWalletAccounts(page)
+    await ready(page, '/transactions')
+    const dialog = await openNewTransactionForm(page)
+
+    await dialog.getByRole('button', { name: /Payment Method/ }).click()
+    await expect(dialog).toBeHidden()
+    const sheet = page.getByRole('dialog').last()
+    const carouselWidth = (await sheet.boundingBox())?.width ?? 0
+    await sheet.getByRole('button', { name: /^View all \d+ accounts$/ }).click()
+    const list = sheet.getByRole('listbox', { name: 'All accounts' })
+    await expect(list.getByRole('option').first()).toBeVisible()
+
+    // The list widens the panel so two card faces stay readable.
+    const listWidth = (await sheet.boundingBox())?.width ?? 0
+    expect(listWidth).toBeGreaterThan(carouselWidth + 100)
+
+    // Accounts in the same group share a row, two per row, not a stack.
+    const groups = await list.getByRole('group').evaluateAll((nodes) =>
+      nodes.map((group) =>
+        Array.from(group.querySelectorAll<HTMLElement>('[role="option"]')).map((option) => {
+          const { width, x, y } = option.getBoundingClientRect()
+          return { width: Math.round(width), x: Math.round(x), y: Math.round(y) }
+        }),
+      ),
+    )
+    const multiAccountGroups = groups.filter((options) => options.length > 1)
+    expect(multiAccountGroups.length).toBeGreaterThan(0)
+    for (const options of multiAccountGroups) {
+      expect(options[0].width).toBeGreaterThanOrEqual(380)
+      expect(options[1].y).toBe(options[0].y)
+      expect(options[1].x).toBeGreaterThan(options[0].x)
+      expect(options.filter((option) => option.y === options[0].y)).toHaveLength(2)
+    }
+
+    await list.getByRole('option', { name: /^Maya/ }).click()
+    await expect(list).toHaveCount(0)
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole('button', { name: /Payment Method/ })).toContainText('Maya')
   })
 })

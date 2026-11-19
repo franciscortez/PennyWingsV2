@@ -441,6 +441,11 @@ function SourceSheet({
     .filter((section) => section.accounts.length > 0)
   const totalAccounts = sections.reduce((sum, section) => sum + section.accounts.length, 0)
   const showingAll = view === 'all'
+  // "View all" shows two card faces side by side, so on desktop it takes the
+  // transaction form's width instead of the carousel's single-card panel.
+  const panelWidth = showingAll
+    ? 'md:max-w-2xl min-[60rem]:max-w-[56rem]'
+    : 'md:max-w-lg'
 
   const backToCarousel = () => {
     setView('carousel')
@@ -487,7 +492,7 @@ function SourceSheet({
       headerClassName="px-4 pt-4 md:px-6 md:pt-6 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:tracking-tight [&_p]:text-sm [&_p]:font-medium [&_p]:text-slate-600 dark:[&_p]:text-slate-400"
       onClose={onClose}
       overlayClassName="items-end p-0 [--modal-gutter:0px] md:items-center md:p-4 md:[--modal-gutter:1rem]"
-      panelClassName="picker-sheet source-sheet font-geist rounded-b-none pb-[env(safe-area-inset-bottom)] shadow-wing-lg dark:shadow-none md:max-w-lg md:rounded-b-[2rem] md:pb-0"
+      panelClassName={`picker-sheet source-sheet font-geist rounded-b-none pb-[env(safe-area-inset-bottom)] shadow-wing-lg dark:shadow-none md:rounded-b-[2rem] md:pb-0 ${panelWidth}`}
       title={title}
     >
       {showingAll ? (

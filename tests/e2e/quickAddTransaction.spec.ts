@@ -95,6 +95,46 @@ test.describe('Mobile quick add', () => {
     await expect.poll(outOfRow).toBe(false)
   })
 
+  test('"View all" lists every account as a scrollable stack and picks one', async ({ page }) => {
+    const wallet = (id: string, name: string, type: string, color: string, balance: number) => ({
+      id, user_id: 'test-user-id', wallet_name: name, wallet_type: type, account_identifier: '09123456789',
+      color, text_color: '#ffffff', balance, is_active: true,
+    })
+    await page.route('**/rest/v1/e_wallets*', (route) => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([
+        wallet('wallet-1', 'GCash', 'gcash', '#0052cc', 3500),
+        wallet('wallet-2', 'Maya', 'maya', '#16a34a', 900),
+        wallet('wallet-3', 'Seabank', 'other', '#ea580c', 120),
+      ]),
+    }))
+    await ready(page, '/dashboard')
+    await quickAdd(page).click()
+    const dialog = form(page)
+    await dialog.getByRole('button', { name: /Payment Method/ }).click()
+    await expect(dialog).toBeHidden()
+    const sheet = page.getByRole('dialog').last()
+
+    await sheet.getByRole('button', { name: /^View all \d+ accounts$/ }).click()
+    const list = sheet.getByRole('listbox', { name: 'All accounts' })
+    await expect(list.getByRole('option', { name: /^BDO Debit/ })).toBeVisible()
+    await expect(sheet.getByRole('button', { name: /^Use / })).toHaveCount(0)
+
+    // Full card faces stack vertically: each account sits below the last.
+    const boxes = await list.getByRole('option').evaluateAll((nodes) =>
+      nodes.map((node) => node.getBoundingClientRect()).map(({ x, y, width }) => ({ x, y, width })),
+    )
+    expect(boxes.length).toBeGreaterThanOrEqual(3)
+    for (let i = 1; i < boxes.length; i += 1) expect(boxes[i].y).toBeGreaterThan(boxes[i - 1].y)
+    expect(new Set(boxes.map((box) => Math.round(box.x))).size).toBe(1)
+
+    await list.getByRole('option', { name: /^Maya/ }).click()
+    await expect(list).toHaveCount(0)
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByRole('button', { name: /Payment Method/ })).toContainText('Maya')
+  })
+
   test('the dial opens other kinds and the type switch covers every kind', async ({ page }) => {
     let payload: Record<string, unknown> | undefined
     await page.route('**/rest/v1/rpc/process_transaction_checked*', async (route) => {

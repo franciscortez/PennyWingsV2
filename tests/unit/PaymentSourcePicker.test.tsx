@@ -245,6 +245,131 @@ describe('PaymentSourcePicker', () => {
     expect(within(sheet).getByText('Short by ₱920.00')).toBeInTheDocument()
   })
 
+  describe('View all', () => {
+    const openAll = async (user: ReturnType<typeof userEvent.setup>, sheet: HTMLElement) => {
+      await user.click(within(sheet).getByRole('button', { name: /^View all/ }))
+      return within(sheet).getByRole('listbox', { name: 'All accounts' })
+    }
+
+    it('lists every account grouped by type and picks one on tap', async () => {
+      const { onChange, user } = renderPicker({ allowLent: true })
+      const sheet = await openSheet(user)
+      expect(within(sheet).getByRole('button', { name: 'View all 5 accounts' })).toBeInTheDocument()
+
+      const list = await openAll(user, sheet)
+      expect(within(list).getAllByRole('group').map((group) => group.textContent?.split('₱')[0])).toEqual([
+        expect.stringContaining('Cash'),
+        expect.stringContaining('Bank cards'),
+        expect.stringContaining('E-wallets'),
+        expect.stringContaining('Lent'),
+      ])
+      expect(within(list).getAllByRole('option')).toHaveLength(5)
+      expect(within(sheet).queryByRole('button', { name: /^Use / })).not.toBeInTheDocument()
+
+      await user.click(within(list).getByRole('option', { name: /^BPI Credit/ }))
+
+      expect(onChange).toHaveBeenCalledWith('card', 'card-2')
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    })
+
+    it('chooses cash with an empty account id', async () => {
+      const { onChange, user } = renderPicker({ method: 'card', cardId: 'card-1' })
+      const list = await openAll(user, await openSheet(user))
+
+      await user.click(within(list).getByRole('option', { name: /^Cash on Hand/ }))
+
+      expect(onChange).toHaveBeenCalledWith('cash', '')
+    })
+
+    it('marks the current account and focuses it', async () => {
+      const { user } = renderPicker({ cardId: 'card-2', method: 'card' })
+      const list = await openAll(user, await openSheet(user))
+
+      const current = within(list).getByRole('option', { name: /^BPI Credit/ })
+      expect(current).toHaveAttribute('aria-selected', 'true')
+      expect(current).toHaveAccessibleName(/current/)
+      expect(current).toHaveFocus()
+      expect(within(list).getByRole('option', { name: /^BDO Debit/ })).toHaveAttribute('aria-selected', 'false')
+    })
+
+    it('moves focus with the arrow keys and picks with Enter', async () => {
+      const { onChange, user } = renderPicker({ cardId: 'card-1', method: 'card' })
+      const list = await openAll(user, await openSheet(user))
+
+      await user.keyboard('{ArrowDown}')
+      expect(within(list).getByRole('option', { name: /^BPI Credit/ })).toHaveFocus()
+      await user.keyboard('{End}')
+      expect(within(list).getByRole('option', { name: /^GCash/ })).toHaveFocus()
+      await user.keyboard('{Enter}')
+
+      expect(onChange).toHaveBeenCalledWith('ewallet', 'wallet-1')
+    })
+
+    it('leaves out excluded accounts', async () => {
+      const { user } = renderPicker({ excludeCardId: 'card-1', method: 'card' })
+      const list = await openAll(user, await openSheet(user))
+
+      expect(within(list).queryByRole('option', { name: /^BDO Debit/ })).not.toBeInTheDocument()
+      expect(within(list).getAllByRole('option')).toHaveLength(3)
+    })
+
+    it('flags accounts that cannot cover the amount but keeps them selectable', async () => {
+      const { onChange, user } = renderPicker({ requiredAmount: 1000, method: 'card', cardId: 'card-1' })
+      const list = await openAll(user, await openSheet(user))
+
+      expect(within(list).getByRole('option', { name: /^BDO Debit/ })).not.toHaveAccessibleName(/not enough/)
+      const short = within(list).getByRole('option', { name: /^BPI Credit/ })
+      expect(short).toHaveAccessibleName(/not enough balance/)
+      expect(short).toHaveTextContent('Short by ₱920.00')
+
+      await user.click(short)
+      expect(onChange).toHaveBeenCalledWith('card', 'card-2')
+    })
+
+    it('goes back to the carousel on the same tab with focus on View all', async () => {
+      const { onChange, user } = renderPicker({ cardId: 'card-2', method: 'card' })
+      const sheet = await openSheet(user)
+      await openAll(user, sheet)
+
+      await user.click(within(sheet).getByRole('button', { name: 'Back to carousel' }))
+
+      expect(within(sheet).queryByRole('listbox')).not.toBeInTheDocument()
+      expect(within(sheet).getByRole('radio', { name: 'Cards 2' })).toHaveAttribute('aria-checked', 'true')
+      expect(within(sheet).getByRole('button', { name: 'Use BPI Credit' })).toBeEnabled()
+      await vi.waitFor(() => expect(within(sheet).getByRole('button', { name: /^View all/ })).toHaveFocus())
+      expect(onChange).not.toHaveBeenCalled()
+    })
+
+    it('hides View all when there are fewer than three accounts', async () => {
+      const { user } = renderPicker({
+        cardAccounts: [base],
+        cashAccount: null,
+        lentAccounts: [],
+        walletAccounts: [gcash],
+      })
+      const sheet = await openSheet(user)
+
+      expect(within(sheet).queryByRole('button', { name: /^View all/ })).not.toBeInTheDocument()
+    })
+
+    it('searches once the list is long', async () => {
+      const extra = Array.from({ length: 7 }, (_, i): Account => ({
+        ...base, id: `card-x${i}`, name: `Extra ${i}`,
+      }))
+      const { user } = renderPicker({ cardAccounts: [base, otherCard, ...extra] })
+      const sheet = await openSheet(user)
+      const list = await openAll(user, sheet)
+      expect(within(list).getAllByRole('option').length).toBeGreaterThan(8)
+
+      await user.type(within(sheet).getByRole('searchbox', { name: 'Search accounts' }), 'bpi')
+      expect(within(sheet).getAllByRole('option')).toHaveLength(1)
+
+      await user.clear(within(sheet).getByRole('searchbox'))
+      await user.type(within(sheet).getByRole('searchbox'), 'zzz')
+      expect(within(sheet).getByRole('status')).toHaveTextContent('No account matches')
+    })
+  })
+
   it('reports open and close so a parent modal can step aside', async () => {
     const onOpenChange = vi.fn()
     const { user } = renderPicker({ onOpenChange })

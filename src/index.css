@@ -845,6 +845,8 @@ body {
 /* Chips and pills share one selected look: pink wash, pink edge, darker
    label. Filled pink stays reserved for the type thumb and Save. */
 .txn-chips {
+  /* Positioned so each chip's offsetLeft is measured from the row. */
+  position: relative;
   display: flex;
   min-width: 0;
   gap: 8px;
@@ -867,6 +869,118 @@ body {
     overflow: visible;
     mask-image: none;
   }
+}
+
+/* "View all" only where the row scrolls: touch screens under 60rem. */
+.txn-chips-all {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 2px;
+  margin: -10px -6px -10px 0;
+  padding: 0 6px 0 10px;
+  border-radius: 999px;
+  color: var(--color-pink-700);
+  font-size: 0.875rem;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.txn-chips-all:active { background: var(--color-pink-50); }
+.txn-chips-all:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: -2px; }
+.dark .txn-chips-all { color: var(--color-pink-300); }
+.dark .txn-chips-all:active { background: rgb(201 68 102 / 0.18); }
+.dark .txn-chips-all:focus-visible { outline-color: var(--color-pink-300); }
+
+@media (pointer: fine), (min-width: 60rem) {
+  .txn-chips-all { display: none; }
+}
+
+/* The full list: two columns of tiles that wrap long names instead of
+   cutting them off. */
+.category-sheet-heading {
+  margin: 0 0 8px 4px;
+  color: var(--color-slate-600);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.dark .category-sheet-heading { color: var(--color-slate-400); }
+
+.category-sheet-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.category-sheet-tile {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 10px 11px;
+  border: 1px solid var(--color-slate-400);
+  border-radius: 14px;
+  background: white;
+  color: var(--color-slate-800);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.25;
+  text-align: left;
+  overflow-wrap: anywhere;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease-out;
+}
+
+.category-sheet-tile[aria-selected='true'] {
+  border-color: var(--color-pink-700);
+  background: var(--color-pink-50);
+  color: var(--color-pink-900);
+  font-weight: 600;
+}
+
+.category-sheet-tile:active { transform: scale(0.97); }
+.category-sheet-tile:focus-visible { outline: 2px solid var(--color-pink-800); outline-offset: 2px; }
+
+.dark .category-sheet-tile {
+  border-color: var(--color-slate-500);
+  background: var(--color-slate-900);
+  color: var(--color-slate-200);
+}
+
+.dark .category-sheet-tile[aria-selected='true'] {
+  border-color: var(--color-pink-300);
+  background: rgb(201 68 102 / 0.18);
+  color: var(--color-pink-100);
+}
+
+.dark .category-sheet-tile:focus-visible { outline-color: var(--color-pink-300); }
+
+@media (hover: hover) {
+  .category-sheet-tile[aria-selected='false']:hover {
+    border-color: var(--color-pink-300);
+    background: var(--color-pink-50);
+  }
+
+  .dark .category-sheet-tile[aria-selected='false']:hover {
+    border-color: var(--color-slate-400);
+    background: var(--color-slate-800);
+  }
+}
+
+.category-sheet-empty { padding: 24px 4px; text-align: center; }
+
+/* Hold the sheet's height while search narrows the list, so it does not
+   jump down under the thumb with every letter. */
+@media (max-width: 47.99rem) {
+  .category-sheet { min-height: min(32rem, 85dvh); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .category-sheet-tile { transition: none; }
+  .category-sheet-tile:active { transform: none; }
 }
 
 .txn-chip,

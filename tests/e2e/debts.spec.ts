@@ -100,9 +100,16 @@ test.describe('Debts Page & Workflows', () => {
     const navigation = page.getByRole('navigation', {
       name: testInfo.project.name.startsWith('Mobile') ? 'Primary mobile navigation' : 'Primary desktop navigation',
     })
+    const isMobileProject = testInfo.project.name.startsWith('Mobile')
     const navigate = async (path: string) => {
       // Client navigation preserves TanStack caches, so missing invalidation is observable.
-      await navigation.locator(`a[href="${path}"]`).click()
+      if (isMobileProject && path === '/debts') {
+        // The phone dock has no Debts item; it lives under More > Tools.
+        await navigation.locator('a[href="/more"]').click()
+        await page.locator('.more-page').getByRole('link', { name: 'Debts', exact: true }).click()
+      } else {
+        await navigation.locator(`a[href="${path}"]`).click()
+      }
       await expect(page).toHaveURL(new RegExp(`${path}$`))
     }
     const assertDashboard = async (balance: string, goalProgress: number, expenses: string, savingsRate: number, entryCount: number) => {

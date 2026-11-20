@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test'
 
 import { setupAuthenticatedMocks } from './helpers/authMock'
 import { blockUnmockedBackend, fixtureTransactionRows } from './helpers/modalFixtures'
-import { continueToTransactionForm, newTransactionOpener } from './helpers/newTransaction'
+import { continueToTransactionForm, newTransactionOpener, openNewTransactionForm } from './helpers/newTransaction'
 
 async function mockActivity(page: Page, extreme = false) {
   const types = ['income', 'expense', 'withdrawal', 'transfer']
@@ -138,17 +138,31 @@ test.describe('Activity design', () => {
       const opener = newTransactionOpener(page)
       await expect(opener).toHaveCount(1)
       await opener.click()
-      const dialog = await continueToTransactionForm(page)
-      await dialog.getByRole('radio', { name: 'Transfer', exact: true }).click()
-      await dialog.getByRole('button', { name: /^Save / }).click()
-      await expect(dialog.locator('#transaction-amount-error')).toBeVisible()
-      for (const width of [320, 375, 768, 1280, 1920]) {
-        await page.setViewportSize({ width, height: 900 })
-        await geometry(page, width)
-        const result = await contrastAudit(page)
-        expect(result.failures).toEqual([])
-        samples.push({ width, state: 'transfer errors', ...result })
+      let dialog = await continueToTransactionForm(page)
+      const showTransferErrors = async () => {
+        await dialog.getByRole('radio', { name: 'Transfer', exact: true }).click()
+        await dialog.getByRole('button', { name: /^Save / }).click()
+        await expect(dialog.locator('#transaction-amount-error')).toBeVisible()
       }
+      const auditTransferErrors = async (widths: number[]) => {
+        for (const width of widths) {
+          await page.setViewportSize({ width, height: 900 })
+          await geometry(page, width)
+          const result = await contrastAudit(page)
+          expect(result.failures).toEqual([])
+          samples.push({ width, state: 'transfer errors', ...result })
+        }
+      }
+      await showTransferErrors()
+      // The quick add form is phone-only and unmounts from 768px up, so the
+      // form stays open only across phone widths.
+      await auditTransferErrors([320, 375])
+      await dialog.getByRole('button', { name: 'Close transaction form' }).click()
+      // From 768px the header button is the opener, so reopen it there.
+      await page.setViewportSize({ width: 768, height: 900 })
+      dialog = await openNewTransactionForm(page)
+      await showTransferErrors()
+      await auditTransferErrors([768, 1280, 1920])
       await dialog.locator('#transaction-fee').focus()
       let result = await contrastAudit(page)
       expect(result.failures).toEqual([])

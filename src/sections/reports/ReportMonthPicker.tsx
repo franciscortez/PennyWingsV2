@@ -6,8 +6,9 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
+import { useDismissable } from '@/hooks/useDismissable'
 import {
   currentMonthInput,
   formatReportMonth,
@@ -47,35 +48,12 @@ export function ReportMonthPicker({
   const pickerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (
-        pickerRef.current &&
-        !pickerRef.current.contains(event.target as Node)
-      ) {
-        setOpen(false)
-      }
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setOpen(false)
-        triggerRef.current?.focus()
-      }
-    }
-
-    document.addEventListener('mousedown', handlePointerDown)
-    document.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.removeEventListener('mousedown', handlePointerDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [open])
+  useDismissable({
+    open,
+    containerRef: pickerRef,
+    returnFocusRef: triggerRef,
+    onDismiss: () => setOpen(false),
+  })
 
   const togglePicker = () => {
     if (!open) {

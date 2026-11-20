@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import {
   Archive,
   ArchiveRestore,
@@ -8,10 +8,12 @@ import {
   History,
   MoreVertical,
   Plus,
+  type LucideIcon,
 } from 'lucide-react'
 
 import { AppButton } from '@/components/ui/Button'
 import { figure, surface, surfaceNested, textMuted } from '@/components/ui/surfaces'
+import { useDismissable } from '@/hooks/useDismissable'
 import { daysUntil, formatDate } from '@/lib/date'
 import type { Debt, DebtType } from '@/types'
 
@@ -39,6 +41,13 @@ const debtTypeLabels: Record<DebtType, string> = {
   personal_loan: 'Personal Loan',
 }
 
+type MenuItem = {
+  Icon: LucideIcon
+  key: string
+  label: string
+  onSelect: () => void
+}
+
 const debtTypeStyles: Record<DebtType, string> = {
   bnpl: 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-800',
   credit_card: 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800',
@@ -57,6 +66,64 @@ export function DebtCard({
   purchaseCount,
 }: DebtCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const menuId = useId()
+  const menuWrapperRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  const menuItems: MenuItem[] = []
+
+  if (debt.status !== 'archived' && onEdit) {
+    menuItems.push({ key: 'edit', label: 'Edit', Icon: Edit2, onSelect: () => onEdit(debt) })
+  }
+
+  if (debt.status !== 'archived' && onArchive) {
+    menuItems.push({ key: 'archive', label: 'Archive', Icon: Archive, onSelect: () => onArchive(debt) })
+  }
+
+  if (debt.status === 'archived' && onUnarchive) {
+    menuItems.push({ key: 'restore', label: 'Restore', Icon: ArchiveRestore, onSelect: () => onUnarchive(debt) })
+  }
+
+  useDismissable({
+    open: menuOpen,
+    containerRef: menuWrapperRef,
+    returnFocusRef: triggerRef,
+    onDismiss: () => setMenuOpen(false),
+  })
+
+  // Moving focus into the menu on open lets arrow keys work straight away.
+  useEffect(() => {
+    if (menuOpen) {
+      menuRef.current?.querySelector<HTMLElement>('[role="menuitem"]')?.focus()
+    }
+  }, [menuOpen])
+
+  const handleTriggerKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    if (event.key === 'ArrowDown' && !menuOpen) {
+      event.preventDefault()
+      setMenuOpen(true)
+    }
+  }
+
+  const handleMenuKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const items = Array.from(
+      menuRef.current?.querySelectorAll<HTMLElement>('[role="menuitem"]') ?? [],
+    )
+    const current = items.indexOf(document.activeElement as HTMLElement)
+    let next: number | null = null
+
+    if (event.key === 'ArrowDown') next = (current + 1) % items.length
+    else if (event.key === 'ArrowUp') next = (current - 1 + items.length) % items.length
+    else if (event.key === 'Home') next = 0
+    else if (event.key === 'End') next = items.length - 1
+    else if (event.key === 'Tab') setMenuOpen(false)
+
+    if (next !== null) {
+      event.preventDefault()
+      items[next]?.focus()
+    }
+  }
 
   const paidAmount = debt.originalAmount - debt.outstandingAmount
   const percentPaid = Math.min(
@@ -125,67 +192,51 @@ export function DebtCard({
           </div>
 
           {/* Action Menu button */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(!menuOpen)}
-              className="flex h-11 w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-              aria-label="Debt actions"
-              aria-expanded={menuOpen}
-            >
-              <MoreVertical size={16} aria-hidden="true" />
-            </button>
-
-            {menuOpen && (
-              <div
-                className="absolute right-0 top-full z-20 mt-1 w-36 rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
-                role="menu"
+          {menuItems.length > 0 && (
+            <div className="relative" ref={menuWrapperRef}>
+              <button
+                ref={triggerRef}
+                type="button"
+                onClick={() => setMenuOpen((open) => !open)}
+                onKeyDown={handleTriggerKeyDown}
+                className="flex h-11 w-11 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                aria-label="Debt actions"
+                aria-haspopup="menu"
+                aria-expanded={menuOpen}
+                aria-controls={menuOpen ? menuId : undefined}
               >
-                {debt.status !== 'archived' && onEdit && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      onEdit(debt)
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-pink-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                    role="menuitem"
-                  >
-                    <Edit2 size={14} aria-hidden="true" />
-                    <span>Edit</span>
-                  </button>
-                )}
-                {debt.status !== 'archived' && onArchive && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      onArchive(debt)
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-pink-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                    role="menuitem"
-                  >
-                    <Archive size={14} aria-hidden="true" />
-                    <span>Archive</span>
-                  </button>
-                )}
-                {debt.status === 'archived' && onUnarchive && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false)
-                      onUnarchive(debt)
-                    }}
-                    className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-pink-50 dark:text-slate-200 dark:hover:bg-slate-800"
-                    role="menuitem"
-                  >
-                    <ArchiveRestore size={14} aria-hidden="true" />
-                    <span>Restore</span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+                <MoreVertical size={16} aria-hidden="true" />
+              </button>
+
+              {menuOpen && (
+                <div
+                  id={menuId}
+                  ref={menuRef}
+                  className="absolute right-0 top-full z-20 mt-1 w-36 rounded-xl border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-700 dark:bg-slate-900"
+                  role="menu"
+                  aria-label="Debt actions"
+                  onKeyDown={handleMenuKeyDown}
+                >
+                  {menuItems.map(({ key, label, Icon, onSelect }) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false)
+                        onSelect()
+                      }}
+                      className="flex min-h-11 w-full items-center gap-2 px-3 py-1.5 text-left text-xs font-medium text-slate-700 hover:bg-pink-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      role="menuitem"
+                      tabIndex={-1}
+                    >
+                      <Icon size={14} aria-hidden="true" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Due Date Indicator */}

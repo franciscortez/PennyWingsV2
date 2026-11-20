@@ -104,6 +104,38 @@ body {
   min-height: 100dvh;
 }
 
+/* Native <dialog> overlay (ModalFrame `native`). The dialog is the same
+   full-viewport flex overlay as the div, so the UA box model is reset; the
+   background and colour sit in a low layer so utilities like bg-black/40 win.
+   Page scroll is contained with overscroll-behavior, not a body lock. */
+@layer base {
+  dialog.modal-overlay {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    overflow: hidden;
+  }
+}
+
+dialog.modal-overlay:not([open]) {
+  display: none;
+}
+
+dialog.modal-overlay:modal {
+  overscroll-behavior: contain;
+}
+
+dialog.modal-overlay::backdrop {
+  background: transparent;
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 /* Shared modal frame geometry (issue #35).
    The page behind an overlay is frozen by `src/lib/scrollLock.ts`; these rules
    make sure only the intended region can scroll, and that the panel stays

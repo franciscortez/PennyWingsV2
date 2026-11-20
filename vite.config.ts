@@ -6,8 +6,21 @@ import path from "node:path";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 
+// Origin used for absolute social-card URLs in index.html; empty keeps them relative.
+let siteUrl = "";
+
 export default defineConfig({
   plugins: [
+    {
+      name: 'pennywings-site-url',
+      configResolved(config) {
+        siteUrl = String(config.env.VITE_SITE_URL ?? '').replace(/\/+$/, '');
+      },
+      transformIndexHtml: {
+        order: 'pre',
+        handler: (html) => html.replaceAll('%VITE_SITE_URL%', siteUrl),
+      },
+    },
     {
       name: 'pennywings-offline-worker',
       apply: 'build',

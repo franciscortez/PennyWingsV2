@@ -96,6 +96,7 @@ export function AuthShell({
 
             <ImageSlot
               image={landingImages.hero}
+              sizes="240px"
               className="-mr-4 -mt-8 ml-auto w-[14rem] xl:w-[15rem]"
             />
 

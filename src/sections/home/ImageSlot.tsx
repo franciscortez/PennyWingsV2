@@ -7,18 +7,22 @@ type ImageSlotProps = {
   image: LandingImage
   className?: string
   priority?: boolean
+  /** Overrides the image's default `sizes` when the slot renders narrower or wider. */
+  sizes?: string
 }
 
 // Renders the finished image once `image.src` is set, and a labelled
 // wireframe until then. The wireframe keeps the final aspect ratio so the
 // layout does not shift when the real asset lands.
-export function ImageSlot({ image, className, priority = false }: ImageSlotProps) {
+export function ImageSlot({ image, className, priority = false, sizes }: ImageSlotProps) {
   const aspectRatio = `${image.width} / ${image.height}`
 
   if (image.src) {
     return (
       <img
         src={image.src}
+        srcSet={image.srcSet}
+        sizes={image.srcSet ? (sizes ?? image.sizes) : undefined}
         alt={image.alt}
         width={image.width}
         height={image.height}

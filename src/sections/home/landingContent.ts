@@ -13,6 +13,10 @@
 export type LandingImage = {
   id: string
   src: string | null
+  /** Width descriptors for the available files, so small screens skip the 1600px one. */
+  srcSet?: string
+  /** Rendered width hint paired with `srcSet`; the slot's className can override via ImageSlot. */
+  sizes?: string
   alt: string
   width: number
   height: number
@@ -24,6 +28,9 @@ export const landingImages = {
   hero: {
     id: 'hero-scene',
     src: '/landing/hero-scene.webp',
+    srcSet:
+      '/landing/hero-scene-800.webp 800w, /landing/hero-scene.webp 1600w',
+    sizes: '(min-width: 1024px) 600px, 92vw',
     alt: 'The PennyWings butterfly gliding above a stack of floating peso coins, a bank card and an e-wallet',
     width: 1600,
     height: 1400,
@@ -34,6 +41,9 @@ export const landingImages = {
   sharing: {
     id: 'shared-accounts-scene',
     src: '/landing/shared-accounts-scene.webp',
+    srcSet:
+      '/landing/shared-accounts-scene-800.webp 800w, /landing/shared-accounts-scene.webp 1600w',
+    sizes: '(min-width: 1024px) 700px, 92vw',
     alt: 'Two PennyWings butterflies sharing a single glowing account card between them',
     width: 1600,
     height: 1100,
@@ -44,6 +54,9 @@ export const landingImages = {
   assistant: {
     id: 'assistant-scene',
     src: '/landing/assistant-scene.webp',
+    srcSet:
+      '/landing/assistant-scene-800.webp 800w, /landing/assistant-scene.webp 1200w',
+    sizes: '(min-width: 1024px) 480px, 92vw',
     alt: 'The PennyWings butterfly reading a small chart on a floating chat bubble',
     width: 1200,
     height: 1200,

@@ -63,6 +63,24 @@ test.describe('Persistent app shell and route transitions', () => {
     await context.close()
   })
 
+  for (const [reducedMotion, expected] of [
+    ['reduce', 'auto'],
+    ['no-preference', 'smooth'],
+  ] as const) {
+    test(`uses ${expected} scrolling when reduced motion is ${reducedMotion}`, async ({ browser }) => {
+      const context = await browser.newContext({ reducedMotion })
+      const page = await context.newPage()
+      await setupAuthenticatedMocks(page)
+      await page.goto('/dashboard')
+
+      expect(
+        await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior),
+      ).toBe(expected)
+
+      await context.close()
+    })
+  }
+
   test('removes the enter animation when reduced motion is requested', async ({ browser }) => {
     const context = await browser.newContext({ reducedMotion: 'reduce' })
     const page = await context.newPage()

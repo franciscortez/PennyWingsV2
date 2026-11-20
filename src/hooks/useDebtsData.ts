@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query'
 
 import { queryKeys } from '@/lib/queryClient'
+import { addDays, toDateInputValue } from '@/lib/date'
 import { invalidateDebtCaches } from '@/lib/queryInvalidation'
 import {
   addDebtCharge as addDebtChargeService,
@@ -115,10 +116,9 @@ export function useDebtsData(
   const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data])
 
   const stats = useMemo<DebtSummaryStats>(() => {
-    const today = new Date().toISOString().slice(0, 10)
-    const in3DaysDate = new Date()
-    in3DaysDate.setDate(in3DaysDate.getDate() + 3)
-    const in3Days = in3DaysDate.toISOString().slice(0, 10)
+    const now = new Date()
+    const today = toDateInputValue(now)
+    const in3Days = toDateInputValue(addDays(now, 3))
 
     let totalOutstanding = 0
     let totalSettled = 0

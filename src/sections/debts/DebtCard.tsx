@@ -12,6 +12,7 @@ import {
 
 import { AppButton } from '@/components/ui/Button'
 import { figure, surface, surfaceNested, textMuted } from '@/components/ui/surfaces'
+import { daysUntil, formatDate } from '@/lib/date'
 import type { Debt, DebtType } from '@/types'
 
 type DebtCardProps = {
@@ -66,13 +67,9 @@ export function DebtCard({
   const dueStatus = useMemo(() => {
     if (!debt.dueDate || debt.status !== 'outstanding') return null
 
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+    const diffDays = daysUntil(debt.dueDate)
 
-    const due = new Date(debt.dueDate)
-    due.setHours(0, 0, 0, 0)
-
-    const diffDays = Math.round((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    if (diffDays === null) return null
 
     if (diffDays < 0) {
       return {
@@ -91,7 +88,7 @@ export function DebtCard({
     }
 
     return {
-      label: `Due ${new Date(debt.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`,
+      label: `Due ${formatDate(debt.dueDate)}`,
       style: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
     }
   }, [debt.dueDate, debt.status])

@@ -41,6 +41,17 @@ test('browser theme color follows saved app theme, toggles, and public light mod
   expect(await page.evaluate(() => localStorage.getItem('theme'))).toBe('dark')
 })
 
+test('follows live OS theme changes until the user chooses a theme', async ({ page }) => {
+  await setupAuthenticatedMocks(page)
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.goto('/dashboard')
+  await expect(page.locator('meta[name="color-scheme"]')).toHaveAttribute('content', 'light dark')
+  await expect(page.locator('html')).toHaveClass(/dark/)
+  await page.emulateMedia({ colorScheme: 'light' })
+  await expect(page.locator('html')).not.toHaveClass(/dark/)
+  expect(await page.evaluate(() => localStorage.getItem('theme'))).toBeNull()
+})
+
 test('signed-out standalone start follows the existing login guard', async ({ page }) => {
   await page.route('**/auth/v1/**', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: '{}' }))
   await page.goto('/dashboard')

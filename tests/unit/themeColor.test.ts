@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
-import { applyTheme, syncThemeColor } from '@/lib/theme'
+import { applyTheme, saveTheme, syncThemeColor } from '@/lib/theme'
 
 const installMetas = () => {
   document.head.insertAdjacentHTML('beforeend', '<meta name="theme-color" content="#c94466" data-theme="light"><meta name="theme-color" content="#020617" data-theme="dark">')
@@ -26,6 +26,7 @@ describe('browser theme colors', () => {
 
   it('can display public light chrome without overwriting the saved app preference', () => {
     installMetas()
+    saveTheme('dark')
     applyTheme('dark')
     syncThemeColor('light')
     expect(localStorage.getItem('theme')).toBe('dark')

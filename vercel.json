@@ -1,5 +1,6 @@
 {
   "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "Content-Security-Policy-Report-Only", "value": "default-src 'self'; script-src 'self' 'sha256-wd9VsWqlWbov2juAm+KNXhIxXqo6jg5F6XFI+Bt9AC8=' 'sha256-vk0HnlMiwUt6qO9L/y5b/BGb5TugHwRvoVlEhN4Ly3U=' 'sha256-yAXnoqBujSxytyHyZLXZGghMmt1/BTdR0aHTXRlY7xg='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self' https://*.supabase.co wss://*.supabase.co; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'" }] },
     { "source": "/sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }, { "key": "Service-Worker-Allowed", "value": "/" }] },
     { "source": "/offline.html", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
   ],

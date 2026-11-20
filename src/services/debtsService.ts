@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase'
 import type { Tables } from '@/lib/database.types'
+import { toDateInputValue } from '@/lib/date'
 import { AppError } from '@/lib/errors'
 import type {
   Debt,
@@ -186,7 +187,7 @@ export const addDebtCharge = async (
   const { data, error } = await supabase.rpc('add_debt_charge_checked', {
     p_debt_id: values.debt_id,
     p_amount: values.amount,
-    p_charge_date: values.charge_date ?? new Date().toISOString().slice(0, 10),
+    p_charge_date: values.charge_date ?? toDateInputValue(),
     p_note: values.note ?? undefined,
   })
 
@@ -260,7 +261,7 @@ export const payDebt = async (
     p_payment_method: values.payment_method,
     p_card_id: values.card_id ?? undefined,
     p_wallet_id: values.wallet_id ?? undefined,
-    p_payment_date: values.payment_date ?? new Date().toISOString().slice(0, 10),
+    p_payment_date: values.payment_date ?? toDateInputValue(),
     p_note: values.note ?? undefined,
   })
 

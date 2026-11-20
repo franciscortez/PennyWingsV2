@@ -21,6 +21,28 @@ export const toDateInputValue = (date = new Date()) =>
     String(date.getDate()).padStart(2, '0'),
   ].join('-')
 
+export const addDays = (date: Date, days: number) => {
+  const next = new Date(date)
+
+  next.setDate(next.getDate() + days)
+
+  return next
+}
+
+/** Whole local calendar days from `from` (default now) to `value`; negative when past. */
+export const daysUntil = (value: DateInput, from = new Date()) => {
+  const target = parseDate(value)
+
+  if (!target || Number.isNaN(target.getTime())) {
+    return null
+  }
+
+  const start = new Date(from.getFullYear(), from.getMonth(), from.getDate())
+  const end = new Date(target.getFullYear(), target.getMonth(), target.getDate())
+
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000)
+}
+
 export const formatDate = (
   value: DateInput,
   options: Intl.DateTimeFormatOptions = {

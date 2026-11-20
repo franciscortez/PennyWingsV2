@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/fieldStyles'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { figure, surfaceNested, textMuted } from '@/components/ui/surfaces'
+import { toDateInputValue } from '@/lib/date'
 import { debtModalPanel } from '@/sections/debts/debtStyles'
 import { debtChargeFormSchema } from '@/validation/debtSchemas'
 import type { Debt, DebtChargeValues } from '@/types'
@@ -32,8 +33,6 @@ const currencyFormatter = new Intl.NumberFormat('en-PH', {
   style: 'currency',
 })
 
-const todayIso = () => new Date().toISOString().slice(0, 10)
-
 export function AddChargeModal({ debt, onClose, onSubmit, saving }: AddChargeModalProps) {
   const {
     control,
@@ -44,7 +43,7 @@ export function AddChargeModal({ debt, onClose, onSubmit, saving }: AddChargeMod
   } = useForm<AddChargeFormValues, unknown, z.output<typeof debtChargeFormSchema>>({
     defaultValues: {
       amount: '',
-      charge_date: todayIso(),
+      charge_date: toDateInputValue(),
       note: '',
     },
     resolver: zodResolver(debtChargeFormSchema),

@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/fieldStyles'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { figure, surfaceNested, textMuted } from '@/components/ui/surfaces'
+import { toDateInputValue } from '@/lib/date'
 import { debtModalPanel } from '@/sections/debts/debtStyles'
 import { PaymentSourcePicker } from '@/sections/transactions/PaymentSourcePicker'
 import type { Account, Debt, DebtPayMutationValues, PaymentMethod } from '@/types'
@@ -40,9 +41,7 @@ export function PayDebtModal({
   const [amountInput, setAmountInput] = useState(String(debt.outstandingAmount))
   const amount = amountInput === '' ? NaN : Number(amountInput)
   const [selectedAccountId, setSelectedAccountId] = useState<string>('')
-  const [paymentDate, setPaymentDate] = useState<string>(
-    new Date().toISOString().slice(0, 10),
-  )
+  const [paymentDate, setPaymentDate] = useState<string>(() => toDateInputValue())
   const [note, setNote] = useState<string>('')
   // While the source picker is open it is the only dialog on screen.
   const [pickerOpen, setPickerOpen] = useState(false)

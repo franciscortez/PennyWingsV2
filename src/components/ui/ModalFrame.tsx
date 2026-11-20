@@ -17,12 +17,21 @@ import { useScrollLock } from '@/hooks/useScrollLock'
 import { useConnectionFeedback } from '@/hooks/useConnectionFeedback'
 import { useTopOverlay } from '@/hooks/useTopOverlay'
 import { ConnectionNotice } from '@/components/ConnectionNotice'
+import { focusWithoutScroll } from '@/lib/focusable'
 import { registerOverlay, type OverlayHandle } from '@/lib/overlayStack'
 
 type ModalBackdropMode = 'dismiss' | 'none'
 
 type ModalFrameProps = {
   mobilePresentation?: 'dialog' | 'sheet' | 'fullscreen'
+  /**
+   * Opt in to a native `<dialog>` opened with `showModal()` (top layer, native
+   * inertness and Escape) instead of the hand-rolled overlay. It also stops the
+   * `position: fixed` body scroll lock. Falls back to the overlay where
+   * `showModal` is missing. Only for modals that do not stack other overlays;
+   * alerts raised while one is open render inside it (see `lib/alert.ts`).
+   */
+  native?: boolean
   /** Pinned below the scroll region, so it stays reachable for long forms. */
   actions?: ReactNode
   /**
@@ -66,8 +75,13 @@ type ModalFrameProps = {
  * Escape while topmost, contains Tab focus and restores focus on close.
  */
 
+const supportsNativeModal = () =>
+  typeof HTMLDialogElement !== 'undefined' &&
+  typeof HTMLDialogElement.prototype.showModal === 'function'
+
 export function ModalFrame({
   mobilePresentation = 'dialog',
+  native = false,
   actions,
   backdrop = 'dismiss',
   backdropClassName = 'bg-black/40',
@@ -88,6 +102,8 @@ export function ModalFrame({
   title,
   titleId,
 }: ModalFrameProps) {
+  // Decided once: switching element type mid-life would remount the form.
+  const [useNative] = useState(() => native && supportsNativeModal())
   const generatedId = useId()
   const resolvedTitleId = titleId ?? `${generatedId}-title`
   const descriptionId = description ? `${generatedId}-description` : undefined
@@ -103,7 +119,7 @@ export function ModalFrame({
 
   // Hook order matters: layout cleanups run in declaration order, so the page
   // scroll position is restored before focus returns to the opener.
-  useScrollLock(lockScroll)
+  useScrollLock(lockScroll && !useNative)
 
   useLayoutEffect(() => {
     const overlay = registerOverlay(document, overlayToken)
@@ -127,6 +143,54 @@ export function ModalFrame({
     onCloseRef.current = onClose
     closeDisabledRef.current = closeDisabled
   })
+
+  // Declared after useModalFocus so the opener is captured before showModal()
+  // moves focus into the dialog.
+  useLayoutEffect(() => {
+    if (!useNative) {
+      return
+    }
+
+    // The overlay element is a <dialog> when native; typed as a div below only
+    // so one JSX tree serves both modes.
+    const layer = layerRef.current as unknown as HTMLDialogElement | null
+
+    if (!layer) {
+      return
+    }
+
+    if (!layer.open) {
+      layer.showModal()
+    }
+
+    // showModal() focuses the first control; restore the caller's choice.
+    const initial = initialFocusRef?.current ?? dialogRef.current
+
+    if (initial) {
+      focusWithoutScroll(initial)
+    }
+
+    // Back gesture and close requests arrive as `cancel`. Escape on a keyboard
+    // is already consumed by the document handler, which owns the stacking and
+    // `closeDisabled` rules, so this path never double-closes.
+    const handleCancel = (event: Event) => {
+      event.preventDefault()
+
+      if (!closeDisabledRef.current && overlayRef.current?.isTopmost()) {
+        onCloseRef.current()
+      }
+    }
+
+    layer.addEventListener('cancel', handleCancel)
+
+    return () => {
+      layer.removeEventListener('cancel', handleCancel)
+
+      if (layer.open) {
+        layer.close()
+      }
+    }
+  }, [useNative, initialFocusRef])
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -169,9 +233,14 @@ export function ModalFrame({
   const closeButtonClass =
     'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-gray-400 transition hover:bg-pink-50 hover:text-pink-600 disabled:pointer-events-none disabled:opacity-50 dark:hover:bg-slate-800 dark:hover:text-pink-400'
 
+  const Overlay = (useNative ? 'dialog' : 'div') as 'div'
+
   return createPortal(
-    <div
+    <Overlay
       ref={layerRef}
+      aria-describedby={useNative ? descriptionId : undefined}
+      aria-labelledby={useNative ? resolvedTitleId : undefined}
+      data-native-modal={useNative ? '' : undefined}
       className={twMerge(
         'modal-overlay z-[100]',
         backdrop === 'dismiss' ? backdropClassName : undefined,
@@ -189,10 +258,10 @@ export function ModalFrame({
     >
       <section
         ref={dialogRef}
-        aria-describedby={descriptionId}
-        aria-labelledby={resolvedTitleId}
-        aria-modal="true"
-        role="dialog"
+        aria-describedby={useNative ? undefined : descriptionId}
+        aria-labelledby={useNative ? undefined : resolvedTitleId}
+        aria-modal={useNative ? undefined : 'true'}
+        role={useNative ? undefined : 'dialog'}
         tabIndex={-1}
         className={twMerge(
           'modal-panel rounded-[2rem] border border-pink-100 bg-white shadow-2xl outline-none focus-visible:ring-2 focus-visible:ring-pink-400 dark:border-slate-800 dark:bg-slate-900',
@@ -252,7 +321,7 @@ export function ModalFrame({
           </div>
         ) : null}
       </section>
-    </div>,
+    </Overlay>,
     document.body,
   )
 }

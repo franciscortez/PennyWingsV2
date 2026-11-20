@@ -67,6 +67,7 @@ export function AddChargeModal({ debt, onClose, onSubmit, saving }: AddChargeMod
 
   return (
     <ModalFrame
+      native
       mobilePresentation="sheet"
       title={`Add Purchase: ${debt.providerName}`}
       description="Record a new purchase. It is added to what you already owe this provider."

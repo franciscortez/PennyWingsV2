@@ -42,6 +42,41 @@ test('debt card actions meet 44px tap targets', async ({ page }) => {
   const menu = trigger.locator('xpath=following-sibling::*[1]')
   await expect(menu).toBeVisible()
   expect((await menu.boundingBox())!.y, 'menu top').toBeGreaterThanOrEqual((await trigger.boundingBox())!.y + (await trigger.boundingBox())!.height - TOLERANCE)
+  const items = menu.getByRole('menuitem')
+  expect(await items.count()).toBeGreaterThan(0)
+  for (const item of await items.all()) {
+    await expectTarget(item, 'Debt menu item')
+  }
+})
+
+test('debt card menu is operable from the keyboard', async ({ page }) => {
+  await setupAuthenticatedMocks(page)
+  await mockDebts(page)
+  await page.goto('/debts')
+  const card = page.getByRole('article', { name: 'Debt: Atome' })
+  const trigger = card.getByRole('button', { name: 'Debt actions' })
+  await expect(trigger).toBeVisible()
+
+  await trigger.focus()
+  await page.keyboard.press('Enter')
+  const items = page.getByRole('menu', { name: 'Debt actions' }).getByRole('menuitem')
+  await expect(items.first()).toBeFocused()
+
+  await page.keyboard.press('ArrowDown')
+  await expect(items.nth(1)).toBeFocused()
+  await page.keyboard.press('Home')
+  await expect(items.first()).toBeFocused()
+  await page.keyboard.press('End')
+  await expect(items.last()).toBeFocused()
+
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('menu')).toHaveCount(0)
+  await expect(trigger).toBeFocused()
+
+  await trigger.click()
+  await expect(page.getByRole('menu')).toBeVisible()
+  await page.mouse.click(2, 2)
+  await expect(page.getByRole('menu')).toHaveCount(0)
 })
 
 test('login password controls meet 44px tap targets without shifting layout', async ({ page }) => {

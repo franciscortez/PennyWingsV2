@@ -2,6 +2,7 @@ import { Check, ChevronRight } from 'lucide-react'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 
 import { fieldError, fieldLabel, textMuted } from '@/components/ui'
+import { prefersReducedMotion } from '@/lib/motion'
 import { CategorySheet } from '@/sections/transactions/CategorySheet'
 import { isHexColor } from '@/sections/transactions/categoryColor'
 import type { TransactionCategory } from '@/types'
@@ -20,10 +21,6 @@ type CategoryChipsProps = {
 
 /** Below this the row fits a phone, so "View all" would add nothing. */
 const VIEW_ALL_MIN = 4
-
-const prefersReducedMotion = () =>
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 /** Centres a chip in its row without scrolling anything around it. */
 const revealChip = (

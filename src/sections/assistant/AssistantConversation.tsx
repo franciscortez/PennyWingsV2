@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 
+import { scrollBehavior } from '@/lib/motion'
 import { AssistantMark } from '@/sections/assistant/AssistantMark'
 import { MarkdownText } from '@/components/ui'
 import type { AssistantMessage } from '@/types'
@@ -16,7 +17,7 @@ export function AssistantConversation({
   const messageEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    messageEndRef.current?.scrollIntoView({ behavior: scrollBehavior() })
   }, [messages, sending])
 
   return (

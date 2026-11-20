@@ -20,6 +20,7 @@ import { fieldError, fieldInput } from '@/components/ui/fieldStyles'
 import { ModalFrame } from '@/components/ui/ModalFrame'
 import { SegmentedControl } from '@/components/ui/SegmentedControl'
 import { figure, textMuted } from '@/components/ui/surfaces'
+import { prefersReducedMotion } from '@/lib/motion'
 import { AccountFace } from '@/sections/accounts/AccountFace'
 import { getAccountKindLabel } from '@/sections/accounts/accountLabels'
 import { darkChipKeys, getAccountLogo, type AccountLogo } from '@/sections/accounts/bankLogos'
@@ -365,7 +366,7 @@ function SourceSheet({
     const card = cardRefs.current[next]
     if (!rail || !card) return
     const left = card.offsetLeft - (rail.clientWidth - card.offsetWidth) / 2
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const reduce = prefersReducedMotion()
     settling.current = true
     window.clearTimeout(settleTimer.current)
     settleTimer.current = window.setTimeout(() => {

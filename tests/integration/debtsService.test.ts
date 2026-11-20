@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { describe, expect, it, vi } from 'vitest'
 import {
   addDebtCharge,
   archiveDebt,
@@ -13,6 +14,8 @@ import {
   unarchiveDebt,
   updateDebt,
 } from '@/services/debtsService'
+
+import { server } from '../mocks/server'
 
 describe('debtsService', () => {
   it('fetches debts list and maps fields correctly', async () => {
@@ -58,6 +61,43 @@ describe('debtsService', () => {
     })
     expect(result.id).toBe('charge-new-1')
     expect(result.outstanding_amount).toBe(70)
+  })
+
+  it('sends the local day when no charge or payment date is given', async () => {
+    const originalTimeZone = process.env.TZ
+    const bodies: Record<string, unknown>[] = []
+    process.env.TZ = 'Asia/Manila'
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-03T16:30:00Z')) // 00:30 on 4 Oct in Manila
+
+    server.use(
+      http.post('*/rest/v1/rpc/add_debt_charge_checked', async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>)
+
+        return HttpResponse.json({ id: 'charge-new-1', debt_id: 'debt-1', amount: 50, outstanding_amount: 70 })
+      }),
+      http.post('*/rest/v1/rpc/pay_debt_checked', async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>)
+
+        return HttpResponse.json({ id: 'payment-new-1', debt_id: 'debt-1', amount: 1, remaining_balance: 0, is_paid: true })
+      }),
+    )
+
+    try {
+      await addDebtCharge({ amount: 50, debt_id: 'debt-1', note: null })
+      await payDebt({ amount: 1, debt_id: 'debt-1', payment_method: 'card', card_id: 'card-1' })
+    } finally {
+      vi.useRealTimers()
+
+      if (originalTimeZone === undefined) {
+        delete process.env.TZ
+      } else {
+        process.env.TZ = originalTimeZone
+      }
+    }
+
+    expect(bodies[0]).toMatchObject({ p_charge_date: '2026-10-04' })
+    expect(bodies[1]).toMatchObject({ p_payment_date: '2026-10-04' })
   })
 
   it('voids a purchase via checked RPC', async () => {

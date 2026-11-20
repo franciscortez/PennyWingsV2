@@ -5,6 +5,7 @@
 - Read the request, `git status --short`, and the smallest relevant source slice. Preserve unrelated changes and keep diffs reviewable.
 - Current code, `package.json`, generated database types, and ordered migrations are authoritative; documentation may lag.
 - Follow `page/section/component -> hook -> service -> Supabase`. Keep database access out of presentation code; use TanStack Query, typed services, Zod, and `@/` imports.
+- **Browser Support:** Baseline Widely available; newer web-platform features only with the guide's feature-detected fallback and no new dependency without approval.
 - Use `$understand-pennywings` for repository-wide analysis, onboarding, architecture questions, or cross-domain work. Its references contain detailed project maps.
 
 ## Non-negotiable safeguards

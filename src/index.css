@@ -79,7 +79,12 @@
 }
 
 html {
+  color-scheme: light;
   scroll-behavior: auto;
+}
+
+html.dark {
+  color-scheme: dark;
 }
 
 @media (prefers-reduced-motion: no-preference) {
